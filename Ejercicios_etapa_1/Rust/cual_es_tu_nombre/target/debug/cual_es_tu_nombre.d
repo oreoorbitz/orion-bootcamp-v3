@@ -1,0 +1,1 @@
+/home/oreoo/code/oreoorbitz/orion-bootcamp-v3/Ejercicios_etapa_1/Rust/cual_es_tu_nombre/target/debug/cual_es_tu_nombre: /home/oreoo/code/oreoorbitz/orion-bootcamp-v3/Ejercicios_etapa_1/Rust/cual_es_tu_nombre/src/main.rs
