@@ -1,0 +1,16 @@
+{
+  "name": "orion-bootcamp-v3",
+  "version": "1.0.0",
+  "description": "Bootcamp teaching coding",
+  "main": "index.js",
+  "scripts": {
+    "test": "vitest",
+    "prueba_1": "vitest Ejercicios_etapa_1/Javascript/Ejercicio_1/prueba.test.js",
+    "prueba_2": "vitest Ejercicios_etapa_1/Javascript/Ejercicio_2/prueba.test.js"
+  },
+  "author": "Orion Holmes",
+  "license": "ISC",
+  "devDependencies": {
+    "vitest": "^latest"
+  }
+}
