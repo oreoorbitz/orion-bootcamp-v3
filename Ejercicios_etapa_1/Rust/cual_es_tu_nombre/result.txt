@@ -1,0 +1,26 @@
+fn main() {
+    // Llamamos a la función y mostramos la salida
+    let saludo = cual_es_tu_nombre("Pao", "Persona");
+    println!("{}", saludo); // Debería imprimir "Hola Pao Persona!"
+}
+
+/// Genera un saludo utilizando el nombre de una persona.
+/// Debe devolver "Hola <primerNombre> <apellido>!"
+fn cual_es_tu_nombre(primer_nombre: &str, apellido: &str) -> String {
+    format!("Hola {} {}!", primer_nombre, apellido)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_juan_perez() {
+        assert_eq!(cual_es_tu_nombre("Juan", "Pérez"), "Hola Juan Pérez!");
+    }
+
+    #[test]
+    fn test_ana_gomez() {
+        assert_eq!(cual_es_tu_nombre("Ana", "Gómez"), "Hola Ana Gómez!");
+    }
+}
