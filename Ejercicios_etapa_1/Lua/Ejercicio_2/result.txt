@@ -1,0 +1,19 @@
+--[[
+Genera un saludo utilizando el nombre de una persona.
+Debe devolver "Hola <primerNombre> <apellido>!" (incluyendo la exclamación al final)
+
+@param primerNombre: string
+@param apellido: string
+@return string
+]]
+local function cualEsTuNombre(primerNombre, apellido)
+    return "Hola " .. primerNombre .. " " .. apellido .. "!"
+end
+
+-- Ejemplo de uso
+local resultado = cualEsTuNombre("Pao", "Persona")
+print(resultado)  -- Debería imprimir "Hola Pao Persona!"
+
+return {
+    cualEsTuNombre = cualEsTuNombre
+}

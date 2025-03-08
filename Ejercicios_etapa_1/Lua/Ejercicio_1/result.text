@@ -1,0 +1,20 @@
+--[[
+Calcula la edad en días dada una cantidad de años.
+No se permite usar objetos Date.
+Fórmula: años * 365 (ignoramos años bisiestos)
+
+@param anios: number - La edad en años
+@return number - La edad en días
+]]
+local function edadEnDias(anios)
+    return anios * 365
+end
+
+-- Ejemplo de uso
+local resultado = edadEnDias(26)
+print(resultado)  -- Debería imprimir 9490
+
+-- Para que la función pueda ser importada en el test
+return {
+    edadEnDias = edadEnDias
+}
