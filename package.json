@@ -6,7 +6,8 @@
   "scripts": {
     "test": "vitest",
     "prueba_1": "vitest Ejercicios_etapa_1/Javascript/Ejercicio_1/prueba.test.js",
-    "prueba_2": "vitest Ejercicios_etapa_1/Javascript/Ejercicio_2/prueba.test.js"
+    "prueba_2": "vitest Ejercicios_etapa_1/Javascript/Ejercicio_2/prueba.test.js",
+    "prueba_3": "vitest Ejercicios_etapa_1/Javascript/Ejercicio_3/prueba.test.js"
   },
   "author": "Orion Holmes",
   "license": "ISC",
