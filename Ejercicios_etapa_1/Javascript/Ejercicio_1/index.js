@@ -19,7 +19,7 @@
      * edadEnDias(10) // 3650
      */
     export function edadEnDias(anios) {
-        return 365 * anios
+        return 0 // Reemplazar por la implementación
     }
 
     const resultado = edadEnDias(26)
