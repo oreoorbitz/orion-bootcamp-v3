@@ -10,7 +10,7 @@
   },
   "author": "Orion Holmes",
   "license": "ISC",
-  "devDependencies": {
-    "vitest": "^latest"
+  "dependencies": {
+    "vitest": "^3.0.8"
   }
 }
