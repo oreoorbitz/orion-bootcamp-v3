@@ -1,6 +1,6 @@
-# Ejercicio 4 (Rust): tipos
+# Ejercicio 3 (Rust): Doble mas triple
 
-Para probar este ejercicio, asegúrate de estar en la carpeta del proyecto `tipos`.
+Para probar este ejercicio, asegúrate de estar en la carpeta del proyecto `doble_mas_triple`.
 
 ## Ejecutar la prueba
 

@@ -1,4 +1,4 @@
-# Ejercicio 2 (Rust): tipos
+# Ejercicio 4 (Rust): tipos
 
 Para probar este ejercicio, asegúrate de estar en la carpeta del proyecto `tipos`.
 
