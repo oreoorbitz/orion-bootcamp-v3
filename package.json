@@ -13,7 +13,8 @@
   },
   "author": "Orion Holmes",
   "license": "ISC",
-  "devDependencies": {
-    "vitest": "^latest"
+  "dependencies": {
+    "cardinal": "^2.1.1",
+    "vitest": "^3.0.9"
   }
 }
