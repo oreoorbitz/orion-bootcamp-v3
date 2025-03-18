@@ -35,16 +35,20 @@
         _default: colors.blue
       }
 
-    , 'String': {
-        _default: function(s, info) {
-          var nextToken = info.tokens[info.tokenIndex + 1]
-
-          // show keys of object literals and json in different color
-          return (nextToken && nextToken.type === 'Punctuator' && nextToken.value === ':')
-            ? colors.green(s)
-            : colors.brightGreen(s)
+    ,     'String': {
+      _default: function(s, info) {
+        // Check if the string starts and ends with a single quote or backtick.
+        if ((s.startsWith("'") && s.endsWith("'")) ||
+            (s.startsWith("`") && s.endsWith("`"))) {
+          return colors.red(s); // dark red for properly closed strings (including the quotes)
         }
+        // Otherwise, keep the current behavior (adjust if needed)
+        var nextToken = info.tokens[info.tokenIndex + 1];
+        return (nextToken && nextToken.type === 'Punctuator' && nextToken.value === ':')
+          ? colors.green(s)
+          : colors.red(s);
       }
+    }
 
     , 'Keyword': {
         'break'       :  colors.white
