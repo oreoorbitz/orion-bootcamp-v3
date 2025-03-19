@@ -3,8 +3,8 @@
      * No se permite usar objetos Date
      * Fórmula: años * 365 (ignoramos años bisiestos)
      *
-     * @param {} años - La edad en años
-     * @returns {} La edad en días
+     * @param {number} anios - La edad en años
+     * @returns {number} La edad en días
      *
      * @example
      * // Para 1 año, se espera 365
@@ -19,11 +19,8 @@
      * edadEnDias(10) // 3650
      */
     export function edadEnDias(anios) {
-        return 0 // Reemplazar por la implementación
+        return anios * 365 // Reemplazar por la implementación
     }
 
     const resultado = edadEnDias(26)
     console.log(resultado)
-
-
-

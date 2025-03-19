@@ -1,6 +1,6 @@
 fn main() {
     // Llamamos a la función para ver su salida en la consola
-    let saludo = cual_es_tu_nombre("Pao", "Persona");
+    let saludo = cual_es_tu_nombre("Paola", "Nava");
     println!("{}", saludo);
 }
 
@@ -10,7 +10,7 @@ fn main() {
 /// # Ejemplo
 /// Para "Juan" y "Pérez", se espera "Hola Juan Pérez!"
 fn cual_es_tu_nombre(primer_nombre: &str, apellido: &str) -> String {
-    "".to_string() // TODO: Reemplazar con la implementación correcta
+    "Hola ".to_string() + primer_nombre + " " + apellido + "!" // TODO: Reemplazar con la implementación correcta
 }
 
 #[cfg(test)]

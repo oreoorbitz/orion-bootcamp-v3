@@ -17,7 +17,7 @@ Fórmula: años * 365 (ignoramos años bisiestos)
 -- edadEnDias(10) --> 3650
 ]]
 local function edadEnDias(anios)
-    return 0 -- Reemplazar por la implementación correcta
+    return anios*365 -- Reemplazar por la implementación correcta
 end
 
 -- Ejemplo de uso

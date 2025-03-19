@@ -1,0 +1,1 @@
+/home/bambiux/code/Bambi-uxx/orion-bootcamp-v3/Ejercicios_etapa_1/Rust/paola_feliz/target/debug/paola_feliz: /home/bambiux/code/Bambi-uxx/orion-bootcamp-v3/Ejercicios_etapa_1/Rust/paola_feliz/src/main.rs

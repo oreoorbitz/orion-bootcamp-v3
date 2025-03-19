@@ -15,11 +15,11 @@ Debe devolver "Hola, <primerNombre> <apellido>!" (incluyendo la exclamación al 
 ]]
 
 local function cualEsTuNombre(primerNombre, apellido)
-    return "" -- Reemplazar con la implementación correcta
+    return string.format("Hola %s %s!", primerNombre, apellido) -- Reemplazar con la implementación correcta
 end
 
 -- Ejemplo de uso
-local resultado = cualEsTuNombre("Pao", "Persona")
+local resultado = cualEsTuNombre("Paola", "Nava")
 print(resultado)
 
 -- Para permitir la importación en la prueba

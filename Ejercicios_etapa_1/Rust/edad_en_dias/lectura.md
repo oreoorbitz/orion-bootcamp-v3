@@ -94,7 +94,7 @@ Si agregamos `;`, Rust lo trataría como una instrucción sin valor de retorno y
 Para imprimir valores en la consola:
 
 - **JavaScript** usa `console.log()`.
-- **Rust** usa `println!()`.
+- **Rust** usa `println!("{}", ...)`.
 
 Ejemplo:
 
@@ -103,7 +103,7 @@ console.log("Hola, mundo!");
 ```
 
 ```rust
-println!("Hola, mundo!");
+println!("{}","Hola, mundo!");
 ```
 
 Rust usa `!` en `println!()`, porque en realidad es **una macro, no una función**.
@@ -171,12 +171,12 @@ Este sistema de **propiedad** en Rust previene errores de acceso a memoria y mej
 ---
 
 ## **📌 9. ¿Qué Hace a JavaScript Especial?**
-JavaScript es **más flexible y dinámico**, pero Rust es **más seguro y eficiente**.  
+JavaScript es **más flexible y dinámico**, pero Rust es **más seguro y eficiente**.
 Ambos tienen sus ventajas:
 
-✅ **JavaScript es más accesible**: No necesita compilación y se ejecuta en cualquier navegador.  
-✅ **Rust es más rápido**: Se compila a código máquina y ofrece alto rendimiento sin un garbage collector.  
-✅ **JavaScript es asincrónico**: Tiene `async/await` y `setTimeout()`, mientras que Rust usa `tokio` para asincronía.  
+✅ **JavaScript es más accesible**: No necesita compilación y se ejecuta en cualquier navegador.
+✅ **Rust es más rápido**: Se compila a código máquina y ofrece alto rendimiento sin un garbage collector.
+✅ **JavaScript es asincrónico**: Tiene `async/await` y `setTimeout()`, mientras que Rust usa `tokio` para asincronía.
 ✅ **Rust es seguro en memoria**: Evita `null` y fugas de memoria sin un garbage collector.
 
 ---

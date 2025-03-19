@@ -83,3 +83,14 @@ console.log( sum(1, 2) );
 
 let double = n => n * 2;
 console.log( double(3));
+
+let sayHi = () => console.log('Hola bb');
+
+sayHi();
+
+let suma = (c, d) => {
+  let result = c + d;
+  return result;
+};
+
+console.log ( suma(1, 2) );

@@ -3,7 +3,7 @@
  * Debe devolver "Hola, <primerNombre> <apellido>"!
  * (incluyendo la exclamación al final)
  *
- * 
+ *
  * @param {string} primerNombre - El primer nombre de la persona
  * @param {string} apellido - El apellido de la persona
  * @returns {string} El mensaje de saludo
@@ -17,7 +17,8 @@
  * cualEsTuNombre("Ana", "Gómez")
  */
 export const cualEsTuNombre = (primerNombre, apellido) => {
-    return '' // Reemplazar por la implementación correcta
+
+    return `Hola ${primerNombre} ${apellido}!`; // Reemplazar por la implementación correcta
 }
 
-console.log(cualEsTuNombre("Pao", "Persona"));
+console.log(cualEsTuNombre("Pao", "Nava"));
