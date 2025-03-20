@@ -48,7 +48,7 @@ console.log(checarTipo("21", "string"));//true
  *        - Retorna `"El elemento es falsy: true"`
  *      - Si "elemento" no es falsy (es decir, es truthy):
  *        - Retorna `"El elemento es truthy: true"`
- *   3. Usa interpolación de strings (`\`\``) para construir el mensaje final.
+ *   3. Usa interpolación de strings para construir el mensaje final.
  *
  * Ejemplos:
  *   esFalsy(false) => "El elemento es el booleano false"
