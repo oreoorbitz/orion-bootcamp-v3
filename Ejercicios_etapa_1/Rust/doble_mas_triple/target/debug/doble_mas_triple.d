@@ -1,0 +1,1 @@
+/home/bambiux/code/Bambi-uxx/orion-bootcamp-v3/Ejercicios_etapa_1/Rust/doble_mas_triple/target/debug/doble_mas_triple: /home/bambiux/code/Bambi-uxx/orion-bootcamp-v3/Ejercicios_etapa_1/Rust/doble_mas_triple/src/main.rs

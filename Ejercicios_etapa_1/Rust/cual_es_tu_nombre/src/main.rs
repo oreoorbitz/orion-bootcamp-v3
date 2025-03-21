@@ -10,8 +10,15 @@ fn main() {
 /// # Ejemplo
 /// Para "Juan" y "Pérez", se espera "Hola Juan Pérez!"
 fn cual_es_tu_nombre(primer_nombre: &str, apellido: &str) -> String {
-    "Hola ".to_string() + primer_nombre + " " + apellido + "!" // TODO: Reemplazar con la implementación correcta
-}
+  let mut saludar = String::from ("Hola");
+    saludar.push_str(" ");
+    saludar.push_str(primer_nombre); // TODO: Reemplazar con la implementación correcta
+    saludar.push_str(" ");
+    saludar.push_str(apellido);
+    saludar.push('!');
+
+    saludar
+  }
 
 #[cfg(test)]
 mod tests {

@@ -14,17 +14,17 @@
 
 /// Función que devuelve el doble de un número
 fn doble(numero: i32) -> i32 {
-    0 // TODO: Reemplazar con la implementación correcta
+    numero * 2 // TODO: Reemplazar con la implementación correcta
 }
 
 /// Función que devuelve el triple de un número
 fn triple(numero: i32) -> i32 {
-    0 // TODO: Reemplazar con la implementación correcta
+    numero * 3 // TODO: Reemplazar con la implementación correcta
 }
 
 /// Función que devuelve la suma del doble y el triple de un número
 fn doble_mas_triple(numero: i32) -> i32 {
-    0 // TODO: Reemplazar con la implementación correcta
+    doble(numero) + triple(numero) // TODO: Reemplazar con la implementación correcta
 }
 
 fn main() {

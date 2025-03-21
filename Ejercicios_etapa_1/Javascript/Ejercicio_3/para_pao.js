@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * EJERCICIO DE FUNCIONES CON CONCEPTOS DE QUÍMICA Y ESTRUCTURAS CONDICIONALES
  *
@@ -31,11 +33,11 @@
  *         if (ph < 7) {
  *             return "ácida";
  *         }
- *         
+ *
  *         if (ph === 7) {
  *             return "neutral";
  *         }
- *         
+ *
  *         return "básica";
  *
  *      Nota: Una función puede tener múltiples sentencias "return", pero solo se ejecutará la primera que cumpla la condición.
@@ -74,11 +76,11 @@
 // if (ph < 7) {
 //     return "ácida";
 // }
-// 
+//
 // if (ph === 7) {
 //     return "neutral";
 // }
-// 
+//
 // return "básica";
 // Recuerda: Aunque hay varios return, solo se ejecutará el primero que cumpla su condición.
 
@@ -90,3 +92,43 @@
 // 3. Retornar un mensaje que contenga el pH redondeado a dos decimales y la clasificación.
 
 // Escribe código aquí abajo
+
+/**
+ * Calcular el pH de nuestra concentración
+ * @param {number} concentracion -
+ * @returns {number}
+ */
+const calcularph = (concentracion) => {
+  if (concentracion <= 0) {
+     throw new Error("La concentración debe ser mayor a 0");
+  }
+
+  /** @type {number} */
+  const logInverso = -Math.log10(concentracion);
+
+  /** @type {string} */
+  const logInversoFix = logInverso.toFixed(2);
+
+  /** @type {number} */
+  const logInversoFloat = parseFloat(logInversoFix);
+
+    return logInversoFloat
+}
+
+
+const clasificarpH = (pH) => {
+if (pH < 7) {
+  return "ácida";
+} else if (pH === 7) {
+  return "neutral";
+} else if (pH > 7) {
+  return "básica";
+}
+}
+
+const analizarSolucion = (concentracion) => {
+  const pH = calcularph(concentracion);
+  return `La solucion tiene un pH de ${pH} y por lo tanto es ${clasificarpH(pH)}`;
+}
+
+console.log(analizarSolucion(0));
