@@ -1,2 +1,19 @@
 node_modules
 package-lock.json
+# Archivos y carpetas de compilación de Rust
+/target/
+**/*.rs.bk
+
+# Archivos temporales o de depuración
+*.log
+*.tmp
+
+# Archivos de lock o dependencias si no se desean trackear
+Cargo.lock
+
+# Archivos de IDE (opcional)
+.idea/
+.vscode/
+
+# Archivos de sistema
+.DS_Store
