@@ -1,0 +1,101 @@
+// @ts-check
+/**
+ * EJERCICIO: CONVERSIÓN DE MICROGRAMOS A UNIDADES DE MASA
+ *
+ * Objetivo:
+ *   Implementar una función que convierta una masa expresada en microgramos a otra unidad de masa
+ *   (por ejemplo, miligramos, gramos o kilogramos). Esta función debe validar la entrada, realizar
+ *   la conversión y retornar un string formateado con dos decimales y el símbolo de la unidad.
+ *
+ * Instrucciones:
+ *
+ * 1. Declara una función (por ejemplo, "convertirMicrogramos") que reciba dos parámetros:
+ *      - microgramos: número que representa la masa en microgramos.
+ *      - codigoUnidad: string con el código de la unidad a la que deseas convertir (por ejemplo, "MG", "G", "KG").
+ *
+ * 2. Utiliza el siguiente objeto "unidades" para mapear cada código a un objeto con dos propiedades:
+ *      - factor: el divisor para convertir microgramos a la unidad deseada.
+ *      - simbolo: el símbolo que representa la unidad.
+ *
+ *    const unidades = {
+ *      MG: { factor: 1000, simbolo: "mg" },
+ *      G: { factor: 1e6, simbolo: "g" },
+ *      KG: { factor: 1e9, simbolo: "kg" }
+ *    }
+ *
+ * 3. La función debe hacer lo siguiente:
+ *      a. Validar que el valor de microgramos no sea negativo. Si lo es, retornar "Valor inválido".
+ *      b. Verificar que el codigoUnidad exista en el objeto "unidades". Si no existe, retornar "Código de unidad inválido".
+ *         Estas validaciones deben hacerse con un "early return", es decir, retornando inmediatamente si la condición falla.
+ *      c. Convertir microgramos a la unidad deseada dividiendo por el factor correspondiente.
+ *      d. Formatear el resultado a dos decimales utilizando el método toFixed(2).
+ *      e. Retornar un string que combine el valor formateado y el símbolo de la unidad.
+ *
+ * Ejemplos:
+ *   convertirMicrogramos(1500000, "G")  // debe retornar: "1.50g"
+ *   convertirMicrogramos(500000, "MG")  // debe retornar: "500.00mg"
+ *   convertirMicrogramos(-100, "KG")    // debe retornar: "Valor inválido"
+ *   convertirMicrogramos(1000000, "XYZ") // debe retornar: "Código de unidad inválido"
+ *
+ * Temas cubiertos:
+ *   - Operadores de comparación y validación temprana (early return)
+ *   - Objetos en JavaScript y acceso a sus propiedades (notación de punto y corchetes)
+ *   - Uso de toFixed para formateo de números
+ *   - Interpolación de cadenas para construir el mensaje final
+ *   - Funciones en JavaScript (parámetros, argumentos, función flecha)
+ *   - Constantes
+ */
+
+/**
+ * Objeto que mapea códigos de unidad a sus factores de conversión y símbolos.
+ * @type {{MG: {factor: number, simbolo: string}, G: {factor: number, simbolo: string}, KG: {factor: number, simbolo: string}}}
+ */
+const unidades = {
+  MG: { factor: 1000, simbolo: "mg" },
+  G: { factor: 1e6, simbolo: "g" },
+  KG: { factor: 1e9, simbolo: "kg" }
+}
+
+/**
+ * Convierte una masa en microgramos a la unidad especificada.
+ *
+ * @param {number} microgramos - La masa en microgramos.
+ * @param {string} codigoUnidad - El código de la unidad a la que se desea convertir (por ejemplo, "MG", "G", "KG").
+ * @returns {string} El valor convertido y formateado con dos decimales seguido del símbolo correspondiente,
+ *                   o un mensaje de error si la entrada es inválida.
+ *
+ * Ejemplos:
+ *   convertirMicrogramos(1500000, "G")  => "1.50g"
+ *   convertirMicrogramos(500000, "MG")  => "500.00mg"
+ *   convertirMicrogramos(-100, "KG")    => "Valor inválido"
+ *   convertirMicrogramos(1000000, "XYZ") => "Código de unidad inválido"
+ */
+const convertirMicrogramos = (microgramos, codigoUnidad) => {
+  // Validación temprana: Si microgramos es negativo, retorna un mensaje de error.
+  if (microgramos < 0) {
+    return "Valor inválido"
+  }
+  // Validación temprana: Si el código de unidad no existe en el objeto, retorna un mensaje de error.
+  if (!unidades[codigoUnidad]) {
+    return "Código de unidad inválido"
+  }
+  // Realiza la conversión dividiendo por el factor correspondiente.
+  const valorConvertido = microgramos / unidades[codigoUnidad].factor
+  // Formatea el resultado a dos decimales.
+  const resultadoFormateado = valorConvertido.toFixed(2)
+  // Retorna el valor formateado junto con el símbolo de la unidad.
+  return `${resultadoFormateado}${unidades[codigoUnidad].simbolo}`
+}
+
+// Ejemplos de uso:
+// (Estos ejemplos se pueden comentar o eliminar en la entrega final)
+const ejemplo1 = convertirMicrogramos(1500000, "G")    // "1.50g"
+const ejemplo2 = convertirMicrogramos(500000, "MG")     // "500.00mg"
+const ejemplo3 = convertirMicrogramos(-100, "KG")       // "Valor inválido"
+const ejemplo4 = convertirMicrogramos(1000000, "XYZ")    // "Código de unidad inválido"
+
+// Puedes imprimir los ejemplos para probar la función en la consola
+console.log(ejemplo1)
+console.log(ejemplo2)
+console.log(ejemplo3)
+console.log(ejemplo4)

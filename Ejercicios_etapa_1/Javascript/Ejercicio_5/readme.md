@@ -1,4 +1,4 @@
-# Ejercicio 4 (JavaScript)
+# Ejercicio 5 (JavaScript)
 
 Para probar este ejercicio, asegúrate de estar en la carpeta Ejercicio_4.
 
