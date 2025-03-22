@@ -1,3 +1,14 @@
+
+---@class BustedAssert
+---@field are table
+---@field is table
+---@field same fun(actual: any, expected: any)
+---@field equal fun(actual: any, expected: any)
+---@field truthy fun(value: any)
+---@diagnostic disable-next-line: assign-type-mismatch
+---@type BustedAssert
+assert = assert
+
 package.path = "./?.lua;" .. package.path
 
 local convercionMonedas = require("convercionMonedas")
