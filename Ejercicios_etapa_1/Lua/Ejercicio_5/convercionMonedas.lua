@@ -31,40 +31,42 @@ Ejemplos:
 
 -- Tabla que mapea códigos de moneda a sus respectivos símbolos.
 local monedas = {
-    USD = "$",
-    EUR = "€",
-    GBP = "£"
-  }
-  
-  --- Convierte una cantidad en centavos a un formato monetario.
-  -- @param centavos (number): Número entero que representa la cantidad en centavos.
-  -- @param codigoMoneda (string): Código de la moneda (por ejemplo, "USD", "EUR", "GBP").
-  -- @return (string): Valor formateado en la moneda correspondiente o un mensaje de error si los parámetros no son válidos.
-  local function convertirCentsAMoneda(centavos, codigoMoneda)
-    -- Validación temprana: centavos negativo
-    if centavos < 0 then
-      return "Valor invalido"
-    end
-  
-    -- Validación temprana: código de moneda inexistente
-    if monedas[codigoMoneda] == nil then
-      return "Codigo de moneda invalido"
-    end
-  
-    -- Conversión: divide centavos entre 100 y formatea el resultado a dos decimales.
-    local resultado = centavos / 100
-    local resultadoFormateado = string.format("%.2f", resultado)
-  
-    -- Retorna el símbolo correspondiente concatenado con el resultado formateado.
-    return monedas[codigoMoneda] .. resultadoFormateado
-  end
-  
-  -- Ejemplos de uso:
-  local conversion = convertirCentsAMoneda(-4000, "GBP")
-  local conversionDos = convertirCentsAMoneda(1000, "EURR")
-  local conversionTres = convertirCentsAMoneda(2000, "USD")
-  
-  print(conversion)       -- "Valor invalido"
-  print(conversionDos)    -- "Codigo de moneda invalido"
-  print(conversionTres)   -- "$20.00"
-  
+  USD = "$",
+  EUR = "€",
+  GBP = "£"
+}
+
+--- Convierte una cantidad en centavos a un formato monetario.
+-- @param centavos (number): Número entero que representa la cantidad en centavos.
+-- @param codigoMoneda (string): Código de la moneda (por ejemplo, "USD", "EUR", "GBP").
+-- @return (string): Valor formateado en la moneda correspondiente o un mensaje de error si los parámetros no son válidos.
+local function convertirCentsAMoneda(centavos, codigoMoneda)
+-- Validación temprana: centavos negativo
+if centavos < 0 then
+  return "Valor invalido"
+end
+
+-- Validación temprana: código de moneda inexistente
+if monedas[codigoMoneda] == nil then
+  return "Codigo de moneda invalido"
+end
+
+-- Conversión: divide centavos entre 100 y formatea el resultado a dos decimales.
+local resultado = centavos / 100
+local resultadoFormateado = string.format("%.2f", resultado)
+
+-- Retorna el símbolo correspondiente concatenado con el resultado formateado.
+return monedas[codigoMoneda] .. resultadoFormateado
+end
+
+-- Ejemplos de uso:
+local conversion = convertirCentsAMoneda(-4000, "GBP")
+local conversionDos = convertirCentsAMoneda(1000, "EURR")
+local conversionTres = convertirCentsAMoneda(2000, "USD")
+
+print(conversion)       -- "Valor invalido"
+print(conversionDos)    -- "Codigo de moneda invalido"
+print(conversionTres)   -- "$20.00"
+
+-- Para que funcione la prueba:
+return { convertirCentsAMoneda = convertirCentsAMoneda }
