@@ -11,7 +11,9 @@
     "prueba_3": "vitest Ejercicios_etapa_1/Javascript/Ejercicio_3/prueba.test.js",
     "prueba_4": "vitest Ejercicios_etapa_1/Javascript/Ejercicio_4/prueba.test.js",
     "prueba_5": "vitest Ejercicios_etapa_1/Javascript/Ejercicio_5/prueba.test.js",
-    "prueba_6": "vitest Ejercicios_etapa_1/Javascript/Ejercicio_6/prueba.test.js"
+    "prueba_6": "vitest Ejercicios_etapa_1/Javascript/Ejercicio_6/prueba.test.js",
+    "prueba_7": "vitest Ejercicios_etapa_1/Javascript/Ejercicio_7/prueba.test.js"
+
   },
   "author": "Orion Holmes",
   "license": "ISC",

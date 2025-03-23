@@ -22,7 +22,7 @@
 export const doble = numero => {} // Reemplazar por la implementación correcta
 
 
-/**
+/**https://prod.liveshare.vsengsaas.visualstudio.com/join?D0EA1C2E283123A72FB0F74F97D0F1D3F501
  * TODO: Implementar la función para que reciba un número y retorne el triple.
  * @param {number} numero - El número que se va a triplicar
  * @returns {number} El triple del número
