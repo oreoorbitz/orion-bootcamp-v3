@@ -1,0 +1,231 @@
+--[[
+EJERCICIO 6: CREAR Y MANIPULAR ARRAYS EN LUA
+
+Instrucciones:
+  1. Crea una función llamada "accederArray" que reciba dos parámetros:
+       - arr: una tabla (array) de donde se extraerá el elemento.
+       - index: el índice del elemento que se desea obtener.
+     La función debe retornar el elemento en la posición indicada.
+  
+  2. Crea una función llamada "manipulaArray" que realice lo siguiente:
+       a. Declara una tabla vacía llamada "myArray".
+       b. Agrega tres elementos a la tabla usando table.insert.
+       c. Retorna el elemento en la posición 2 (el segundo elemento) de la tabla.
+  
+  3. Crea una función llamada "sumarElementos" que sume todos los elementos de una tabla de números usando un bucle for.
+       Si alguno de los elementos no es un número, retorna "Datos inválidos".
+  
+  4. Crea una función llamada "generarRango" que genere una tabla con números desde 0 hasta n (incluyendo n).
+       Si n no es un número, retorna "Datos inválidos".
+  
+  5. Crea una función llamada "organizarPorTipo" que reciba una tabla y devuelva una tabla con dos campos:
+       - strings: una tabla con todos los elementos de tipo string.
+       - numbers: una tabla con todos los elementos de tipo number.
+  
+  6. Crea funciones que simulen los métodos de alto orden map, filter y reduce:
+       a. "miMapa": recibe una tabla y una función; aplica la función a cada elemento y retorna una nueva tabla.
+       b. "miFilter": recibe una tabla y una función predicado; retorna una nueva tabla con los elementos que cumplen la condición.
+       c. "miReduce": recibe una tabla, una función reductora y un valor inicial; acumula un resultado a lo largo de los elementos y lo retorna.
+  
+  Nota: Recuerda que en Lua las tablas son 1-indexadas y que no existen métodos incorporados para map, filter o reduce, por lo que deberás implementarlos utilizando bucles.
+]]--
+
+--- Devuelve un elemento en la tabla según el índice.
+-- @param arr table: La tabla de donde se extraerá el elemento.
+-- @param index number: El índice del elemento a obtener.
+-- @return *: El elemento en la posición indicada.
+function accederArray(arr, index)
+    return arr[index]
+end
+
+local resultadoDeAccederArray = accederArray({'a', 'b', 'c'}, 2)
+print("accederArray:", resultadoDeAccederArray)  -- Espera "b" (ya que Lua es 1-indexado)
+
+--- Manipula una tabla creando una nueva tabla, agregando tres elementos y retornando el segundo elemento.
+-- @param arr table: Una tabla base (no se usará; se creará una tabla nueva).
+-- @param primerElemento any: Primer elemento a agregar.
+-- @param segundoElemento any: Segundo elemento a agregar.
+-- @param tercerElemento any: Tercer elemento a agregar.
+-- @return any: El elemento en la posición 2 (segundo elemento) de la tabla resultante.
+function manipulaArray(arr, primerElemento, segundoElemento, tercerElemento)
+    local myArray = {}  -- Declara una tabla vacía.
+    table.insert(myArray, primerElemento)
+    table.insert(myArray, segundoElemento)
+    table.insert(myArray, tercerElemento)
+    return myArray[2]  -- Retorna el segundo elemento.
+end
+
+local resultadoDeManipularArray = manipulaArray({}, 1, 2, 3)
+print("manipulaArray:", resultadoDeManipularArray)  -- Espera 2
+
+--- Suma los elementos de una tabla de números usando un bucle for.
+-- @param numeros table: Una tabla de números.
+-- @return number|string: La suma de los elementos o "Datos inválidos" si algún elemento no es un número.
+function sumarElementos(numeros)
+    local suma = 0
+    for i = 1, #numeros do
+        if type(numeros[i]) ~= "number" then
+            return "Datos inválidos"
+        end
+        suma = suma + numeros[i]
+    end
+    return suma
+end
+
+local resultadoSumarElementos = sumarElementos({200, 200, 20})
+print("sumarElementos:", resultadoSumarElementos)  -- Espera 420
+
+--- Genera una tabla con números desde 0 hasta n (incluyendo n).
+-- @param n number: El número hasta el cual se genera el rango.
+-- @return table|string: Una tabla con números desde 0 hasta n o "Datos inválidos" si n no es un número.
+function generarRango(n)
+    if type(n) ~= "number" then
+        return "Datos inválidos"
+    end
+    local rango = {}
+    for i = 0, n do
+        table.insert(rango, i)
+    end
+    return rango
+end
+
+local resultadoDeGenerarRango = generarRango(10)
+print("generarRango:", table.concat(resultadoDeGenerarRango, ", "))  -- Espera "0, 1, 2, ..., 10"
+
+--- Toma una tabla y devuelve una tabla con dos campos: 'strings' y 'numbers'.
+-- Cada campo contendrá una tabla con los elementos originales según su tipo.
+-- @param arr table: La tabla de entrada.
+-- @return table: Una tabla con las propiedades 'strings' y 'numbers'.
+function organizarPorTipo(arr)
+    local resultado = { strings = {}, numbers = {} }
+    for i = 1, #arr do
+        local tipo = type(arr[i])
+        if tipo == "string" then
+            table.insert(resultado.strings, arr[i])
+        elseif tipo == "number" then
+            table.insert(resultado.numbers, arr[i])
+        end
+    end
+    return resultado
+end
+
+local resultadoDeOrganizarPorTipo = organizarPorTipo({1, "hola", 3, "mundo"})
+-- Para imprimir el resultado, convertimos las tablas a cadenas.
+local function tablaAString(t)
+    local s = "{ "
+    for i, v in ipairs(t) do
+        s = s .. tostring(v) .. " "
+    end
+    return s .. "}"
+end
+print("organizarPorTipo:", "strings: " .. tablaAString(resultadoDeOrganizarPorTipo.strings) .. ", numbers: " .. tablaAString(resultadoDeOrganizarPorTipo.numbers))
+
+--- miMapa
+-- Esta función recibe una tabla y una función; aplica la función a cada elemento de la tabla y retorna una nueva tabla con los resultados.
+-- @param arreglo table: La tabla de entrada.
+-- @param fn function: La función que se aplicará a cada elemento.
+-- @return table: Una nueva tabla con los elementos transformados.
+function miMapa(arreglo, fn)
+    local nuevoArray = {}
+    for i = 1, #arreglo do
+        table.insert(nuevoArray, fn(arreglo[i]))
+    end
+    return nuevoArray
+end
+
+local doble = function(x) return x * 2 end
+local resultadoDeMapiarDoble = miMapa({1, 2, 3, 4}, doble)
+print("miMapa:", table.concat(resultadoDeMapiarDoble, ", "))  -- Espera "2, 4, 6, 8"
+
+--- miFilter
+-- Esta función recibe una tabla y una función predicado; aplica la función a cada elemento de la tabla y retorna una nueva tabla
+-- con aquellos elementos que cumplen la condición.
+-- @param arreglo table: La tabla de entrada.
+-- @param fn function: La función predicado que determina si un elemento debe incluirse.
+-- @return table: Una nueva tabla con los elementos que cumplen la condición.
+function miFilter(arreglo, fn)
+    local filtrado = {}
+    for i = 1, #arreglo do
+        if fn(arreglo[i]) then
+            table.insert(filtrado, arreglo[i])
+        end
+    end
+    return filtrado
+end
+
+local esPar = function(num) return num % 2 == 0 end
+local resultadoFiltrado = miFilter({1, 2, 3, 4, 5, 6}, esPar)
+print("miFilter:", table.concat(resultadoFiltrado, ", "))  -- Espera "2, 4, 6"
+
+--- miReduce
+-- Esta función recibe una tabla, una función reductora y un valor inicial. Aplica la función reductora acumulando un resultado
+-- a lo largo de los elementos de la tabla y retorna el resultado final.
+-- @param arreglo table: La tabla de entrada.
+-- @param fn function: La función reductora que recibe dos argumentos: el acumulador y el elemento actual.
+-- @param valorInicial any: El valor inicial del acumulador.
+-- @return any: El resultado acumulado tras aplicar la función reductora a todos los elementos.
+function miReduce(arreglo, fn, valorInicial)
+    local acumulador = valorInicial
+    for i = 1, #arreglo do
+        acumulador = fn(acumulador, arreglo[i])
+    end
+    return acumulador
+end
+
+local sumar = function(acumulador, valor) return acumulador + valor end
+local resultadoReducir = miReduce({1, 2, 3, 4}, sumar, 0)
+print("miReduce:", resultadoReducir)  -- Espera 10
+
+--- usaMap
+-- Esta función simula el método .map utilizando un bucle for para aplicar la función a cada elemento de la tabla.
+-- @param arreglo table: La tabla de entrada.
+-- @param fn function: La función que se aplicará a cada elemento.
+-- @return table: Una nueva tabla con los elementos transformados.
+function usaMap(arreglo, fn)
+    local nuevoArray = {}
+    for i = 1, #arreglo do
+        nuevoArray[i] = fn(arreglo[i])
+    end
+    return nuevoArray
+end
+
+local multiplicarPorTres = function(x) return x * 3 end
+local resultadoMap = usaMap({1, 2, 3, 4}, multiplicarPorTres)
+print("usaMap:", table.concat(resultadoMap, ", "))  -- Espera "3, 6, 9, 12"
+
+--- usaFilter
+-- Esta función simula el método .filter utilizando un bucle for para recorrer la tabla y filtrar los elementos.
+-- @param arreglo table: La tabla de entrada.
+-- @param fn function: La función predicado que determina si un elemento debe incluirse.
+-- @return table: Una nueva tabla con los elementos que cumplen la condición.
+function usaFilter(arreglo, fn)
+    local nuevoArray = {}
+    for i = 1, #arreglo do
+        if fn(arreglo[i]) then
+            table.insert(nuevoArray, arreglo[i])
+        end
+    end
+    return nuevoArray
+end
+
+local esImparejo = function(num) return num % 2 ~= 0 end
+local resultadoFilter = usaFilter({1, 2, 3, 4, 5, 6}, esImparejo)
+print("usaFilter:", table.concat(resultadoFilter, ", "))  -- Espera "1, 3, 5"
+
+--- usaReduce
+-- Esta función simula el método .reduce utilizando un bucle for para acumular el resultado de aplicar una función reductora.
+-- @param arreglo table: La tabla de entrada.
+-- @param fn function: La función reductora que recibe dos argumentos: el acumulador y el elemento actual.
+-- @param valorInicial any: El valor inicial del acumulador.
+-- @return any: El resultado acumulado tras aplicar la función reductora a todos los elementos.
+function usaReduce(arreglo, fn, valorInicial)
+    local acumulador = valorInicial
+    for i = 1, #arreglo do
+        acumulador = fn(acumulador, arreglo[i])
+    end
+    return acumulador
+end
+
+local multiplicar = function(ac, val) return ac * val end
+local resultadoReduce = usaReduce({1, 2, 3, 4}, multiplicar, 1)
+print("usaReduce:", resultadoReduce)  -- Espera 24

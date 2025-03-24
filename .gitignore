@@ -1,19 +1,15 @@
+# Node.js
 node_modules
 package-lock.json
-# Archivos y carpetas de compilación de Rust
-/target/
-**/*.rs.bk
 
-# Archivos temporales o de depuración
-*.log
-*.tmp
+# Rust build files and logs
+/target/           # All Rust build output goes here
+**/*.rs.bk         # Backup files
+**/*.log           # Any log files
+**/*.tmp           # Temp files (if you generate any)
+*.profraw          # Rust coverage profile raw output
+*.profdata         # Rust coverage processed output
 
-# Archivos de lock o dependencias si no se desean trackear
-Cargo.lock
-
-# Archivos de IDE (opcional)
-.idea/
-.vscode/
-
-# Archivos de sistema
-.DS_Store
+# If you're using cargo-expand or cargo-insta:
+.expand/
+insta/

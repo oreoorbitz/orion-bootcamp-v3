@@ -1,67 +1,113 @@
-# Lectura: Conversión de Centavos a Formato Monetario en Lua
+# Lectura: Comparación de Conceptos en Lua y JavaScript
 
-En este ejercicio, implementamos una función en Lua que convierte una cantidad en centavos a un formato monetario. Aunque comparte la misma lógica que la versión en JavaScript, existen diferencias específicas en la sintaxis y ciertas funciones incorporadas. A continuación, se destacan las diferencias clave sin repetir los conceptos generales ya abordados en la Lectura 4.
+En este documento se explican algunas de las diferencias clave entre Lua y JavaScript en cuanto a:
 
----
+- Truthyness y Falsyness
+- Operadores de comparación
+- Estructuras condicionales (if statements)
 
-## Diferencias Específicas para la Conversión Monetaria
-
-### 1. Formateo de Números
-- **JavaScript:**  
-  - Se utiliza el método `toFixed(2)` para formatear un número a dos decimales.
-  - Ejemplo:
-    ```js
-    const resultadoFormateado = (centavos / 100).toFixed(2)
-    ```
-- **Lua:**  
-  - Se usa `string.format("%.2f", valor)` para lograr el mismo efecto.
-  - Ejemplo:
-    ```lua
-    local resultadoFormateado = string.format("%.2f", resultado)
-    ```
-
-### 2. Concatenación de Cadenas
-- **JavaScript:**  
-  - Se pueden usar template literals o el operador `+` para concatenar strings.
-  - Ejemplo:
-    ```js
-    return `${monedas[codigoMoneda]}${resultadoFormateado}`
-    ```
-- **Lua:**  
-  - La concatenación se realiza con el operador `..`.
-  - Ejemplo:
-    ```lua
-    return monedas[codigoMoneda] .. resultadoFormateado
-    ```
-
-### 3. Declaración de Funciones y Tablas
-- **JavaScript:**  
-  - Se declara la función mediante funciones flecha o declaraciones tradicionales.
-  - Los objetos se definen con la sintaxis de llaves.
-- **Lua:**  
-  - Se usa `local function` para definir funciones.
-  - Las tablas se definen con una sintaxis similar a los objetos, pero sin comas obligatorias al final de cada par clave-valor.
-  - Ejemplo de tabla:
-    ```lua
-    local monedas = {
-      USD = "$",
-      EUR = "€",
-      GBP = "£"
-    }
-    ```
+Estos conceptos son esenciales para comprender cómo se evalúan las condiciones y cómo se manejan los valores en ambos lenguajes.
 
 ---
 
-## Resumen
+## 1. Truthyness y Falsyness
 
-- **Formateo de Números:**  
-  Lua utiliza `string.format` en lugar de `toFixed` para dar formato a los números.
+### JavaScript
+- Falsy Values:  
+  En JavaScript, los siguientes valores se consideran falsy:
+    - false
+    - 0
+    - "" (cadena vacía)
+    - null
+    - undefined
+    - NaN
   
-- **Concatenación:**  
-  En Lua se usa `..` para unir cadenas, en contraste con la interpolación o el operador `+` en JavaScript.
+  Cualquier otro valor se evalúa como truthy.
 
-- **Sintaxis de Funciones y Tablas:**  
-  Lua emplea `local function` y define tablas con una sintaxis ligeramente distinta a los objetos de JavaScript.
+- Ejemplo:
+    if (0) {
+      console.log("Esto NO se ejecuta");
+    } else {
+      console.log("0 es falsy en JavaScript");
+    }
 
-Estas diferencias resaltan cómo la misma lógica puede implementarse en distintos lenguajes, adaptándose a las particularidades sintácticas de cada uno. ¡Sigue practicando para dominar estas variaciones y fortalecer tu capacidad de trasladar conceptos entre lenguajes!
+### Lua
+- Falsy Values:  
+  En Lua, solo dos valores se consideran falsy:
+    - false
+    - nil
+  
+  Nota: Incluso 0 y "" son truthy en Lua.
 
+- Ejemplo:
+    if 0 then
+      print("0 es truthy en Lua")
+    else
+      print("Esto no se ejecuta")
+    end
+
+---
+
+## 2. Operadores de Comparación
+
+### JavaScript
+- Operadores:  
+  - "==" realiza comparación con coerción de tipos.
+  - "===" realiza comparación estricta sin coerción, lo cual es preferido para evitar resultados inesperados.
+
+- Ejemplo:
+    console.log(0 == false);  // true, debido a la coerción
+    console.log(0 === false); // false, sin coerción
+
+### Lua
+- Operador Único:  
+  Lua utiliza el operador "==" para todas las comparaciones y no realiza coerción de tipos.  
+  Esto significa que la comparación es más predecible.
+
+- Ejemplo:
+    print(0 == false)  -- false, ya que 0 y false son de tipos diferentes
+    print(nil == nil)  -- true
+
+---
+
+## 3. Estructuras Condicionales (if Statements)
+
+### JavaScript
+- Sintaxis:  
+  Las condiciones en JavaScript se encierran entre paréntesis y el bloque se delimita con llaves.
+
+- Ejemplo:
+    if (variable === 10) {
+      console.log("La variable es 10");
+    } else {
+      console.log("La variable no es 10");
+    }
+
+### Lua
+- Sintaxis:  
+  En Lua, las condiciones no requieren paréntesis y el bloque condicional se cierra con "end".
+
+- Ejemplo:
+    if variable == 10 then
+      print("La variable es 10")
+    else
+      print("La variable no es 10")
+    end
+
+---
+
+## Conclusión
+
+- Truthyness y Falsyness:
+    - JavaScript tiene múltiples valores falsy, lo que puede llevar a evaluaciones inesperadas.
+    - En Lua, solo false y nil son falsy, simplificando la lógica condicional.
+
+- Operadores de Comparación:
+    - JavaScript diferencia entre "==" y "===" debido a la coerción de tipos.
+    - Lua utiliza un único operador "==" sin coerción, haciendo las comparaciones más directas.
+
+- If Statements:
+    - JavaScript requiere paréntesis y llaves.
+    - Lua utiliza "then" y "end" para delimitar bloques condicionales sin necesidad de paréntesis.
+
+Comprender estas diferencias te ayudará a escribir código más predecible y seguro en ambos lenguajes, adaptando tu lógica según sus características específicas.
