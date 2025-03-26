@@ -41,22 +41,17 @@ local monedas = {
 -- @param codigoMoneda (string): Código de la moneda (por ejemplo, "USD", "EUR", "GBP").
 -- @return (string): Valor formateado en la moneda correspondiente o un mensaje de error si los parámetros no son válidos.
 local function convertirCentsAMoneda(centavos, codigoMoneda)
--- Validación temprana: centavos negativo
-if centavos < 0 then
-  return "Valor invalido"
-end
+-- TODO Validación temprana: centavos negativo
 
--- Validación temprana: código de moneda inexistente
-if monedas[codigoMoneda] == nil then
-  return "Codigo de moneda invalido"
-end
 
--- Conversión: divide centavos entre 100 y formatea el resultado a dos decimales.
-local resultado = centavos / 100
-local resultadoFormateado = string.format("%.2f", resultado)
+-- TODO: Validación temprana: código de moneda inexistente
+
+
+-- TODO: Conversión: divide centavos entre 100 y formatea el resultado a dos decimales.
+
 
 -- Retorna el símbolo correspondiente concatenado con el resultado formateado.
-return monedas[codigoMoneda] .. resultadoFormateado
+return 
 end
 
 -- Ejemplos de uso:
