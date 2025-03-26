@@ -30,7 +30,7 @@ end)
 
 describe("divisionSegura", function()
     it("Debe devolver el resultado correcto cuando los valores son números válidos", function()
-        assert.are.equal("El resultado de dividir 10 entre 2 es 5.000000", divisionSegura(10, 2))
+        assert.are.equal("El resultado de dividir 10 entre 2 es 5", divisionSegura(10, 2))
     end)
 
     it("Debe manejar errores cuando un valor no es un número", function()

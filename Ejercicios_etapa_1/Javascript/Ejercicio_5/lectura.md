@@ -18,7 +18,7 @@ Este documento repasa algunos conceptos clave que te ayudarán a entender y reso
 ### 3. Objetos en JavaScript
 - **Qué son:** Estructuras que agrupan datos en pares de clave-valor.
 - **Uso en el desafío:** El objeto `monedas` mapea códigos de moneda (como `"USD"`, `"EUR"`, `"GBP"`) a sus respectivos símbolos. Es importante entender cómo acceder a sus propiedades.
-  
+
 ### 4. Notación de Punto y Notación Literal para Acceder a Valores de Objetos
 - **Notación de Punto:** Permite acceder a una propiedad de un objeto utilizando un punto, por ejemplo, `monedas.USD`.
 - **Notación Literal (o de Corchetes):** Se usa cuando la clave es dinámica o no es un identificador válido, por ejemplo, `monedas[codigoMoneda]`.
@@ -70,4 +70,3 @@ Este desafío integra tanto nuevos conceptos como aquellos ya aprendidos. Es fun
 - Apliques de forma correcta los conceptos previamente cubiertos, como la interpolación de cadenas y la estructura de las funciones en JavaScript.
 
 Estos conocimientos te permitirán no solo resolver este reto, sino también afrontar desafíos más complejos en el futuro. ¡Buena suerte y sigue practicando!
-

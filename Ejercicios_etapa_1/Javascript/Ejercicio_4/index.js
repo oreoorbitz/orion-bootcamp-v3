@@ -22,10 +22,10 @@
  * @returns {string} Un mensaje indicando el tipo esperado y si la variable coincide
  */
 export const checarTipo = (variable, tipoEsperado) => {
-  return '' // Reemplazar por la implementación correcta
+  return (`La variable es ${tipoEsperado}: ${typeof(variable) === tipoEsperado}`); // Reemplazar por la implementación correcta
 }
 
-const r = checarTipo(21, "number");
+const r = checarTipo(23, "number");
 
 console.log(checarTipo(21, "number")); //true
 console.log(checarTipo("String", "number")); //false
@@ -62,21 +62,45 @@ console.log(checarTipo("21", "string"));//true
  * @returns {string} Un mensaje indicando si el valor es falsy, booleano false, booleano true, o truthy.
  */
 export const falsosoVerdadoso = (elemento) => {
-   // Implementar aqui
-};
+
+  const subfix = 'El elemento es'
+
+  console.log(subfix, elemento)
+
+  if (elemento === false) return (`${subfix} el booleano ${elemento}`)
+
+  if (elemento === true) return (`${subfix} el booleano ${elemento}`)
+
+  if (elemento === 0) return (`${subfix} falsy: ${elemento === 0}`)
+
+  if (elemento === "") return (`${subfix} falsy: ${elemento === ""}`)
+
+  if (elemento === null) return (`${subfix} falsy: ${elemento === null}`)
+
+  if (elemento === undefined) return (`${subfix} falsy: ${elemento === undefined}`)
+
+  if (elemento == []) return (`${subfix} truthy: ${elemento == []}`)
+
+  if (typeof(elemento) == 'object') return (`${subfix} truthy: ${typeof(elemento) == 'object'}`)
+
+  if ((typeof elemento !== "string") && isNaN(elemento)) return (`${subfix} falsy: ${isNaN(elemento)}`)
+
+   return (`${subfix} truthy: true`)
+}
 
 // Ejemplos de ejecución en la consola
-console.log(falsosoVerdadoso(false));  // "El elemento es el booleano false"
-console.log(falsosoVerdadoso(true));   // "El elemento es el booleano true"
-console.log(falsosoVerdadoso(0));      // "El elemento es falsy: true"
-console.log(falsosoVerdadoso(""));     // "El elemento es falsy: true"
-console.log(falsosoVerdadoso(null));   // "El elemento es falsy: true"
-console.log(falsosoVerdadoso(undefined)); // "El elemento es falsy: true"
-console.log(falsosoVerdadoso(NaN));    // "El elemento es falsy: true"
-console.log(falsosoVerdadoso(42));     // "El elemento es truthy: true"
-console.log(falsosoVerdadoso("Hola")); // "El elemento es truthy: true"
-console.log(falsosoVerdadoso([]));     // "El elemento es truthy: true"
-console.log(falsosoVerdadoso({}));     // "El elemento es truthy: true"
+console.log('1',falsosoVerdadoso(false));  // "El elemento es el booleano false"
+console.log('2',falsosoVerdadoso(true));   // "El elemento es el booleano true"
+console.log('3',falsosoVerdadoso(0));      // "El elemento es falsy: true"
+console.log('4',falsosoVerdadoso(""));     // "El elemento es falsy: true"
+console.log('5',falsosoVerdadoso(null));   // "El elemento es falsy: true"
+console.log('6',falsosoVerdadoso(undefined)); // "El elemento es falsy: true"
+console.log('7',falsosoVerdadoso(NaN));    // "El elemento es falsy: true"
+console.log('8',falsosoVerdadoso(42));     // "El elemento es truthy: true"
+console.log('9',falsosoVerdadoso("Hola")); // "El elemento es truthy: true"
+console.log('10',falsosoVerdadoso([]));     // "El elemento es truthy: true"
+console.log('11',falsosoVerdadoso({}));     // "El elemento es truthy: true"
+
 
 /**
  * EJERCICIO 4: DIVISIÓN SEGURA CON DETECCIÓN DE NaN Y EARLY RETURN
@@ -89,7 +113,7 @@ console.log(falsosoVerdadoso({}));     // "El elemento es truthy: true"
  *      - Si **cualquiera** de los dos valores **no es un número**, retorna `"Error: Uno de los valores no es un número"`.
  *      - Si **el divisor es 0**, retorna `"Error: No se puede dividir por 0"`.
  *      - Si **cualquier valor es NaN**, retorna `"Error: Uno de los valores es NaN"`.
- *      - De lo contrario, realiza la división y retorna el resultado como `string` interpolado:  
+ *      - De lo contrario, realiza la división y retorna el resultado como `string` interpolado:
  *        `"El resultado de dividir <dividendo> entre <divisor> es <resultado>"`.
  *   3. Utiliza **early return** para evitar cálculos innecesarios.
  *   4. Usa `typeof` para validar que los valores son números.
@@ -106,7 +130,19 @@ console.log(falsosoVerdadoso({}));     // "El elemento es truthy: true"
  * @returns {string} Mensaje indicando el resultado de la operación o un error.
  */
 export const divisionSegura = (dividendo, divisor) => {
-   // Implementar aqui
+
+  if (typeof(dividendo) !== 'number') return ('Error: Uno de los valores no es un número')  // Implementar aqui
+
+  if (typeof(divisor) !== 'number') return ('Error: Uno de los valores no es un número')
+
+  if (divisor == 0) return ('Error: No se puede dividir por 0')
+
+  if (isNaN(divisor)) return ('Error: Uno de los valores es NaN')
+
+  if (isNaN(dividendo)) return ('Error: Uno de los valores es NaN')
+
+  return (`El resultado de dividir ${dividendo} entre ${divisor} es ${dividendo/divisor}`)
+
 };
 
 // 📌 Ejemplos de ejecución en la consola
@@ -144,16 +180,34 @@ console.log(divisionSegura(50, undefined)); // "Error: Uno de los valores no es 
  * @returns {string} Mensaje indicando el estado del valor.
  */
 export const valorSeguro = (valor) => {
-  // Implementar aqui
+
+  const subt = 'El valor es'
+
+  if (valor === null) return (`${subt} null (ausencia intencional de datos)`)  // Implementar aqui
+
+  if (valor === undefined) return (`${subt} undefined (valor no asignado)`)
+
+  if (valor === 0) return (`${subt} falsy pero definido: ${valor}`)
+
+  if (valor === "") return (`${subt} falsy pero definido: ${valor}`)
+
+  if (valor === false) return (`${subt} falsy pero definido: ${valor}`)
+
+  if (typeof(valor) == 'object') return (`${subt} válido: ${valor}`)
+
+  if ((typeof valor !== "string") && isNaN(valor)) return (`${subt} falsy pero definido: ${valor}`)
+
+  return (`${subt} válido: ${valor}`)
+
 }
 
 // 📌 Ejemplos de ejecución en la consola
-console.log(valorSeguro(null));        // "El valor es null (ausencia intencional de datos)"
-console.log(valorSeguro(undefined));   // "El valor es undefined (valor no asignado)"
-console.log(valorSeguro(0));           // "El valor es falsy pero definido: 0"
-console.log(valorSeguro(""));          // "El valor es falsy pero definido: "
-console.log(valorSeguro(false));       // "El valor es falsy pero definido: false"
-console.log(valorSeguro(NaN));         // "El valor es falsy pero definido: NaN"
-console.log(valorSeguro("Hola"));      // "El valor es válido: Hola"
-console.log(valorSeguro(42));          // "El valor es válido: 42"
-console.log(valorSeguro({}));          // "El valor es válido: [object Object]"
+console.log('1',valorSeguro(null));        // "El valor es null (ausencia intencional de datos)"
+console.log('2',valorSeguro(undefined));   // "El valor es undefined (valor no asignado)"
+console.log('3',valorSeguro(0));           // "El valor es falsy pero definido: 0"
+console.log('4',valorSeguro(""));          // "El valor es falsy pero definido: "
+console.log('5',valorSeguro(false));       // "El valor es falsy pero definido: false"
+console.log('6',valorSeguro(NaN));         // "El valor es falsy pero definido: NaN"
+console.log('7',valorSeguro("Hola"));      // "El valor es válido: Hola"
+console.log('8',valorSeguro(42));          // "El valor es válido: 42"
+console.log('9',valorSeguro({}));          // "El valor es válido: [object Object]"

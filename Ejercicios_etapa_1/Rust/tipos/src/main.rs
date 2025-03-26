@@ -15,6 +15,7 @@ fn main() {
 /// @return String - Mensaje indicando si el número es entero o decimal.
 fn verificar_tipo(num: f64) -> String {
     
+    }
 }
 
 #[cfg(test)]
