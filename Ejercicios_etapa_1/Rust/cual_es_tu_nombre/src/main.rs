@@ -10,7 +10,7 @@ fn main() {
 /// # Ejemplo
 /// Para "Juan" y "Pérez", se espera "Hola Juan Pérez!"
 fn cual_es_tu_nombre(primer_nombre: &str, apellido: &str) -> String {
-    "".to_string() // TODO: Reemplazar con la implementación correcta
+    format!("Hola {} {}!",primer_nombre, apellido).to_string() // TODO: Reemplazar con la implementación correcta
 }
 
 #[cfg(test)]
