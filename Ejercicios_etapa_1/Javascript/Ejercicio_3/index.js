@@ -19,7 +19,9 @@
  * @param {number} numero - El número que se va a doblar
  * @returns {number} El doble del número
  */
-export const doble = numero => {} // Reemplazar por la implementación correcta
+export const doble = numero => {
+    return numero * 2
+} // Reemplazar por la implementación correcta
 
 
 /**
@@ -28,7 +30,7 @@ export const doble = numero => {} // Reemplazar por la implementación correcta
  * @returns {number} El triple del número
  */
 export function triple (numero) {
-    return 0 // Reemplazar por la implementación correcta
+    return numero * 3 // Reemplazar por la implementación correcta
 }
 
 /**
@@ -38,5 +40,5 @@ export function triple (numero) {
  * @returns {number} La suma del doble del número y el triple del número
  */
 export const  dobleMasTriple = function(numero){
-    return 0 // Reemplazar por la implementación correcta
+    return doble (numero) + triple (numero) // Reemplazar por la implementación correcta
 }
