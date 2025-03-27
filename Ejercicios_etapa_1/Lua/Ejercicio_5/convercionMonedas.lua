@@ -7,7 +7,7 @@ Instrucciones:
        - codigoMoneda: string con el código de la moneda (por ejemplo, "USD", "EUR", "GBP").
 
   2. Utiliza el siguiente objeto (tabla) "monedas" que mapea códigos de moneda a sus respectivos símbolos:
-  
+
        local monedas = {
          USD = "$",
          EUR = "€",
@@ -41,17 +41,21 @@ local monedas = {
 -- @param codigoMoneda (string): Código de la moneda (por ejemplo, "USD", "EUR", "GBP").
 -- @return (string): Valor formateado en la moneda correspondiente o un mensaje de error si los parámetros no son válidos.
 local function convertirCentsAMoneda(centavos, codigoMoneda)
--- TODO Validación temprana: centavos negativo
 
 
--- TODO: Validación temprana: código de moneda inexistente
+ if (centavos < 0) then
+  return "Valor invalido"
+ end
 
+if (monedas[codigoMoneda] == nil ) then
+  return "Codigo de moneda invalido"
+end
 
--- TODO: Conversión: divide centavos entre 100 y formatea el resultado a dos decimales.
+local valorEntero = tonumber(string.format("%.2f", centavos/100))
 
+local simboloMoneda = monedas[codigoMoneda]
 
--- Retorna el símbolo correspondiente concatenado con el resultado formateado.
-return 0
+return string.format("%s%.2f",simboloMoneda, valorEntero)
 end
 
 -- Ejemplos de uso:
