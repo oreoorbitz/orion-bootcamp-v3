@@ -15,7 +15,7 @@ fn main() {
 /// assert_eq!(edad_en_dias(10), 3650);
 /// ```
 fn edad_en_dias(anios: u32) -> u32 {
-    0 // TODO: Reemplazar con la implementación correcta
+    anios * 365 // TODO: Reemplazar con la implementación correcta
 }
 
 #[cfg(test)]
