@@ -2,6 +2,8 @@
 
 En este ejercicio se convierte una cantidad en centavos a un formato monetario. Aunque la lógica es similar, existen diferencias importantes en la forma en que se estructuran los datos y se realiza el formateo de cadenas entre Rust y JavaScript.
 
+- escrito por chatGPt, v1
+
 ---
 
 ## 1. Estructuras de Datos Tipo Objeto
@@ -11,6 +13,7 @@ En este ejercicio se convierte una cantidad en centavos a un formato monetario. 
   En JavaScript se utilizan objetos literales para mapear claves a valores. Por ejemplo, el objeto `monedas` contiene los símbolos de las monedas y se accede a ellos mediante `monedas[codigoMoneda]`.
 
   Ejemplo:
+ ```
     const monedas = {
       USD: "$",
       EUR: "€",
@@ -18,12 +21,14 @@ En este ejercicio se convierte una cantidad en centavos a un formato monetario. 
     };
     // Acceso:
     return monedas[codigoMoneda] + resultadoFormateado;
+```
 
 ### Rust:
 - **Mapeo con "match":**
   Rust no dispone de objetos literales dinámicos como JavaScript. En cambio, se utiliza una construcción `match` para mapear claves conocidas a sus valores correspondientes.
 
   Ejemplo:
+  ```
     let simbolo = match codigo_moneda {
         "USD" => "$",
         "EUR" => "€",
@@ -32,6 +37,7 @@ En este ejercicio se convierte una cantidad en centavos a un formato monetario. 
     };
     // Luego se concatena con el valor formateado:
     format!("{}{}", simbolo, valor_formateado);
+
 
 Esta diferencia muestra cómo Rust requiere definir de manera explícita cada caso posible, mientras que JavaScript permite estructuras más flexibles.
 
@@ -46,6 +52,7 @@ Esta diferencia muestra cómo Rust requiere definir de manera explícita cada ca
   Se pueden usar template literals o el operador `+` para combinar el símbolo de la moneda con el valor formateado.
 
   Ejemplo:
+  ```
     const resultadoFormateado = (centavos / 100).toFixed(2);
     return `${monedas[codigoMoneda]}${resultadoFormateado}`;
 
@@ -56,6 +63,7 @@ Esta diferencia muestra cómo Rust requiere definir de manera explícita cada ca
   Se utiliza `format!` para construir el string final que une el símbolo y el valor formateado.
 
   Ejemplo:
+  ```
     let valor_formateado = format!("{:.2}", valor);
     format!("{}{}", simbolo, valor_formateado);
 
@@ -63,7 +71,7 @@ Esta diferencia muestra cómo Rust requiere definir de manera explícita cada ca
 
 ## Conclusión
 
-Las diferencias principales entre la versión en Rust y en JavaScript para este ejercicio se centran en:
+Las diferencias principales entre en Rust y en JavaScript para este ejercicio se centran en:
 
 - **Estructuras de Datos:**  
   JavaScript usa objetos literales dinámicos, mientras que Rust utiliza un `match` para mapear claves a valores de manera explícita.

@@ -1,10 +1,10 @@
-# Ejercicio 5 (JavaScript)
+# Ejercicio 6 (JavaScript)
 
-Para probar este ejercicio, asegúrate de estar en la carpeta Ejercicio_5.
+Para probar este ejercicio, asegúrate de estar en la carpeta Ejercicio_6.
 
 ## Ejecutar la prueba
 
-```npm run prueba_5 ```
+```npm run prueba_6 ```
 
 Esto ejecutará las pruebas unitarias con Vitest y mostrará los resultados en la terminal.
 
