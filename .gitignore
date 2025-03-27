@@ -3,7 +3,7 @@ node_modules
 package-lock.json
 
 # Rust build files and logs
-/target/           # All Rust build output goes here
+target          # All Rust build output goes here
 **/*.rs.bk         # Backup files
 **/*.log           # Any log files
 **/*.tmp           # Temp files (if you generate any)
@@ -13,3 +13,4 @@ package-lock.json
 # If you're using cargo-expand or cargo-insta:
 .expand/
 insta/
+Ejercicios_etapa_1/Rust/edad_en_dias/target
