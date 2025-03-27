@@ -17,11 +17,11 @@ Fórmula: años * 365 (ignoramos años bisiestos)
 -- edadEnDias(10) --> 3650
 ]]
 local function edadEnDias(anios)
-    return 0 -- Reemplazar por la implementación correcta
+    return anios * 365 -- Reemplazar por la implementación correcta
 end
 
 -- Ejemplo de uso
-local resultado = edadEnDias(26)
+local resultado = edadEnDias(33)
 print(resultado)
 
 -- Para que la función pueda ser importada en el test, la devolvemos
