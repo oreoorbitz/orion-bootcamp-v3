@@ -51,7 +51,7 @@ local function convertirCentsAMoneda(centavos, codigoMoneda)
 
 
 -- Retorna el símbolo correspondiente concatenado con el resultado formateado.
-return 
+return 0
 end
 
 -- Ejemplos de uso:
