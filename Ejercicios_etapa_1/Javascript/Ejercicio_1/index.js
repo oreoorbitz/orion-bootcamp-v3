@@ -18,8 +18,9 @@
      * // Para 10 años, se espera 3650
      * edadEnDias(10) // 3650
      */
+    
     export function edadEnDias(anios) {
-        return 0 // Reemplazar por la implementación
+        return anios* 365 // Reemplazar por la implementación
     }
 
     const resultado = edadEnDias(26)
