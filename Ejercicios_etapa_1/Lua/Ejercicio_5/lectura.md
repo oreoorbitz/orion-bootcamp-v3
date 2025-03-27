@@ -1,67 +1,111 @@
 # Lectura: Conversión de Centavos a Formato Monetario en Lua
 
-En este ejercicio, implementamos una función en Lua que convierte una cantidad en centavos a un formato monetario. Aunque comparte la misma lógica que la versión en JavaScript, existen diferencias específicas en la sintaxis y ciertas funciones incorporadas. A continuación, se destacan las diferencias clave sin repetir los conceptos generales ya abordados en la Lectura 4.
+En este ejercicio, implementamos una función en Lua que convierte una cantidad en centavos a un formato monetario. Aunque comparte la misma lógica que la versión en JavaScript, existen diferencias específicas en la sintaxis y ciertas funciones incorporadas. A continuación, se destacan las diferencias clave.
+
+-- escrito por Orion, v1
 
 ---
 
-## Diferencias Específicas para la Conversión Monetaria
+## Objetos en JavaScript vs. Tablas en Lua
 
-### 1. Formateo de Números
-- **JavaScript:**  
-  - Se utiliza el método `toFixed(2)` para formatear un número a dos decimales.
-  - Ejemplo:
-    ```js
-    const resultadoFormateado = (centavos / 100).toFixed(2)
-    ```
-- **Lua:**  
-  - Se usa `string.format("%.2f", valor)` para lograr el mismo efecto.
-  - Ejemplo:
-    ```lua
-    local resultadoFormateado = string.format("%.2f", resultado)
-    ```
+### ¿Cuáles son las similitudes?
 
-### 2. Concatenación de Cadenas
-- **JavaScript:**  
-  - Se pueden usar template literals o el operador `+` para concatenar strings.
-  - Ejemplo:
-    ```js
-    return `${monedas[codigoMoneda]}${resultadoFormateado}`
-    ```
-- **Lua:**  
-  - La concatenación se realiza con el operador `..`.
-  - Ejemplo:
-    ```lua
-    return monedas[codigoMoneda] .. resultadoFormateado
-    ```
-
-### 3. Declaración de Funciones y Tablas
-- **JavaScript:**  
-  - Se declara la función mediante funciones flecha o declaraciones tradicionales.
-  - Los objetos se definen con la sintaxis de llaves.
-- **Lua:**  
-  - Se usa `local function` para definir funciones.
-  - Las tablas se definen con una sintaxis similar a los objetos, pero sin comas obligatorias al final de cada par clave-valor.
-  - Ejemplo de tabla:
-    ```lua
-    local monedas = {
-      USD = "$",
-      EUR = "€",
-      GBP = "£"
-    }
-    ```
+Ambos, objetos en JavaScript y tablas en Lua, se basan en el concepto de arrays asociativos (o diccionarios): colecciones de pares clave-valor. En JavaScript, los objetos se utilizan para almacenar valores bajo claves (generalmente strings o símbolos), mientras que en Lua, las tablas pueden funcionar tanto como arrays indexados numéricamente como arrays asociativos.
 
 ---
 
-## Resumen
+### Creación y Acceso en JavaScript
 
-- **Formateo de Números:**  
-  Lua utiliza `string.format` en lugar de `toFixed` para dar formato a los números.
-  
-- **Concatenación:**  
-  En Lua se usa `..` para unir cadenas, en contraste con la interpolación o el operador `+` en JavaScript.
+#### Creación con Literal de Objeto
 
-- **Sintaxis de Funciones y Tablas:**  
-  Lua emplea `local function` y define tablas con una sintaxis ligeramente distinta a los objetos de JavaScript.
+```javascript
+const obj = {
+  key1: 'valor1',
+  key2: 'valor2',
+  // También podemos usar índices numéricos
+  0: 'cero'
+};
+```
 
-Estas diferencias resaltan cómo la misma lógica puede implementarse en distintos lenguajes, adaptándose a las particularidades sintácticas de cada uno. ¡Sigue practicando para dominar estas variaciones y fortalecer tu capacidad de trasladar conceptos entre lenguajes!
+#### Acceso a la Información
 
+- Notación de Corchetes:
+
+```
+console.log(obj['key1']); // 'valor1'
+console.log(obj[0]);      // 'cero'
+```
+
+- Notación de Punto (cuando la clave es un identificador válido):
+
+```
+console.log(obj.key2);    // 'valor2'
+```
+
+##### Aceder cadenas de informacion
+
+```
+const multiObj = {
+  subObj = {
+    key1: 'valor1'
+  }
+}
+
+multiObj.subOj.key // 'valor1'
+```
+
+
+
+##### Usar numeros y characters especiales como llaves
+
+```
+ const product = {
+  quantity: 1,
+  properties: {
+    '_sale': true,
+    'has-no-returns': true
+  }
+ }
+```
+
+
+#### Metidos de objectos
+- Javascript empeso con pocos metidos para manipular objects
+- hasOwnProperty checa si existe la propertiedad en el objecto, segun la llave
+- toString fue hecho para funcionar con patrones de programacion viejas en javascript, como tal, no se usa mucho en programacion de javascript moderna.
+
+```
+ const product = {
+  quantity: 1,
+  properties: {
+    '_sale': true,
+    'has-no-returns': true
+  }
+ }
+
+ product.properties.hasOwnProperty('_sale') // true
+ console.log(product.properties.toString()); // "[object Object]"
+ ```
+
+ - Eventualmente, javascript agrego mas metidos para trabajar con Objects, pero fue decidido que usando notacion de punto para metidos de array seria confuso, asi que todo estos  nuevos metidos son estaticos.
+
+ ```
+
+ const product = {
+  quantity: 1,
+  properties: {
+    '_sale': true,
+    'has-no-returns': true
+  }
+ }
+ 
+ Object.entries(product )
+
+ /*
+ [
+  ["quantity", 1],
+  ["properties", { "_sale": true, "has-no-returns": true }]
+]
+*/
+
+ ```
