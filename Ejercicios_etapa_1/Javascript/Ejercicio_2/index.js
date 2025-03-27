@@ -17,7 +17,7 @@
  * cualEsTuNombre("Ana", "Gómez")
  */
 export const cualEsTuNombre = (primerNombre, apellido) => {
-    return '' // Reemplazar por la implementación correcta
+    return `Hola ${primerNombre} ${apellido}!` // Reemplazar por la implementación correcta
 }
 
-console.log(cualEsTuNombre("Pao", "Persona"));
+console.log(cualEsTuNombre("Pao", "Perez"));
