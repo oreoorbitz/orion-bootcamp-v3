@@ -45,3 +45,25 @@
 // - Retorna el string formado por el valor formateado y el símbolo correspondiente.
 
 // Escribe código aquí abajo
+
+const unidades = {
+  MG: { factor: 1000, simbolo: "mg" },
+  G:  { factor: 1e6, simbolo: "g" },
+  KG: { factor: 1e9, simbolo: "kg" }
+}
+
+ export const convertirMicrogramos = (microgramos, codigoUnidad) => {
+   if (microgramos < 0) return ('Valor invalido');
+
+   if (codigoUnidad == unidades.MG.simbolo) return (`${unidades.MG.simbolo}:${(microgramos/unidades.MG.factor).toFixed(2)}`);
+
+   if (codigoUnidad == unidades.G.simbolo) return (`${unidades.G.simbolo}${(microgramos/unidades.G.factor).toFixed(2)}`);
+
+   if (codigoUnidad == unidades.KG.simbolo) return (`${unidades.KG.simbolo}${(microgramos/unidades.KG.factor).toFixed(2)}`);
+
+   return ('Codigo de unidad invalido')
+ }
+
+ console.log(convertirMicrogramos(50000,"mg"))
+ console.log(convertirMicrogramos(-50000,"MG"))
+ console.log(convertirMicrogramos(50000,"kg"))

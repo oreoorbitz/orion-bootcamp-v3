@@ -6,9 +6,9 @@
 const monedas = {
     USD: "$",
     EUR: "€",
-    GBP: "£"
+    GBP: "£",
   }
-  
+ console.log(monedas.USD)
   /**
    * Convierte una cantidad en centavos a un formato monetario.
    *
@@ -23,9 +23,18 @@ const monedas = {
    *  convertirCentsAMoneda(200, "ABC") => "Codigo de moneda invalido"
    */
   export const convertirCentsAMoneda = (centavos, codigoMoneda) => {
-   return '' // Reemplazar por la implementación
+   if (centavos < 0) return ('Valor invalido');
+
+   if (!monedas[codigoMoneda]) return ("Codigo de moneda invalido")
+
+  const valorEntero = (centavos/100).toFixed(2);
+  const simboloMoneda = monedas[codigoMoneda]
+
+  return (`${simboloMoneda}${valorEntero}`)
   }
-  
+
+
+
   // Ejemplos de uso:
   const convercion = convertirCentsAMoneda(-4000, "GBP")
   const convercionDos = convertirCentsAMoneda(1000, "EURR")
