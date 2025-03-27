@@ -57,9 +57,9 @@ const unidades = {
 
    if (codigoUnidad == unidades.MG.simbolo) return (`${unidades.MG.simbolo}:${(microgramos/unidades.MG.factor).toFixed(2)}`);
 
-   if (codigoUnidad == unidades.G.simbolo) return (`${unidades.G.simbolo}${(microgramos/unidades.G.factor).toFixed(2)}`);
+   if (codigoUnidad == unidades.G.simbolo) return (`${unidades.G.simbolo}:${(microgramos/unidades.G.factor).toFixed(2)}`);
 
-   if (codigoUnidad == unidades.KG.simbolo) return (`${unidades.KG.simbolo}${(microgramos/unidades.KG.factor).toFixed(2)}`);
+   if (codigoUnidad == unidades.KG.simbolo) return (`${unidades.KG.simbolo}:${(microgramos/unidades.KG.factor).toFixed(2)}`);
 
    return ('Codigo de unidad invalido')
  }
