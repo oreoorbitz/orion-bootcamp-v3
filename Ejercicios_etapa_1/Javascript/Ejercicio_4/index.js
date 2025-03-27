@@ -1,3 +1,5 @@
+import { E } from "vitest/dist/chunks/reporters.d.CqBhtcTq.js";
+
 /**
  * EJERCICIO 4: USO DE typeof Y CONDICIONALES
  *
@@ -22,7 +24,12 @@
  * @returns {string} Un mensaje indicando el tipo esperado y si la variable coincide
  */
 export const checarTipo = (variable, tipoEsperado) => {
-  return '' // Reemplazar por la implementación correcta
+  const tipoVerdadero = typeof variable
+  if(typeof variable === tipoEsperado){
+    return 'El tipo esperado coincide'
+  }
+  
+  return  `La variable ${tipoEsperado} ${variable}` // Reemplazar por la implementación correcta
 }
 
 const r = checarTipo(21, "number");
@@ -62,7 +69,6 @@ console.log(checarTipo("21", "string"));//true
  * @returns {string} Un mensaje indicando si el valor es falsy, booleano false, booleano true, o truthy.
  */
 export const falsosoVerdadoso = (elemento) => {
-   // Implementar aqui
 };
 
 // Ejemplos de ejecución en la consola
