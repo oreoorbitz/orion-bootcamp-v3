@@ -20,26 +20,32 @@
 //   convertir_cents_a_moneda(200, "ABC")  => "Codigo de moneda invalido"
 
 /// Convierte una cantidad en centavos a un formato monetario.
-/// 
+///
 /// # Parámetros
 /// - `centavos`: número entero que representa la cantidad en centavos.
 /// - `codigo_moneda`: string que representa el código de la moneda ("USD", "EUR", "GBP").
-/// 
+///
 /// # Retorno
 /// Retorna un `String` con el valor formateado en la moneda correspondiente o un mensaje de error si los parámetros no son válidos.
 fn convertir_cents_a_moneda(centavos: i32, codigo_moneda: &str) -> String {
-    // TODO: Si centavos es negativo, retorna "Valor invalido".
+  if centavos < 0 {
+   return String::from("Valor invalido");
+  }
 
-    // TODO: Utiliza un "match" para obtener el símbolo correspondiente según el código de moneda.
-    // Si codigo_moneda no es "USD", "EUR" o "GBP", retorna "Codigo de moneda invalido".
+  let simbolo = match codigo_moneda{
+    "USD" => "$",
+    "EUR" => "€",
+    "GBP" => "£",
+    _ => return String:: from ("Codigo de moneda invalido"),
+  };
 
-    // TODO: Convierte centavos a unidades monetarias dividiendo por 100.
-    // Recuerda convertir centavos a f64 para la división.
+    let valor = centavos as f64 / 100.0;
+    let valor_formateado = format!("{:.2}", valor);
 
-    // TODO: Formatea el valor resultante a dos decimales utilizando format!("{:.2}", valor).
 
-    // TODO: Retorna un String que combine el símbolo obtenido con el valor formateado.
-    unimplemented!()
+  return format! ("{}{}", simbolo, valor_formateado);
+
+        unimplemented!()
 }
 
 fn main() {

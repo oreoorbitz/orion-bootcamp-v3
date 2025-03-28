@@ -1,1 +1,1 @@
-/home/oreoo/code/oreoorbitz/orion-bootcamp-v3/Ejercicios_etapa_1/Rust/convercion_monedas/target/debug/convercion_monedas: /home/oreoo/code/oreoorbitz/orion-bootcamp-v3/Ejercicios_etapa_1/Rust/convercion_monedas/src/main.rs
+/home/bambiux/code/Bambi-uxx/orion-bootcamp-v3/Ejercicios_etapa_1/Rust/convercion_monedas/target/debug/convercion_monedas: /home/bambiux/code/Bambi-uxx/orion-bootcamp-v3/Ejercicios_etapa_1/Rust/convercion_monedas/src/main.rs
