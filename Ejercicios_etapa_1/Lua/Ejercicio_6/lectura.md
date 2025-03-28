@@ -7,10 +7,12 @@ En este ejercicio, estamos simulando algunas de las funcionalidades que en JavaS
 ## 1. Tablas y Metatables en Lua
 
 - Tablas en Lua:
-  En Lua, no existen arrays nativos; en su lugar se usan "tablas". Una tabla es una estructura de datos flexible que puede actuar como un array (usando claves numéricas) o como un objeto (usando claves de tipo string).
+  En Lua, no existen arrays nativos; en su lugar se usan "tablas". Una tabla es una estructura de datos flexible que puede actuar como un array de javascript (usando claves numéricas) o como un objeto de javascript (usando claves de tipo string).
   Ejemplo de un "array" en Lua:
+  ```
     local miArray = { "a", "b", "c" }
     print(miArray[1])  -- Imprime "a", ya que Lua es 1-indexado.
+  ```
 
 - Metatables:
   Las metatables permiten definir comportamientos personalizados para las tablas, como sobrecargar operadores o implementar herencia. Es importante notar que las metatables no son arrays, sino una herramienta avanzada para extender la funcionalidad de las tablas. En este ejercicio, no usamos metatables para simular métodos de orden superior, sino que implementamos esas funciones utilizando bucles tradicionales.

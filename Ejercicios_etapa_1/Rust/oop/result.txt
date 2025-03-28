@@ -1,0 +1,183 @@
+// main.rs
+// EJERCICIO 7: PATRÓN FACTORY Y PUBSUB EN RUST
+//
+// En este ejercicio se implementa el patrón Factory para crear objetos Usuario y se implementa
+// una estructura PubSub para suscribirse y publicar eventos. Se usa un enum para representar
+// información heterogénea en los eventos. Se incluyen pruebas unitarias en el mismo archivo.
+
+use std::collections::HashMap;
+
+/// Estructura que representa a un usuario.
+pub struct Usuario {
+    pub nombre: String,
+    pub rol: String,
+}
+
+impl Usuario {
+    /// Crea una nueva instancia de Usuario.
+    ///
+    /// # Parámetros
+    /// - `nombre`: El nombre del usuario.
+    /// - `rol`: El rol del usuario (ejemplo: "admin", "cliente", etc.).
+    ///
+    /// # Retorno
+    /// Una nueva instancia de Usuario.
+    pub fn new(nombre: &str, rol: &str) -> Self {
+        Usuario {
+            nombre: nombre.to_string(),
+            rol: rol.to_string(),
+        }
+    }
+
+    /// Método saludar de Usuario.
+    ///
+    /// # Retorno
+    /// Un mensaje de saludo en el formato "Hola, soy <nombre> y soy <rol>".
+    pub fn saludar(&self) -> String {
+        format!("Hola, soy {} y soy {}", self.nombre, self.rol)
+    }
+}
+
+/// Función factory para crear un Usuario.
+pub fn crear_usuario_con_factory(nombre: &str, rol: &str) -> Usuario {
+    Usuario::new(nombre, rol)
+}
+
+// Definición de temas (topics) para PubSub.
+pub const MOSTRAR_NOTIFICACION_ERROR: &str = "MOSTRAR_NOTIFICACION_ERROR";
+pub const MOSTRAR_NOTIFICACION_EXITO: &str = "MOSTRAR_NOTIFICACION_EXITO";
+
+/// Tipo de dato para la información que se pasa en los eventos.
+/// Se utiliza un HashMap de String a String.
+pub type Info = HashMap<String, String>;
+
+/// Tipo alias para una función escuchadora que recibe una referencia a Info.
+pub type Escuchador = Box<dyn Fn(&Info)>;
+
+/// Estructura que representa un Publicador-Subscriptor (PubSub).
+pub struct PubSub {
+    temas: HashMap<String, Vec<Escuchador>>,
+}
+
+impl PubSub {
+    /// Crea una nueva instancia de PubSub.
+    pub fn new() -> Self {
+        PubSub {
+            temas: HashMap::new(),
+        }
+    }
+
+    /// Permite suscribirse a un evento.
+    ///
+    /// # Parámetros
+    /// - `evento`: El nombre del evento.
+    /// - `escuchador`: La función que se ejecutará cuando se publique el evento.
+    ///
+    /// # Retorno
+    /// Un objeto Suscripcion con un método `remover` para cancelar la suscripción.
+    pub fn suscribirse<F>(&mut self, evento: &str, escuchador: F) -> Suscripcion
+    where
+        F: Fn(&Info) + 'static,
+    {
+        self.temas.entry(evento.to_string()).or_insert(Vec::new()).push(Box::new(escuchador));
+        let indice = self.temas[evento].len() - 1;
+        Suscripcion {
+            evento: evento.to_string(),
+            indice,
+            pubsub: self as *mut PubSub,
+        }
+    }
+
+    /// Publica un evento, ejecutando todos los escuchadores asociados.
+    ///
+    /// # Parámetros
+    /// - `evento`: El nombre del evento.
+    /// - `info`: Información a pasar a los escuchadores.
+    pub fn publicar(&self, evento: &str, info: &Info) {
+        if let Some(escuchadores) = self.temas.get(evento) {
+            for escuchador in escuchadores {
+                escuchador(info);
+            }
+        }
+    }
+}
+
+/// Estructura que representa una suscripción a un evento en PubSub.
+pub struct Suscripcion {
+    evento: String,
+    indice: usize,
+    pubsub: *mut PubSub,
+}
+
+impl Suscripcion {
+    /// Remueve la suscripción, cancelando el escuchador.
+    pub fn remover(self) {
+        unsafe {
+            if let Some(lista) = (*self.pubsub).temas.get_mut(&self.evento) {
+                if self.indice < lista.len() {
+                    lista[self.indice] = Box::new(|_| {});
+                }
+            }
+        }
+    }
+}
+
+fn main() {
+    // Ejemplo de uso del factory
+    let usuario = crear_usuario_con_factory("Luis", "admin");
+    println!("{}", usuario.saludar()); // "Hola, soy Luis y soy admin"
+
+    // Ejemplo de uso de PubSub
+    let mut pubsub = PubSub::new();
+    let suscripcion = pubsub.suscribirse(MOSTRAR_NOTIFICACION_EXITO, |info| {
+        if let Some(mensaje) = info.get("mensaje") {
+            println!("Se recibió el evento con info: {}", mensaje);
+        }
+    });
+    let mut info = Info::new();
+    info.insert("mensaje".to_string(), "¡Hola mundo!".to_string());
+    pubsub.publicar(MOSTRAR_NOTIFICACION_EXITO, &info);
+    suscripcion.remover();
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_usuario_saludar() {
+        let usuario = crear_usuario_con_factory("Ana", "cliente");
+        assert_eq!(usuario.saludar(), "Hola, soy Ana y soy cliente");
+    }
+
+    #[test]
+    fn test_pubsub_publicar() {
+        let mut pubsub = PubSub::new();
+        let mut mensaje_recibido = String::new();
+        let _suscripcion = pubsub.suscribirse(MOSTRAR_NOTIFICACION_EXITO, |info| {
+            if let Some(mensaje) = info.get("mensaje") {
+                mensaje_recibido.push_str(mensaje);
+            }
+        });
+        let mut info = Info::new();
+        info.insert("mensaje".to_string(), "Prueba".to_string());
+        pubsub.publicar(MOSTRAR_NOTIFICACION_EXITO, &info);
+        assert_eq!(mensaje_recibido, "Prueba");
+    }
+
+    #[test]
+    fn test_pubsub_remover() {
+        let mut pubsub = PubSub::new();
+        let mut contador = 0;
+        let suscripcion = pubsub.suscribirse(MOSTRAR_NOTIFICACION_EXITO, |_| {
+            contador += 1;
+        });
+        let mut info = Info::new();
+        info.insert("mensaje".to_string(), "Evento 1".to_string());
+        pubsub.publicar(MOSTRAR_NOTIFICACION_EXITO, &info);
+        suscripcion.remover();
+        info.insert("mensaje".to_string(), "Evento 2".to_string());
+        pubsub.publicar(MOSTRAR_NOTIFICACION_EXITO, &info);
+        assert_eq!(contador, 1);
+    }
+}

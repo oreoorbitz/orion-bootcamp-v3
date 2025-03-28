@@ -1,55 +1,38 @@
 // main.rs
 // EJERCICIO 6: MANIPULACIÓN DE ARRAYS Y FUNCIONES DE ORDEN SUPERIOR
 //
-// Este ejercicio se centra en la manipulación de arrays (en Rust, se usan Vec<T>) y en la
-// implementación de funciones de orden superior similares a las que se usan en JavaScript.
-// Se incluyen funciones básicas como acceder a un elemento, manipular un array, sumar elementos,
-// generar un rango, organizar por tipo (usando un enum para simular arrays heterogéneos),
-// y versiones propias (miMapa, miFilter, miReduce) que imitan los métodos .map, .filter y .reduce.
+// Este ejercicio se centra en la manipulación de arrays (en Rust, se usan Vec<T>) y en la implementación
+// de funciones de orden superior similares a las que se usan en JavaScript. Se incluyen funciones básicas
+// como acceder a un elemento, manipular un array, sumar elementos, generar un rango, organizar por tipo
+// (usando un enum para simular arrays heterogéneos), y versiones propias (mi_mapa, mi_filter, mi_reduce,
+// usa_map, usa_filter, usa_reduce) que imitan los métodos .map, .filter y .reduce.
 
 /// Devuelve el elemento en la posición indicada de un array (Vec).
 /// Si el índice es inválido, retorna None.
-///
-/// # Parámetros
-/// - `arr`: Un vector de elementos.
-/// - `index`: El índice del elemento a obtener.
-///
-/// # Retorno
-/// Un Option con el elemento si existe.
 fn acceder_array<T: Clone>(arr: &Vec<T>, index: usize) -> Option<T> {
-    arr.get(index).cloned()
+    // TODO: Retornar el elemento en la posición indicada.
+    unimplemented!()
 }
 
+/// Manipula un array creando un nuevo vector y agregando tres elementos.
+/// Retorna el elemento en la posición 1 (segundo elemento) del vector.
 fn manipula_array<T: Clone>(primer_elemento: T, segundo_elemento: T, tercer_elemento: T) -> T {
-    // Crea un vector vacío y agrega tres elementos.
-    let mut my_array = Vec::new();
-    my_array.push(primer_elemento);
-    my_array.push(segundo_elemento);
-    my_array.push(tercer_elemento);
-    // Retorna el elemento en la posición 1 (segundo elemento).
-    my_array[1].clone()
+    // TODO: Crea un vector vacío, agrega tres elementos y retorna el segundo elemento.
+    unimplemented!()
 }
 
+/// Suma los elementos de un array de números usando un bucle for.
+/// Si el vector es homogéneo (todos números), retorna la suma total.
 fn sumar_elementos(numeros: &Vec<i32>) -> Result<i32, &'static str> {
-    // En Rust, el vector ya es homogéneo (todos números) gracias al tipado estático.
-    // Simplemente sumamos los elementos.
-    let mut suma = 0;
-    for &num in numeros.iter() {
-        suma += num;
-    }
-    Ok(suma)
+    // TODO: Usar un bucle for para sumar los elementos del vector.
+    unimplemented!()
 }
 
+/// Genera un vector con números desde 0 hasta n (incluyendo n).
+/// Retorna un error si n es negativo.
 fn generar_rango(n: i32) -> Result<Vec<i32>, &'static str> {
-    // Verifica que n sea no negativo; de lo contrario, retornamos un error.
-    if n < 0 {
-        return Err("Datos inválidos");
-    }
-    let mut rango = Vec::new();
-    for i in 0..=n {
-        rango.push(i);
-    }
-    Ok(rango)
+    // TODO: Verifica que n sea no negativo; luego, genera y retorna el vector.
+    unimplemented!()
 }
 
 /// Enum para representar valores heterogéneos: números o textos.
@@ -66,22 +49,13 @@ struct Organizado {
     strings: Vec<String>,
 }
 
+/// Toma un vector de Valor y devuelve una estructura con dos campos: 'numbers' y 'strings'.
 fn organizar_por_tipo(arr: &Vec<Valor>) -> Organizado {
-    let mut numeros = Vec::new();
-    let mut textos = Vec::new();
-    for item in arr {
-        match item {
-            Valor::Numero(n) => numeros.push(*n),
-            Valor::Texto(s) => textos.push(s.clone()),
-        }
-    }
-    Organizado {
-        numbers: numeros,
-        strings: textos,
-    }
+    // TODO: Recorrer el vector y clasificar cada elemento en el campo correspondiente.
+    unimplemented!()
 }
 
-/// miMapa
+/// mi_mapa
 ///
 /// Esta función recibe un vector y una función; aplica la función a cada elemento del vector y
 /// retorna un nuevo vector con los resultados.
@@ -89,14 +63,11 @@ fn mi_mapa<T, U, F>(arreglo: &Vec<T>, mut fnc: F) -> Vec<U>
 where
     F: FnMut(&T) -> U,
 {
-    let mut nuevo_vector = Vec::new();
-    for item in arreglo {
-        nuevo_vector.push(fnc(item));
-    }
-    nuevo_vector
+    // TODO: Implementar iterando con un bucle for y retornando el nuevo vector.
+    unimplemented!()
 }
 
-/// miFilter
+/// mi_filter
 ///
 /// Esta función recibe un vector y una función predicado; retorna un nuevo vector que contiene
 /// solo aquellos elementos para los cuales la función predicado retorna true.
@@ -104,16 +75,11 @@ fn mi_filter<T: Clone, F>(arreglo: &Vec<T>, mut predicado: F) -> Vec<T>
 where
     F: FnMut(&T) -> bool,
 {
-    let mut filtrado = Vec::new();
-    for item in arreglo {
-        if predicado(item) {
-            filtrado.push(item.clone());
-        }
-    }
-    filtrado
+    // TODO: Implementar iterando con un bucle for y retornando el vector filtrado.
+    unimplemented!()
 }
 
-/// miReduce
+/// mi_reduce
 ///
 /// Esta función recibe un vector, una función reductora y un valor inicial. Aplica la función reductora
 /// acumulando un resultado a lo largo de los elementos del vector y retorna el resultado final.
@@ -121,14 +87,11 @@ fn mi_reduce<T, U, F>(arreglo: &Vec<T>, mut fnc: F, valor_inicial: U) -> U
 where
     F: FnMut(U, &T) -> U,
 {
-    let mut acumulador = valor_inicial;
-    for item in arreglo {
-        acumulador = fnc(acumulador, item);
-    }
-    acumulador
+    // TODO: Implementar usando un bucle for para acumular el resultado.
+    unimplemented!()
 }
 
-/// usaMap
+/// usa_map
 ///
 /// Esta función utiliza el método de iteradores para simular el método .map de JavaScript.
 /// Aplica la función a cada elemento del vector y retorna un nuevo vector con los resultados.
@@ -136,21 +99,23 @@ fn usa_map<T, U, F>(arreglo: Vec<T>, fnc: F) -> Vec<U>
 where
     F: FnMut(T) -> U,
 {
-    arreglo.into_iter().map(fnc).collect()
+    // TODO: Implementar usando el método map de iteradores.
+    unimplemented!()
 }
 
-/// usaFilter
+/// usa_filter
 ///
 /// Esta función utiliza el método de iteradores para simular el método .filter de JavaScript.
-/// Retorna un nuevo vector con los elementos que cumplen con la condición especificada.
+/// Retorna un nuevo vector con los elementos que cumplen la condición especificada.
 fn usa_filter<T, F>(arreglo: Vec<T>, fnc: F) -> Vec<T>
 where
     F: FnMut(&T) -> bool,
 {
-    arreglo.into_iter().filter(fnc).collect()
+    // TODO: Implementar usando el método filter de iteradores.
+    unimplemented!()
 }
 
-/// usaReduce
+/// usa_reduce
 ///
 /// Esta función utiliza el método fold para simular el método .reduce de JavaScript.
 /// Acumula un resultado a partir de los elementos del vector y retorna el resultado final.
@@ -158,7 +123,8 @@ fn usa_reduce<T, U, F>(arreglo: Vec<T>, fnc: F, valor_inicial: U) -> U
 where
     F: FnMut(U, T) -> U,
 {
-    arreglo.into_iter().fold(valor_inicial, fnc)
+    // TODO: Implementar usando el método fold.
+    unimplemented!()
 }
 
 fn main() {
