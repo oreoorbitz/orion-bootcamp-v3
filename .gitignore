@@ -13,5 +13,9 @@ package-lock.json
 # If you're using cargo-expand or cargo-insta:
 .expand/
 insta/
-Ejercicios_etapa_1/Rust/tipos/target/
+
+
+
+
 Cargo.lock
+target/
