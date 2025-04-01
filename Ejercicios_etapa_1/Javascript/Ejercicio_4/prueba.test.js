@@ -3,10 +3,10 @@ import { checarTipo, falsosoVerdadoso, divisionSegura, valorSeguro } from "./ind
 
 describe('checarTipo', () => {
     it('Debe devolver si la variable es el tipo esperado', () => {
-        expect(checarTipo(21, "number")).toBe(true)
-        expect(checarTipo("String", "number")).toBe(false)
-        expect(checarTipo(21, "string")).toBe(false)
-        expect(checarTipo("21", "string")).toBe(true)
+        expect(checarTipo(21, "number")).toBe("La variable es 21: true")
+        expect(checarTipo("String", "number")).toBe("La variable es String: false")
+        expect(checarTipo(21, "string")).toBe("La variable es 21: false")
+        expect(checarTipo("21", "string")).toBe("La variable es 21: true")
     })
 })
 

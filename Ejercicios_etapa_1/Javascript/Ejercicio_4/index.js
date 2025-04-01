@@ -1,4 +1,3 @@
-import { E } from "vitest/dist/chunks/reporters.d.CqBhtcTq.js";
 
 /**
  * EJERCICIO 4: USO DE typeof Y CONDICIONALES
@@ -16,20 +15,19 @@ import { E } from "vitest/dist/chunks/reporters.d.CqBhtcTq.js";
  *   3. Utiliza plantillas literales (interpolación) para construir el string final.
  *
  * Ejemplos:
- *   checarTipo(10, "number") => "La variable es number: true"
- *   checarTipo("Hola", "number") => "La variable es number: false"
+ *   checarTipo(10, "number") => "La variable es 10: true"
+ *   checarTipo("Hola", "number") => "La variable es hola: false"
+ *   cehcarTipo(10, "string") => "La variable es 10: false"
+ *   checarTipo("10", "string") => "La variable es 10: true"
  *
  * @param {*} variable - La variable de cualquier tipo que vamos a verificar
  * @param {string} tipoEsperado - El tipo de dato que se espera (por ejemplo, "number")
  * @returns {string} Un mensaje indicando el tipo esperado y si la variable coincide
  */
 export const checarTipo = (variable, tipoEsperado) => {
-  const tipoVerdadero = typeof variable
-  if(typeof variable === tipoEsperado){
-    return 'El tipo esperado coincide'
-  }
-  
-  return  `La variable ${tipoEsperado} ${variable}` // Reemplazar por la implementación correcta
+
+  return `La variable es ${variable}: ${tipoEsperado === typeof variable}`
+
 }
 
 const r = checarTipo(21, "number");
@@ -69,7 +67,21 @@ console.log(checarTipo("21", "string"));//true
  * @returns {string} Un mensaje indicando si el valor es falsy, booleano false, booleano true, o truthy.
  */
 export const falsosoVerdadoso = (elemento) => {
-};
+
+  if (elemento === false) {
+    return `El elemento es el booleano false`
+  }
+
+  if (elemento === true) {
+    return `El elemento es el booleano true`
+  }
+
+  if (!elemento) {
+    return `El elemento es falsy: true`
+  }
+
+ return "El elemento es truthy: true"
+}
 
 // Ejemplos de ejecución en la consola
 console.log(falsosoVerdadoso(false));  // "El elemento es el booleano false"
@@ -112,9 +124,25 @@ console.log(falsosoVerdadoso({}));     // "El elemento es truthy: true"
  * @returns {string} Mensaje indicando el resultado de la operación o un error.
  */
 export const divisionSegura = (dividendo, divisor) => {
-   // Implementar aqui
-};
+  
 
+  if (typeof dividendo !== 'number' || typeof divisor !== 'number'){
+    return "Error: Uno de los valores no es un número"
+  }
+  
+  if (divisor === 0){
+    return "Error: No se puede dividir por 0"
+  }
+
+  if(isNaN(dividendo) || isNaN(divisor)){
+    return "Error: Uno de los valores es NaN"
+  }
+  
+const resultado = (dividendo / divisor)
+   return  `El resultado de dividir ${dividendo} entre ${divisor} es ${resultado}`
+   
+   
+}
 // 📌 Ejemplos de ejecución en la consola
 console.log(divisionSegura(10, 2));      // "El resultado de dividir 10 entre 2 es 5"
 console.log(divisionSegura(10, "Hola")); // "Error: Uno de los valores no es un número"
@@ -150,7 +178,19 @@ console.log(divisionSegura(50, undefined)); // "Error: Uno de los valores no es 
  * @returns {string} Mensaje indicando el estado del valor.
  */
 export const valorSeguro = (valor) => {
-  // Implementar aqui
+  
+  if (valor === null){
+    return "El valor es null (ausencia intencional de datos)"
+  }
+
+  if (valor === undefined || valor === null){
+    return "El valor es undefined (valor no asignado)"
+  }
+
+  if (!valor){
+    return`El valor es falsy pero definido: ${valor}`
+  }
+  return `El valor es válido: ${valor}`
 }
 
 // 📌 Ejemplos de ejecución en la consola
