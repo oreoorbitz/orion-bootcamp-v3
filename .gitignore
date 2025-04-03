@@ -13,4 +13,9 @@ target          # All Rust build output goes here
 # If you're using cargo-expand or cargo-insta:
 .expand/
 insta/
-Ejercicios_etapa_1/Rust/edad_en_dias/target
+
+
+
+
+Cargo.lock
+target/

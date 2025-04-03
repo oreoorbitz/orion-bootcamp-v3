@@ -1,18 +1,27 @@
 // @ts-check
 
-/**
- * Simula una Promesa que representa la llegada de un paquete.
- * Esta promesa puede resolverse (llegó bien) o rechazarse (se perdió o fue dañada).
- */
-export const paquete = new Promise((resolve, reject) => {
-    const tiempoDeEntrega = Math.floor(Math.random() * 3000) + 1000;
+// Constantes de mensajes
+const CONTENIDO_LIBRO = "libro";
+const ESTADO_EN_TRANSITO = "en tránsito";
+const ERROR_PAQUETE_PERDIDO = "El paquete se perdió en tránsito";
 
+const LOG_BODEGA = "📍 En la bodega central: revisando el paquete...";
+const LOG_CAMINO = "🚚 En camino al centro de distribución...";
+const LOG_ENTREGA = "📬 Entregando al destinatario...";
+const LOG_FIN = "🔁 Fin del proceso logístico.";
+const LOG_PAQUETE_RECIBIDO = "📦 El destinatario recibió el paquete:";
+
+const ERROR_ENTREGA = "❌ Error en la entrega:";
+
+// Promesa que simula la llegada de un paquete.
+const paquete = new Promise((resolve, reject) => {
+    const tiempoDeEntrega = Math.floor(Math.random() * 3000) + 1000;
     setTimeout(() => {
         const exitoso = Math.random() > 0.2; // 80% de probabilidad de éxito
         if (exitoso) {
-            resolve({ contenido: "libro", estado: "en tránsito" });
+            resolve({ contenido: CONTENIDO_LIBRO, estado: ESTADO_EN_TRANSITO });
         } else {
-            reject(new Error("El paquete se perdió en tránsito"));
+            reject(new Error(ERROR_PAQUETE_PERDIDO));
         }
     }, tiempoDeEntrega);
 });
@@ -22,41 +31,36 @@ export const paquete = new Promise((resolve, reject) => {
  * Simula una mutación, como marcarlo como "entregado".
  * @param {{ contenido: string, estado: string }} paquete
  */
-export const entregarAlDestinatario = (paquete) => {
+const entregarAlDestinatario = (paquete) => {
     paquete.estado = "entregado";
-    console.log(`📦 El destinatario recibió el paquete: ${paquete.contenido}. Estado: ${paquete.estado}`);
+    console.log(`${LOG_PAQUETE_RECIBIDO} ${paquete.contenido}. Estado: ${paquete.estado}`);
 };
 
 /**
  * procesarEnvio
  *
- * Esta función encadena pasos de manejo del paquete usando .then(), .catch() y .finally().
- * Cada paso simula una persona que realiza una acción sobre el paquete antes de pasarlo al siguiente.
- * En caso de error, se muestra un mensaje con .catch().
+ * Implementa el proceso logístico utilizando .then(), .catch() y .finally().
+ * Utiliza las siguientes acciones:
+ *  - Revisar el paquete en la bodega central y marcarlo como revisado.
+ *  - Actualizar la ubicación a "centro de distribución".
+ *  - Entregar el paquete al destinatario.
+ *  - En caso de error, mostrar un mensaje de error.
+ *  - Finalmente, mostrar el mensaje de fin del proceso logístico.
  */
-export const procesarEnvio = () => {
-    paquete
-        .then((paquete) => {
-            console.log("📍 En la bodega central: revisando el paquete...");
-            paquete.revisado = true;
-            return paquete;
-        })
-        .then((paquete) => {
-            console.log("🚚 En camino al centro de distribución...");
-            paquete.ubicacion = "centro de distribución";
-            return paquete;
-        })
-        .then((paquete) => {
-            console.log("📬 Entregando al destinatario...");
-            entregarAlDestinatario(paquete);
-        })
-        .catch((error) => {
-            console.error("❌ Error en la entrega:", error.message);
-        })
-        .finally(() => {
-            console.log("🔁 Fin del proceso logístico.");
-        });
+const procesarEnvio = () => {
+    // TODO: Implementa el proceso logístico usando .then(), .catch() y .finally().
 };
 
-// Ejemplo de ejecución
-procesarEnvio();
+/**
+ * procesarEnvioAsync
+ *
+ * Implementa el proceso logístico utilizando async/await.
+ * Utiliza try/catch/finally para manejar la promesa "paquete":
+ *  - En el bloque try, espera la resolución del paquete, marca el paquete como revisado, actualiza su ubicación,
+ *    y llama a entregarAlDestinatario.
+ *  - En el bloque catch, captura el error e imprime un mensaje de error.
+ *  - En el bloque finally, imprime el mensaje de fin del proceso logístico.
+ */
+const procesarEnvioAsync = async () => {
+    // TODO: Implementa el proceso logístico usando async/await, try/catch/finally.
+};
