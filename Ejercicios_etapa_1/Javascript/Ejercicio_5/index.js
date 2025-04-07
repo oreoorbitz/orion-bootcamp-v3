@@ -23,8 +23,17 @@ const monedas = {
    *  convertirCentsAMoneda(200, "ABC") => "Codigo de moneda invalido"
    */
   export const convertirCentsAMoneda = (centavos, codigoMoneda) => {
-   return '' // Reemplazar por la implementación
+    console.log(centavos, monedas)
+    if(!codigoMoneda){
+      return "Codigo de moneda invalido"
+    }
+
+    if(centavos < 0){
+      return "Valor invalido"
+    }
+   
   }
+  
   
   // Ejemplos de uso:
   const convercion = convertirCentsAMoneda(-4000, "GBP")
