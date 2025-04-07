@@ -7,9 +7,14 @@
  * @param {number} index - El índice del elemento que se desea obtener.
  * @returns {*} El elemento en la posición indicada.
  */
+
+
+
+let array = ['a', 2, 'c'];
+
 export const accederArray = (arr, index) => {
-    // TODO: Retorna el elemento en el índice dado.
-    return 0; // Reemplazar por la implementación correcta.
+  // TODO: Retorna el elemento en el índice dado.
+    return arr[index]; // Reemplazar por la implementación correcta.
 };
 
 const resultadoDeAccederArray = accederArray(['a', 'b', 'c'], 2);
@@ -24,13 +29,16 @@ console.log(resultadoDeAccederArray);
  * @param {*} tercerElemento - Tercer elemento a agregar.
  * @returns {string|number} El segundo elemento del array.
  */
+
+
+ // TODO: Declara un array vacío llamado "myArray".
+ let myArray =[];
+
 export const manipulaArray = (arr, primerElemento, segundoElemento, tercerElemento) => {
-    // TODO: Declara un array vacío llamado "myArray".
-
     // TODO: Agrega tres elementos al array usando el método push.
-
+  arr.push(primerElemento, segundoElemento, tercerElemento)
     // TODO: Retorna el elemento en la posición 1 del array.
-    return ""; // Reemplazar por la implementación correcta.
+    return arr[1]; // Reemplazar por la implementación correcta.
 };
 
 export const resultadoDeManipularArray = manipulaArray(['a'], 1, 2, 3);
@@ -41,11 +49,17 @@ console.log(resultadoDeManipularArray);
  * @param {number[]} numeros - El array de números.
  * @returns {number|string} La suma total de los elementos o "Datos inválidos" si la validación falla.
  */
+
 export const sumarElementos = (numeros) => {
     // TODO: Verifica que todos los elementos son números. Si alguno no lo es, retorna "Datos inválidos".
-
+  const sonNumeros = numeros.every(elemento => typeof(elemento) === 'number')
+  if (!sonNumeros) return 'Datos inválidos'
     // TODO: Usa un for loop para sumar los elementos del array.
-    return 0; // Reemplazar por la implementación correcta.
+  let suma = 0;
+    for(let i = 0; i< numeros.length; i++  ) {
+      suma += numeros[i];
+    }
+  return suma // Reemplazar por la implementación correcta.
 };
 
 const resultadoSumarElementos = sumarElementos([200, 200, 20]);
@@ -56,15 +70,27 @@ console.log(resultadoSumarElementos);
  * @param {number} n - El número hasta el cual se genera el rango.
  * @returns {number[]|string} Un array con números desde 0 hasta n o "Datos inválidos" si n no es un número.
  */
-export const generarRango = (n) => {
-    // TODO: Verifica que n es un número. Si no, retorna "Datos inválidos".
 
+export const generarRango = (n) => {
+  let rango = [];
+
+
+  console.log('n es:', n)
+
+  // TODO: Verifica que n es un número. Si no, retorna "Datos inválidos".
+  if (typeof(n) !== 'number') return 'Datos inválidos'
     // TODO: Declara un array vacío, por ejemplo: const rango = [];
 
+  console.log('rango es', rango)
     // TODO: Usa un bucle for para recorrer desde 0 hasta n (incluyendo n) y agrega cada número al array.
-
+  for(let i = 0; i<= n; i++) {
+    console.log('Antes de empujar rango es', rango)
+    console.log('estoy empujando', i)
+    rango.push(i);
+    console.log('después de empujar rango es', rango)
+  }
     // TODO: Retorna el array.
-    return []; // Reemplazar por la implementación correcta.
+    return rango; // Reemplazar por la implementación correcta.
 };
 
 const resultadoDeGenerarRango = generarRango(10);
@@ -76,6 +102,8 @@ console.log(resultadoDeGenerarRango);
  * @param {(number|string)[]} arr - El array de entrada.
  * @returns {object} Un objeto con las propiedades 'strings' y 'numbers'.
  */
+
+/*borrar aquí
 export const organizarPorTipo = (arr) => {
     // TODO: Declara dos arrays, uno para strings y otro para numbers.
 
@@ -98,6 +126,7 @@ console.log(resultadoDeOrganizarPorTipo);
  * @param {Function} fn - La función que se aplicará a cada elemento.
  * @returns {Array} Un nuevo array con los elementos transformados.
  */
+/*Borrar aqui
 export const miMapa = (arreglo, fn) => {
     return []
 };
@@ -117,6 +146,7 @@ console.log(resultadoDeMapiarDoble);
 * @param {Function} fn - La función predicado que se aplicará a cada elemento.
 * @returns {Array} Un nuevo array con los elementos que cumplen la condición.
 */
+/* borrar aqui
 export const miFilter = (arreglo, fn) => {
     return []
 }
@@ -137,6 +167,7 @@ console.log(resultadoFiltrado)
  * @param {*} valorInicial - El valor inicial del acumulador.
  * @returns {*} El resultado acumulado después de aplicar la función reductora a todos los elementos.
  */
+/* borrar aqui
 export const miReduce = (arreglo, fn, valorInicial) => {
     return ''
 };
@@ -156,6 +187,7 @@ console.log(resultadoReducir)
  * @param {Function} fn - La función que se aplicará a cada elemento.
  * @returns {Array} Un nuevo array con los elementos transformados.
  */
+/*borrar aqui
 export const usaMap = (arreglo, fn) => {
     return []; // Reemplazar por la implementación correcta.
 };
@@ -174,13 +206,14 @@ console.log(resultadoMap); // Ejemplo: [3, 6, 9, 12]
  * @param {Function} fn - La función predicado que determina si un elemento debe incluirse.
  * @returns {Array} Un nuevo array con los elementos que cumplen la condición.
  */
+/* borrar aqui
 export const usaFilter = (arreglo, fn) => {
     return []; // Reemplazar por la implementación correcta.
 };
 
 const esImparejo = (num) => num % 2 !== 0;
 const resultadoFilter = usaFilter([1, 2, 3, 4, 5, 6], esImparejo);
-console.log(resultadoFilter); 
+console.log(resultadoFilter);
 
 /**
  * usaReduce
@@ -193,10 +226,12 @@ console.log(resultadoFilter);
  * @param {*} valorInicial - El valor inicial del acumulador.
  * @returns {*} El resultado acumulado después de aplicar la función reductora a todos los elementos.
  */
+/* borrar aqui
 export const usaReduce = (arreglo, fn, valorInicial) => {
-    return ''; 
+    return '';
 };
 
 const multiplicar = (acumulador, valor) => acumulador * valor;
 const resultadoReduce = usaReduce([1, 2, 3, 4], multiplicar, 0);
-console.log(resultadoReduce); 
+console.log(resultadoReduce);
+*/
