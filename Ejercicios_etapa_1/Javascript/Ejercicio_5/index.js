@@ -24,7 +24,7 @@ const monedas = {
    */
   export const convertirCentsAMoneda = (centavos, codigoMoneda) => {
     console.log(centavos, monedas)
-    if(!codigoMoneda){
+    if(!(codigoMoneda in monedas)){
       return "Codigo de moneda invalido"
     }
 
