@@ -103,14 +103,22 @@ console.log(resultadoDeGenerarRango);
  * @returns {object} Un objeto con las propiedades 'strings' y 'numbers'.
  */
 
-/*borrar aquí
+
 export const organizarPorTipo = (arr) => {
     // TODO: Declara dos arrays, uno para strings y otro para numbers.
-
+  let strings = [];
+  let numbers = [];
     // TODO: Recorre el array de entrada y clasifica cada elemento en el array correspondiente.
-
+  for (let i= 0; i <arr.length ; i++ ) {
+    let contenido = arr[i];
+    if (typeof(contenido) === 'string') {
+      strings.push(contenido)
+    } else if (typeof(contenido) === 'number') {
+      numbers.push(contenido)
+    }
+  }
     // TODO: Retorna un objeto con las propiedades 'strings' y 'numbers' conteniendo los arrays correspondientes.
-    return {}; // Reemplazar por la implementación correcta.
+    return {strings, numbers}; // Reemplazar por la implementación correcta.
 };
 
 const resultadoDeOrganizarPorTipo = organizarPorTipo([1, "hola", 3, "mundo"]);
@@ -126,9 +134,13 @@ console.log(resultadoDeOrganizarPorTipo);
  * @param {Function} fn - La función que se aplicará a cada elemento.
  * @returns {Array} Un nuevo array con los elementos transformados.
  */
-/*Borrar aqui
+
 export const miMapa = (arreglo, fn) => {
-    return []
+  let resultados = [];
+  for(let i = 0; i<arreglo.length; i++){
+      resultados.push(fn(arreglo[i]))
+  }
+  return resultados
 };
 
 const doble = x => x * 2;
@@ -146,10 +158,18 @@ console.log(resultadoDeMapiarDoble);
 * @param {Function} fn - La función predicado que se aplicará a cada elemento.
 * @returns {Array} Un nuevo array con los elementos que cumplen la condición.
 */
-/* borrar aqui
+
 export const miFilter = (arreglo, fn) => {
-    return []
+  // @ts-ignore
+  let resultados = [];
+  for(let i = 0; i<arreglo.length; i++){
+      if (fn(arreglo[i]) === true) {
+        resultados.push(arreglo[i])
+  }
 }
+return resultados
+};
+
 
 const esPar = (num) => num % 2 === 0
 const resultadoFiltrado = miFilter([1, 2, 3, 4, 5, 6], esPar)
@@ -167,10 +187,16 @@ console.log(resultadoFiltrado)
  * @param {*} valorInicial - El valor inicial del acumulador.
  * @returns {*} El resultado acumulado después de aplicar la función reductora a todos los elementos.
  */
-/* borrar aqui
+
 export const miReduce = (arreglo, fn, valorInicial) => {
-    return ''
+    // @ts-ignore
+    let acumulador = valorInicial;
+    for(let i = 0; i<arreglo.length; i++){
+      acumulador = fn(acumulador, arreglo[i])
+}
+    return acumulador;
 };
+
 
 
 const sumar = (acumulador, valor) => acumulador + valor
@@ -187,9 +213,10 @@ console.log(resultadoReducir)
  * @param {Function} fn - La función que se aplicará a cada elemento.
  * @returns {Array} Un nuevo array con los elementos transformados.
  */
-/*borrar aqui
+
 export const usaMap = (arreglo, fn) => {
-    return []; // Reemplazar por la implementación correcta.
+    // @ts-ignore
+    return arreglo.map(fn); // Reemplazar por la implementación correcta.
 };
 
 const multiplicarPorTres = x => x * 3;
@@ -206,9 +233,10 @@ console.log(resultadoMap); // Ejemplo: [3, 6, 9, 12]
  * @param {Function} fn - La función predicado que determina si un elemento debe incluirse.
  * @returns {Array} Un nuevo array con los elementos que cumplen la condición.
  */
-/* borrar aqui
+
 export const usaFilter = (arreglo, fn) => {
-    return []; // Reemplazar por la implementación correcta.
+    // @ts-ignore
+    return arreglo.filter(fn); // Reemplazar por la implementación correcta.
 };
 
 const esImparejo = (num) => num % 2 !== 0;
@@ -226,12 +254,15 @@ console.log(resultadoFilter);
  * @param {*} valorInicial - El valor inicial del acumulador.
  * @returns {*} El resultado acumulado después de aplicar la función reductora a todos los elementos.
  */
-/* borrar aqui
+
 export const usaReduce = (arreglo, fn, valorInicial) => {
-    return '';
+    // @ts-ignore
+    return arreglo.reduce(fn, valorInicial);
 };
 
 const multiplicar = (acumulador, valor) => acumulador * valor;
 const resultadoReduce = usaReduce([1, 2, 3, 4], multiplicar, 0);
 console.log(resultadoReduce);
-*/
+
+const resultadoo = [400, 10, 10].reduce( (a,b )=> a + b, 0)
+console.log(resultadoo);

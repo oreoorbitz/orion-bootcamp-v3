@@ -250,7 +250,7 @@ let numeross = [1, 2, 3, 4, 5];
 numeross.reverse();
 console.log(numeross);
 
-*/
+
 
 let nombres = 'Bilbo, Gandalf, Nazgul';
 let arr = nombres.split(', ');
@@ -293,3 +293,52 @@ for (let name of arr) {
   console.log(soldiers.length);
   console.log(soldiers[0].age);
   console.log(soldiers[1].age);
+
+
+let persona = {
+  nombre: 'Lucía',
+  age: 28,
+  city: 'Madrid'
+}
+
+for(let key in persona) {
+  console.log(key,':', persona[key]);
+
+}
+
+let pattern = /hello/;
+let str = "hello world";
+
+let result = pattern.test(str);
+console.log(result)
+
+
+
+let patern = /world/;
+let stri = "hello world";
+
+let resultt = patern.exec(stri);
+console.log(resultt)
+
+let str = "The quick brown fox jumps over the lazy dog.";
+let matches = str.match(/the/gi);
+
+console.log(matches)
+
+
+let str = "Hello world! This is a test string.";
+let regex = /[a-zA-Z]+/g;
+
+let matches = str.matchAll(regex);
+
+for (let match of matches) {
+    console.log(match);
+}
+
+*/
+
+let str = "The quick brown fox jumps over the lazy dog";
+let pattern = /brown/;
+
+let result = str.search(pattern);
+console.log(result);

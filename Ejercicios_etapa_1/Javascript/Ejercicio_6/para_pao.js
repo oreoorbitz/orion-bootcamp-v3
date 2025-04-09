@@ -44,11 +44,19 @@
 
 // Objeto que mapea códigos de unidad a sus factores y símbolos.
 const unidades = {
-    MG: { factor: 1000, simbolo: "mg" },
-    G:  { factor: 1e6, simbolo: "g" },
-    KG: { factor: 1e9, simbolo: "kg" }
+    MG: { factor: 1000, simbolo: "MG" },
+    G:  { factor: 1e6, simbolo: "G" },
+    KG: { factor: 1e9, simbolo: "KG" }
   };
-  
+
+  /**
+   * sanitiza un string
+   * @param {string}
+   * @return {string}
+   */
+
+  const sanitizar = str => str.toUpperCase()
+
   /**
    * Función previa (del ejercicio anterior):
    * Convierte una masa en microgramos a la unidad indicada, validando:
@@ -57,10 +65,17 @@ const unidades = {
    *  - Retornar un string usando toFixed(2) y el símbolo (por ej. "1.23mg")
    */
   export function convertirMicrogramos(microgramos, codigoUnidad) {
-    // TODO (parte anterior):
-    return ""; // Reemplazar
+    if (microgramos < 0) return ('Valor invalido');
+    console.log('los microgramos es', microgramos)
+   if (!unidades[codigoUnidad]) return 'Codigo de unidad invalido'; // Reemplazar
+    const factor = unidades[codigoUnidad].factor
+    const simbolo = unidades[codigoUnidad].simbolo
+    const resultado = (microgramos/factor).toFixed(4)
+    return (`${resultado} : MG`);
+
+
   }
-  
+
   /**
    * PARTE 1:
    * Función que procesa las muestras. Valida las propiedades y, si son válidas, convierte la masa
@@ -71,16 +86,35 @@ const unidades = {
   export function procesarMuestras(muestras) {
     // TODO:
     // 1. Crear un array de resultados vacío.
-    // 2. Iterar sobre "muestras":
+  let resultados = [];
+      // 2. Iterar sobre "muestras":
+      for( let muestra of muestras) {
+      if (!muestra.compuesto || typeof muestra.compuesto !== 'string') {
+        continue;
+      }
+      if (typeof (muestra.masa) !== 'number' || muestra.masa <= 0) {
+        continue;
+      }
+      if (!unidades[muestra.unidad]) {
+        continue;
+      }
+      let conversion = convertirMicrogramos(muestra.masa, muestra.unidad)
+      if (conversion === 'valor invlido' || conversion === 'codigo de unidad invalido') {
+        continue;
+      }
+      let resultado = `El compuesto ${muestra.compuesto} tiene una masa de ${conversion}`;
+      resultados.push(resultado);
+      }
     //    - Verificar que tenga "compuesto", "masa", "unidad"
     //    - Verificar "masa" >= 0
     //    - Verificar "unidad" en "unidades"
     //    - Convertir usando "convertirMicrogramos"
     //    - Construir el string y pushear a resultados
     // 3. Retornar resultados
-    return []; // Reemplazar
+    return resultados; // Reemplazar
   }
-  
+
+
   /**
    * PARTE 2:
    * filtrarMuestrasVolatiles
@@ -91,9 +125,13 @@ const unidades = {
    */
   export function filtrarMuestrasVolatiles(compuestosVolatiles, resultadosProcesados) {
     // TODO: Implementar con .filter() y, por ejemplo, compuestosVolatiles.some(comp => cadena.includes(comp))
-    return []; // Reemplazar
+
+    return resultadosProcesados.filter(resultado => {
+            return compuestosVolatiles.some(compuestoVolatil => resultado.includes(compuestoVolatil))
+    }); // Reemplazar
   }
-  
+
+
   /**
    * calcularMasaTotal
    *
@@ -105,29 +143,61 @@ const unidades = {
    * @returns {number} Masa total
    */
   export function calcularMasaTotal(resultadosProcesados) {
+    const resultado = resultadosProcesados.reduce((acumulador, texto) => {
+     const regex = /tiene una masa de ([\d.]+)\w*/;
+     const match = texto.match(regex)
+     if (match && match[1]) {
+      console.log(match[1])
+      const numero = parseFloat(match[1])
+      if (!isNaN(numero) ){
+       return acumulador + numero
+      }
+     }
+    }, 0)
+    return resultado
+}
+
+
+
+
+
+
+
+  /* Sin usar RegEx
+  export function calcularMasaTotal(resultadosProcesados) {
     // TODO: Extraer la parte numérica de cada string y sumar.
+    const resultado = resultadosProcesados.reduce( (acumulador, texto) => {
+      const arrayPalabras = texto.split(' ');
+      const talVezNumeros = arrayPalabras.map((texto) => parseFloat(texto))
+      const numero = talVezNumeros.find( talVezNumero => talVezNumero >= 0)
+      return acumulador + numero
+       } ,0 )
+       return resultado
     // Ej: "El compuesto Acetona tiene una masa de 1.23mg" => "1.23" => parseFloat("1.23")
-    return 0; // Reemplazar
+    ; // Reemplazar
   }
-  
+*/
+
+
+
   // Ejemplo de uso:
   const muestras = [
     { compuesto: "Acetona", masa: 1234, unidad: "MG" },
+    { compuesto: "Metanol", masa: 1658, unidad: "MG" },
     { compuesto: "Etanol", masa: 500,  unidad: "G" },
     { compuesto: "Agua", masa: -100,   unidad: "KG" },  // Inválida (masa negativa)
     { compuesto: "Butanol", masa: 2000, unidad: "XYZ" } // Inválida (unidad inexistente)
   ];
-  
+
   // Procesamos:
   const resultados = procesarMuestras(muestras);
   console.log("Resultados:", resultados);
-  
+
   // Filtramos compuestos volátiles:
   const volatiles = ["Acetona", "Metanol"];
   const resultadosVolatiles = filtrarMuestrasVolatiles(volatiles, resultados);
   console.log("Volátiles:", resultadosVolatiles);
-  
+
   // Calculamos la masa total:
   const masaTotal = calcularMasaTotal(resultadosVolatiles);
   console.log("Masa total (mg):", masaTotal);
-  
