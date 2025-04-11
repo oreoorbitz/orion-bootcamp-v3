@@ -71,7 +71,7 @@ export const productoDos = JSON.parse(PRODUCTO_STRING_DOS);
  *  - <XX>: 2 primeros caracteres de 'vendor' en mayúscula
  *  - <####>: el id con 4 dígitos
  *  - [X]: opcional si el precio > 100
- *
+ *  - Pistas: vas a querer usar prototype.string.padStart
  * @param {object} producto - Objeto con { id: number, vendor: string, price: number, ... }
  * @returns {string} El SKU generado
  */
