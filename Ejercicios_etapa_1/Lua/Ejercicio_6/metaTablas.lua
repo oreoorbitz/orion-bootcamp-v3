@@ -6,22 +6,22 @@ Instrucciones:
        - arr: una tabla (array) de donde se extraerá el elemento.
        - index: el índice del elemento que se desea obtener.
      La función debe retornar el elemento en la posición indicada.
-  
+
   2. Crea una función llamada "manipulaArray" que realice lo siguiente:
        a. Declara una tabla vacía llamada "myArray".
        b. Agrega tres elementos a la tabla usando table.insert.
        c. Retorna el elemento en la posición 2 (el segundo elemento) de la tabla.
-  
+
   3. Crea una función llamada "sumarElementos" que sume todos los elementos de una tabla de números usando un bucle for.
        Si alguno de los elementos no es un número, retorna "Datos inválidos".
-  
+
   4. Crea una función llamada "generarRango" que genere una tabla con números desde 0 hasta n (incluyendo n).
        Si n no es un número, retorna "Datos inválidos".
-  
+
   5. Crea una función llamada "organizarPorTipo" que reciba una tabla y devuelva una tabla con dos campos:
        - strings: una tabla con todos los elementos de tipo string.
        - numbers: una tabla con todos los elementos de tipo number.
-  
+
   6. Crea funciones que simulen los métodos de alto orden map, filter y reduce:
        a. "miMapa": recibe una tabla y una función; aplica la función a cada elemento y retorna una nueva tabla.
        b. "miFilter": recibe una tabla y una función predicado; retorna una nueva tabla con los elementos que cumplen la condición.
@@ -35,8 +35,8 @@ Nota: Recuerda que en Lua las tablas son 1-indexadas y que no existen métodos i
 -- @param index number: El índice del elemento a obtener.
 -- @return *: El elemento en la posición indicada.
 function accederArray(arr, index)
-    -- TODO: Retorna el elemento en la posición 'index' de 'arr'.
-    return nil -- Reemplazar por la implementación correcta.
+  -- TODO: Retorna el elemento en la posición 'index' de 'arr'.
+    return arr[index] -- Reemplazar por la implementación correcta.
 end
 
 local resultadoDeAccederArray = accederArray({'a', 'b', 'c'}, 2)
@@ -50,11 +50,14 @@ print("accederArray:", resultadoDeAccederArray)
 -- @return any: El elemento en la posición 2 (segundo elemento) de la tabla resultante.
 function manipulaArray(arr, primerElemento, segundoElemento, tercerElemento)
     -- TODO: Declara una tabla vacía llamada "myArray".
-    
+  local myArray = {}
     -- TODO: Agrega los tres elementos usando table.insert.
-    
+  local nuevosInsertados = {primerElemento, segundoElemento, tercerElemento}
+  for _, v in ipairs (nuevosInsertados) do
+    table.insert(myArray,v)
+  end
     -- TODO: Retorna el elemento en la posición 2 de "myArray".
-    return nil -- Reemplazar por la implementación correcta.
+    return myArray[2] -- Reemplazar por la implementación correcta.
 end
 
 local resultadoDeManipularArray = manipulaArray({}, 1, 2, 3)
@@ -65,9 +68,19 @@ print("manipulaArray:", resultadoDeManipularArray)
 -- @return number|string: La suma de los elementos o "Datos inválidos" si algún elemento no es un número.
 function sumarElementos(numeros)
     -- TODO: Verifica que todos los elementos sean números. Si no, retorna "Datos inválidos".
-    
+local todosSonNumeros = true
+for _, v in ipairs(numeros) do
+  if type(v) ~= "number" then
+    return "Datos inválidos"
+  end
+end
+
+  local acumulador = 0
+  for _, v in ipairs(numeros) do
+    acumulador = acumulador + v
+  end
     -- TODO: Usa un bucle for para sumar los elementos.
-    return nil -- Reemplazar por la implementación correcta.
+    return acumulador -- Reemplazar por la implementación correcta.
 end
 
 local resultadoSumarElementos = sumarElementos({200, 200, 20})
@@ -78,14 +91,19 @@ print("sumarElementos:", resultadoSumarElementos)
 -- @return table|string: Una tabla con números desde 0 hasta n o "Datos inválidos" si n no es un número.
 function generarRango(n)
     -- TODO: Verifica que n es un número. Si no, retorna "Datos inválidos".
-    
-    -- TODO: Declara una tabla vacía (por ejemplo, rango).
-    
-    -- TODO: Usa un bucle for para recorrer desde 0 hasta n y agrega cada número a la tabla.
-    
-    -- TODO: Retorna la tabla.
-    return nil -- Reemplazar por la implementación correcta.
+if type(n) ~= "number" then
+  return "Datos inválidos"
 end
+    -- TODO: Declara una tabla vacía (por ejemplo, rango).
+local rango = {}
+    -- TODO: Usa un bucle for para recorrer desde 0 hasta n y agrega cada número a la tabla.
+for i = 0, n do
+  table.insert(rango, i)
+end
+    -- TODO: Retorna la tabla.
+    return table.concat(rango, ", ") -- Reemplazar por la implementación correcta.
+end
+
 
 local resultadoDeGenerarRango = generarRango(10)
 print("generarRango:", resultadoDeGenerarRango)
@@ -96,12 +114,22 @@ print("generarRango:", resultadoDeGenerarRango)
 -- @return table: Una tabla con las propiedades 'strings' y 'numbers'.
 function organizarPorTipo(arr)
     -- TODO: Declara dos tablas, una para strings y otra para numbers.
-    
+
+    local strings = {}
+    local numbers = {}
+
     -- TODO: Recorre la tabla 'arr' y clasifica cada elemento en la tabla correspondiente.
-    
+    for _, v in ipairs(arr) do
+      if type(v) == "number" then
+        table.insert(numbers, v)
+      elseif type(v) == "string" then
+        table.insert(strings,v)
+      end
+    end
     -- TODO: Retorna una tabla con las propiedades 'strings' y 'numbers'.
-    return nil -- Reemplazar por la implementación correcta.
-end
+    return "numbers = {" .. table.concat(numbers, ", ") .. "}, strings = {" .. table.concat(strings, ", ") .. "}" -- Reemplazar por la implementación correcta.
+ end
+
 
 local resultadoDeOrganizarPorTipo = organizarPorTipo({1, "hola", 3, "mundo"})
 print("organizarPorTipo:", resultadoDeOrganizarPorTipo)
@@ -113,9 +141,12 @@ print("organizarPorTipo:", resultadoDeOrganizarPorTipo)
 -- @return table: Una nueva tabla con los elementos transformados.
 function miMapa(arreglo, fn)
     -- TODO: Declara una tabla vacía.
-    
+  local tabla = {}
     -- TODO: Recorre 'arreglo' y aplica 'fn' a cada elemento, insertando el resultado en la nueva tabla.
-    return nil -- Reemplazar por la implementación correcta.
+    for _, v in ipairs(arreglo) do
+       table.insert(tabla, fn(v))
+    end
+    return table.concat(tabla, ", ") -- Reemplazar por la implementación correcta.
 end
 
 local doble = function(x) return x * 2 end
@@ -130,9 +161,15 @@ print("miMapa:", resultadoDeMapiarDoble)
 -- @return table: Una nueva tabla con los elementos que cumplen la condición.
 function miFilter(arreglo, fn)
     -- TODO: Declara una tabla vacía.
-    
+  local tabla = {}
     -- TODO: Recorre 'arreglo' y, para cada elemento, si 'fn(elemento)' es true, inserta el elemento en la nueva tabla.
-    return nil -- Reemplazar por la implementación correcta.
+    for _, v in ipairs(arreglo) do
+      if fn(v) == true then
+        table.insert(tabla, v)
+      end
+     -- Reemplazar por la implementación correcta.
+  end
+  return table.concat(tabla, ", ")
 end
 
 local esPar = function(num) return num % 2 == 0 end
@@ -148,9 +185,12 @@ print("miFilter:", resultadoFiltrado)
 -- @return any: El resultado acumulado tras aplicar la función reductora.
 function miReduce(arreglo, fn, valorInicial)
     -- TODO: Declara una variable 'acumulador' e inicialízala con 'valorInicial'.
-    
+  local acumulador = valorInicial
     -- TODO: Usa un bucle for para recorrer 'arreglo' y actualiza 'acumulador' aplicando 'fn'.
-    return nil -- Reemplazar por la implementación correcta.
+  for _, v in ipairs(arreglo) do
+    acumulador = fn(acumulador, v)
+  end
+    return acumulador -- Reemplazar por la implementación correcta.
 end
 
 local sumar = function(acumulador, valor) return acumulador + valor end
