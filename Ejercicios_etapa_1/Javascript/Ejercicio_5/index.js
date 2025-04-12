@@ -23,7 +23,7 @@ const monedas = {
    *  convertirCentsAMoneda(200, "ABC") => "Codigo de moneda invalido"
    */
   export const convertirCentsAMoneda = (centavos, codigoMoneda) => {
-    console.log(centavos, monedas)
+    
     if(!(codigoMoneda in monedas)){
       return "Codigo de moneda invalido"
     }
@@ -32,8 +32,10 @@ const monedas = {
       return "Valor invalido"
     }
      
-    
-              
+    const unidades = centavos / 100
+    const formateado = unidades.toFixed(2)
+    return `${monedas[codigoMoneda]}${formateado}`
+  
   }
   
   
