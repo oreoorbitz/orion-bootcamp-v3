@@ -23,7 +23,7 @@
     }
 
     const resultado = edadEnDias(26)
-    console.log(resultado)
+    console.log(resultado) 
 
 
 
