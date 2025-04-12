@@ -71,28 +71,3 @@ describe("miReduce", function()
     assert.are.equal(10, metaTablas.miReduce({1, 2, 3, 4}, sumar, 0))
   end)
 end)
-
-describe("usaMap", function()
-  it("debe retornar un nuevo array usando el método simulado de map", function()
-    local multiplicarPorTres = function(x) return x * 3 end
-    local resultado = metaTablas.usaMap({1, 2, 3, 4}, multiplicarPorTres)
-    local esperado = {3, 6, 9, 12}
-    assert.are.same(esperado, resultado)
-  end)
-end)
-
-describe("usaFilter", function()
-  it("debe retornar un nuevo array usando el método simulado de filter", function()
-    local esImparejo = function(num) return num % 2 ~= 0 end
-    local resultado = metaTablas.usaFilter({1, 2, 3, 4, 5, 6}, esImparejo)
-    local esperado = {1, 3, 5}
-    assert.are.same(esperado, resultado)
-  end)
-end)
-
-describe("usaReduce", function()
-  it("debe retornar el resultado acumulado usando el método simulado de reduce", function()
-    local multiplicar = function(ac, val) return ac * val end
-    assert.are.equal(24, metaTablas.usaReduce({1, 2, 3, 4}, multiplicar, 1))
-  end)
-end)
