@@ -12,6 +12,7 @@
 // Ahora se puede usar `convertirEdad()` en lugar de `edadEnDias()` en las pruebas.
 
 import { assertEquals } from "@std/assert";
+import { edadEnDias, cualEsTuNombre, doble, triple } from "./main.ts";
 // TODO: Importar las funciones desde main.ts aquí
 // Ejemplo:
 // import { edadEnDias } from "./main.ts";
@@ -29,6 +30,22 @@ import { assertEquals } from "@std/assert";
  *   assertEquals(edadEnDias(10), 3650);
  * });
  */
+
+Deno.test("edadEnDias devuelve edad en dias correctamenete", () => {
+    assertEquals(edadEnDias(1), 365)
+})
+
+Deno.test("cualEsTuNombre el string correctamente", () => {
+    assertEquals(cualEsTuNombre("Juan", "Pérez"),"Hola, Juan Pérez!")
+})
+
+Deno.test('doble dobla un el numero correctamente', () => {
+    assertEquals(doble(2), 4)
+})
+
+Deno.test('triple tripicla correctamente', () => {
+    assertEquals(triple(3), 9)
+})
 
 // EJEMPLO DE PRUEBA:
 // ------------------
