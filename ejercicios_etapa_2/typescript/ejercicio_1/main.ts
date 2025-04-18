@@ -34,9 +34,6 @@
  
 // TODO: Escribir la función aquí
 
-export const edadEnDias = (edad: number) : number => edad * 365
-
-
 /* ============================
  * EJERCICIO 2: Generar un saludo
  * ============================
@@ -51,11 +48,6 @@ export const edadEnDias = (edad: number) : number => edad * 365
  */
 
 // TODO: Escribir la función aquí
-
-export const cualEsTuNombre = (primerNombre: string, segundoNombre: string) : string =>   `Hola, ${primerNombre} ${segundoNombre}!` 
-console.log(cualEsTuNombre("juan", "perez"))
-
-
 
 /* ============================
  * EJERCICIO 3: Múltiples funciones
@@ -73,12 +65,6 @@ console.log(cualEsTuNombre("juan", "perez"))
  */
 
 // TODO: Escribir las funciones aquí
-
-export const doble = (n: number) : number => n * 2
-
-export const triple = (n: number) : number => n * 3
-
-export const dobleMasTriple = (n: number) : number => doble(n) + triple(n)
 
 /* ============================
  * EJERCICIO 4: Tipado y validaciones
