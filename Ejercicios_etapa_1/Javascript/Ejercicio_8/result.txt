@@ -1,7 +1,7 @@
 // index.js
 
 /**
- * EJERCICIO 9: GENERACIÓN Y VALIDACIÓN DE SKUs EN UN ENTORNO E-COMMERCE
+ * EJERCICIO 8: GENERACIÓN Y VALIDACIÓN DE SKUs EN UN ENTORNO E-COMMERCE
  *
  * Instrucciones:
  *
@@ -40,7 +40,7 @@
 // ------------------------------------------------------------------------------------------------
 // Cadena con datos de un producto
 // ------------------------------------------------------------------------------------------------
-const PRODUCTO_STRING_UNO = `{
+export const PRODUCTO_STRING_UNO = `{
   "id": 42,
   "handle": "simple-tee",
   "vendor": "Velocity",
@@ -49,7 +49,7 @@ const PRODUCTO_STRING_UNO = `{
   "tags": ["ropa", "camiseta", "oferta"]
 }`;
 
-const PRODUCTO_STRING_DOS = `{
+export const PRODUCTO_STRING_DOS = `{
   "id": 256,
   "handle": "casual-tee",
   "vendor": "Velocity",
