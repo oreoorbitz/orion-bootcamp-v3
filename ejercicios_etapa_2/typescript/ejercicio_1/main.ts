@@ -25,3 +25,13 @@
  * 
  * Enfócate en: bucles, condicionales, métodos de string, y lógica de separación.
  */
+
+const HTML = `<div>Hello <span>World</span></div>`;
+
+export const tokenizarHTML = (html: string): string[] => {
+  const tokens = html.match(/<[^>]+>|[^<]+/g);
+  const tokenArray = tokens ? tokens : [];
+  return tokenArray
+}
+
+console.log(tokenizarHTML(HTML));
