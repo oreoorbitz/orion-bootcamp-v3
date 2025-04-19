@@ -1,72 +1,39 @@
-// @ts-check
-
 /**
- * EJERCICIO: Analizando HTML como cadena de texto
+ * MÓDULO 2: CLASIFICACIÓN DE ETIQUETAS
  *
- * Objetivo:
- * - Comprender la estructura básica de HTML.
- * - Usar `String.split()` y `String.match()` para dividir una cadena HTML.
- * - Extraer el tag de apertura, el contenido y el tag de cierre.
+ * Objetivo: Analizar los tokens generados anteriormente y clasificarlos como:
+ * - apertura (`<div>`),
+ * - cierre (`</div>`),
+ * - autocierre (`<img />`),
+ * - o contenido de texto.
  *
- * 🎯 Instrucciones:
- * 1. Crear una función llamada `analizarHTML` que:
- *    - Reciba una cadena HTML.
- *    - Divida el contenido en tag de apertura, contenido y tag de cierre.
- *    - Retorne un objeto con esta estructura:
- *      {
- *        apertura: string,
- *        contenido: string,
- *        cierre: string
- *      }
- * 2. Crear una función llamada `identificarTags` que:
- *    - Reciba una cadena HTML.
- *    - Use regex para identificar los nombres de los tags (sin contenido).
- *    - Retorne un array de tags encontrados.
+ * Instrucciones:
+ * 1. Crea una función `clasificarTokens(tokens: string[]): any[]`
+ * 2. Devuelve un array de objetos con esta estructura:
+ *    {
+ *      tipo: 'apertura' | 'cierre' | 'autocierre' | 'texto',
+ *      nombre: 'div' | null,
+ *      contenido: string | null
+ *    }
+ * 3. Si es una etiqueta, extrae el nombre del tag (por ejemplo: `div`, `span`, etc.)
  *
- * 📚 Ejemplos:
- * analizarHTML("<div>Hello</div>")
- * // { apertura: "<div>", contenido: "Hello", cierre: "</div>" }
+ * Ejemplo (entrada del módulo anterior):
+ * [
+ *   "<div>",
+ *   "Hello ",
+ *   "<span>",
+ *   "World",
+ *   "</span>",
+ *   "</div>"
+ * ]
  *
- * identificarTags("<div><p>Hola</p></div>")
- * // ["div", "p", "/p", "/div"]
- */
-
-/**
- * Interface para el resultado de `analizarHTML`.
- */
-export interface ResultadoHTML {
-  apertura: string;
-  contenido: string;
-  cierre: string;
-}
-
-/**
- * Enum para tipos de tags comunes en HTML (opcional).
- */
-export enum TagHTML {
-  DIV = "div",
-  P = "p",
-  H1 = "h1",
-  SECTION = "section",
-  SPAN = "span"
-}
-
-/**
- * Función `analizarHTML`
- * ----------------------
- * Recibe una cadena HTML y retorna un objeto con el tag de apertura,
- * el contenido y el tag de cierre.
- *
- * @param {string} cadena - La cadena HTML que será analizada.
- * @returns {ResultadoHTML} Objeto con apertura, contenido y cierre.
- */
-
-
-/**
- * Función `identificarTags`
- * -------------------------
- * Recibe una cadena HTML y retorna un array de tags encontrados.
- *
- * @param {string} cadena - La cadena HTML que será analizada.
- * @returns {string[]} Array de tags encontrados.
+ * Resultado esperado:
+ * [
+ *   { tipo: 'apertura', nombre: 'div', contenido: null },
+ *   { tipo: 'texto', nombre: null, contenido: 'Hello ' },
+ *   { tipo: 'apertura', nombre: 'span', contenido: null },
+ *   { tipo: 'texto', nombre: null, contenido: 'World' },
+ *   { tipo: 'cierre', nombre: 'span', contenido: null },
+ *   { tipo: 'cierre', nombre: 'div', contenido: null }
+ * ]
  */

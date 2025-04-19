@@ -1,7 +1,7 @@
 // index.js
 
 /**
- * EJERCICIO 9: GENERACIÓN Y VALIDACIÓN DE SKUs EN UN ENTORNO E-COMMERCE
+ * EJERCICIO 8: GENERACIÓN Y VALIDACIÓN DE SKUs EN UN ENTORNO E-COMMERCE
  *
  * Instrucciones:
  *
@@ -40,7 +40,7 @@
 // ------------------------------------------------------------------------------------------------
 // Cadena con datos de un producto
 // ------------------------------------------------------------------------------------------------
-const PRODUCTO_STRING_UNO = `{
+export const PRODUCTO_STRING_UNO = `{
   "id": 42,
   "handle": "simple-tee",
   "vendor": "Velocity",
@@ -49,7 +49,7 @@ const PRODUCTO_STRING_UNO = `{
   "tags": ["ropa", "camiseta", "oferta"]
 }`;
 
-const PRODUCTO_STRING_DOS = `{
+export const PRODUCTO_STRING_DOS = `{
   "id": 256,
   "handle": "casual-tee",
   "vendor": "Velocity",
@@ -59,9 +59,7 @@ const PRODUCTO_STRING_DOS = `{
 }`;
 
 // 1b. TODO: Convierte la cadena PRODUCTO_STRING_UNO y PRODUCTO_STRING_DOS a objetos reales usando JSON.parse.
-// Asegúrate de exportarlos para la prueba.
-export const productoUno = JSON.parse(PRODUCTO_STRING_UNO);
-export const productoDos = JSON.parse(PRODUCTO_STRING_DOS);
+// llama las variables, productoUno y productoDos Asegúrate de exportarlos para la prueba.
 
 // ------------------------------------------------------------------------------------------------
 // 2. Crea la función "generarSKU"
@@ -75,16 +73,7 @@ export const productoDos = JSON.parse(PRODUCTO_STRING_DOS);
  * @param {object} producto - Objeto con { id: number, vendor: string, price: number, ... }
  * @returns {string} El SKU generado
  */
-export function generarSKU(producto) {
-  const vendor = (producto.vendor || "").slice(0, 2).toUpperCase();
-  const id4 = String(producto.id).padStart(4, "0");
-  
-  let sku = `${vendor}-${id4}`;
-  if (producto.price > 100) {
-    sku += "X";
-  }
-  return sku;
-}
+// la funcion debria llamarse generarSKU, asegura exportarla
 
 // ------------------------------------------------------------------------------------------------
 // 3. Crea la función "validarSKU"
@@ -95,21 +84,5 @@ export function generarSKU(producto) {
  * @param {string} sku - El SKU a validar
  * @returns {boolean} true si es válido, false en caso contrario
  */
-export function validarSKU(sku) {
-  const regex = /^[A-Z]{2}-\d{4}[A-Z]?$/;
-  return regex.test(sku);
-}
+// la funcion debria llamarse validarSKU, asegura exportarla
 
-// ------------------------------------------------------------------------------------------------
-// 4. DEMO (una vez implementado)
-// ------------------------------------------------------------------------------------------------
-
-// SKU para el primer producto
-const skuUno = generarSKU(productoUno);
-console.log("SKU para productoUno:", skuUno);
-console.log("¿SKU válido?:", validarSKU(skuUno));
-
-// SKU para el segundo producto
-const skuDos = generarSKU(productoDos);
-console.log("SKU para productoDos:", skuDos);
-console.log("¿SKU válido?:", validarSKU(skuDos));

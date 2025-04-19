@@ -1,0 +1,101 @@
+// @ts-check
+/*******************************************************************************************
+ * SOLUCIÓN – EJERCICIO 10: ASINCRONÍA EN UN “LABORATORIO” VIRTUAL
+ * ---------------------------------------------------------------
+ * En esta referencia se muestran implementadas todas las funciones solicitadas.
+ * Compárala con tu propio código únicamente cuando necesites verificar un detalle
+ * o desbloquearte. ¡Intenta primero resolverlo por tu cuenta! 💪
+ *******************************************************************************************/
+
+/* ------------------------------------------------------------------ */
+/* 1.  API Mock – NO se modifica                                       */
+/* ------------------------------------------------------------------ */
+function obtenerMuestrasDelServidor () {
+  const MOCK_MUESTRAS = [
+    { id: 1, nombre: "Solución Acética",  ph: 3.5,  concentracion: 0.1, temper: 21 },
+    { id: 2, nombre: "Tampón Fosfato",   ph: 7.2,  concentracion: 0.05, temper: 22 },
+    { id: 3, nombre: "Solución Amónica", ph: 11.1, concentracion: 0.2, temper: 19 },
+    { id: 4, nombre: "Agua Desionizada", ph: 7.0,  concentracion: 0.0,  temper: 20 }
+  ];
+  return new Promise(resolve => setTimeout(() => resolve(MOCK_MUESTRAS), 1_000));
+}
+
+/* ------------------------------------------------------------------ */
+/* 2A. obtenerMuestras                                                 */
+/* ------------------------------------------------------------------ */
+async function obtenerMuestras () {
+  try {
+    const muestras = await obtenerMuestrasDelServidor();
+    return muestras;
+  } catch (err) {
+    console.error("❌ Error al obtener las muestras:", err);
+    throw err; // re‑lanza para que quien llame sepa que algo falló
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* 2B. filtrarPorPH                                                    */
+/* ------------------------------------------------------------------ */
+/**
+ * @param {{ph:number}[]} muestras
+ * @param {{min:number, max:number}} rango
+ */
+function filtrarPorPH (muestras, rango) {
+  return muestras.filter(m => m.ph >= rango.min && m.ph <= rango.max);
+}
+
+/* ------------------------------------------------------------------ */
+/* 2C. calcularPromedioConcentracion                                   */
+/* ------------------------------------------------------------------ */
+/**
+ * @param {{concentracion:number}[]} muestras
+ * @returns {number}
+ */
+function calcularPromedioConcentracion (muestras) {
+  if (!muestras.length) return 0;
+  const total = muestras.reduce((acc, m) => acc + m.concentracion, 0);
+  return +(total / muestras.length).toFixed(3); // redondeamos a 3 décimas
+}
+
+/* ------------------------------------------------------------------ */
+/* 2D. procesarEnsayo (flujo completo)                                 */
+/* ------------------------------------------------------------------ */
+async function procesarEnsayo () {
+  try {
+    const lote = await obtenerMuestras();
+
+    // 1) filtrar pH 6‑8
+    const neutras = filtrarPorPH(lote, { min: 6, max: 8 });
+    console.log(`🔬 Muestras (pH 6‑8): ${neutras.length}`);
+
+    // 2) promedio concentración de todo el lote
+    const promConc = calcularPromedioConcentracion(lote);
+    console.log(`📊 Promedio de concentración: ${promConc}%`);
+
+    // (extra) mostrar detalle de SKUs simulados
+    console.table(lote.map(m => ({
+      ID   : m.id.toString().padStart(3, "0"),
+      Nom  : m.nombre,
+      pH   : m.ph,
+      Conc : m.concentracion
+    })));
+  } catch (err) {
+    console.error("❌ No se pudo completar el ensayo:", err);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* 3.  Ejecución                                                       */
+/* ------------------------------------------------------------------ */
+// Descomenta si quieres ver la salida:
+ // procesarEnsayo();
+
+/* ------------------------------------------------------------------ */
+/* 4.  Exports (para posibles tests)                                   */
+/* ------------------------------------------------------------------ */
+export {
+  obtenerMuestras,
+  filtrarPorPH,
+  calcularPromedioConcentracion,
+  procesarEnsayo
+};
