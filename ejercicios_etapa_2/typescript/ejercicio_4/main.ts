@@ -98,6 +98,14 @@ const esTag = (string: string) => string.startsWith("<") && string.endsWith(">")
 
 const esAppertura = (string: string) => string.startsWith("<") && !string.startsWith("</") && !string.endsWith("/>");
 
+const esTokenDeApertura = (token: Token) => token.tipo === TipoToken.Apertura;
+
+const esTokenDeCierre = (token: Token) => token.tipo === TipoToken.Cierre;
+
+const esTokenDeAutocierre = (token: Token) => token.tipo === TipoToken.Autocierre;
+
+const esTokenDeTexto = (token: Token) => token.tipo === TipoToken.Texto;
+
 const esCierre = (string: string) => string.startsWith("</") && string.endsWith(">");
 
 const esAutocierre = (string: string) => string.startsWith("<") && string.endsWith("/>");
@@ -117,7 +125,7 @@ const tokenizarHTML = (html: string): string[] => {
 }
 
 
-export const clasificarTokens = (tokens: string[]): object[] => {
+export const clasificarTokens = (tokens: string[]): Token[] => {
   const tokensClassificados = tokens.map(token => {
     if (esTag(token)) {
       const nombreTag = encontrarNombreDeTag(token);
@@ -146,15 +154,21 @@ export const clasificarTokens = (tokens: string[]): object[] => {
 }
 
 const construirArbol = (tokens: Token[]): Token | null => {
-  const obj = tokens.map(token => {
-    console.log(token.tipo === TipoToken.Apertura)
-    if(token.tipo === TipoToken.Apertura) {
-      return {
-        ...token,
-        hijos: []
-      }
+  const stack: Token[] = [];
+  let currentNode: Token | null = null;
+
+  for ( const token of tokens) {
+    if(esTokenDeApertura(token)) {
+      console.log('token de apertura', token)
+    } else if(esTokenDeCierre(token)) {
+      console.log('token de cierre', token)
+    } else if(esTokenDeTexto(token)) {
+      console.log('token de texto', token)
+    } else if(esTokenDeAutocierre(token)) {
+      console.log('token de autocierre', token)
     }
-  })
+  }
+
 
   return null
 }
