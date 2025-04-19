@@ -37,9 +37,19 @@ export const TEXTO_LARGO = "es largo";
  * Recuerda exportarla con: export function determinarTipoNumero(num) {...}
  */
 //
-// export function determinarTipoNumero(num) {
-//     // Implementa aquí
-// }
+// export function determinarTipoNumero(num) {}
+
+export function determinarTipoNumero(num){
+    
+    if (num % 1 === 0){ 
+       return `${TEXTO_NUMERO_ENTERO} ${num}`
+
+    }
+}
+let r = determinarTipoNumero(10)
+console.log(r)
+r = determinarTipoNumero(3.50)
+console.log(r)
 
 /**
  * TODO: Implementar la función "esPositivo"
@@ -51,9 +61,11 @@ export const TEXTO_LARGO = "es largo";
  */
 //
 // export function esPositivo(num) {
-//     // Implementa aquí
-// }
-
+export function esPositivo(num){
+    
+}
+   
+    
 /**
  * TODO: Implementar la función "dividirSeguro"
  * Debe recibir dos números (dividendo, divisor) y retornar:
@@ -64,8 +76,14 @@ export const TEXTO_LARGO = "es largo";
  */
 //
 // export function dividirSeguro(dividendo, divisor) {
-//     // Implementa aquí
-// }
+export function dividirSeguro(dividendo, divisor){
+    
+    if (divisor === 0){
+        const TEXTO_DIVISOR = "Error divisor es "
+        return `${TEXTO_DIVISOR} ${dividendo/divisor}`
+
+    }
+}
 
 /**
  * TODO: Implementar la función "evaluarLongitud"
@@ -74,8 +92,9 @@ export const TEXTO_LARGO = "es largo";
  *   - "El texto '<texto>' es corto" si texto.length <= 5
  *
  * Recuerda exportarla con: export function evaluarLongitud(texto) {...}
- */
+ */export function evaluarLongitud(texto){
+
+ }
 //
-// export function evaluarLongitud(texto) {
-//     // Implementa aquí
-// }
+// export function evaluarLongitud(texto) {}
+
