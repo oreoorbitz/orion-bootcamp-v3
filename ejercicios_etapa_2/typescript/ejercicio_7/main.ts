@@ -1,14 +1,23 @@
 /**
  * MÓDULO 7: REEMPLAZO DE VARIABLES EN PLANTILLAS
  *
- * Objetivo: Reemplazar `{{ variable }}` en una plantilla con el valor de un objeto de datos.
+ * 🧠 Concepto clave:
+ * En los motores de plantillas como Liquid, `{{ nombre }}` se reemplaza por el valor real de una variable del contexto.
+ * Esto permite generar contenido dinámico desde datos, como hacer que el título de una página cambie según el usuario.
+ *
+ * En este módulo, empezarás a conectar *datos reales* con *plantillas de texto*.
+ *
+ * Objetivo:
+ * Reemplazar todos los bloques `{{ variable }}` por sus valores del objeto `contexto`.
  *
  * Instrucciones:
  * 1. Crea una función `renderizarVariables(tokens: string[], contexto: Record<string, any>): string`
- * 2. Por cada token `{{ variable }}`, reemplázalo con `contexto['variable']`
- * 3. Si la variable no existe en el objeto, puedes dejarla vacía o usar un valor por defecto
+ * 2. Para cada token:
+ *    - Si es una variable `{{ ... }}`, busca el valor correspondiente en el `contexto`
+ *    - Si no existe, puedes dejarlo vacío (`""`) o usar un valor por defecto
+ *    - El resto del texto debe conservarse sin cambios
  *
- * Entrada de ejemplo:
+ * Entrada:
  * tokens:
  * [
  *   "Hola, ",
@@ -22,10 +31,10 @@
  *   ciudad: "Madrid"
  * }
  *
- * Salida esperada:
+ * Resultado esperado:
  * "Hola, Carlos. Bienvenido a Madrid."
  *
  * Consejo:
- * - Recorta los espacios en `{{ nombre }}` usando `.trim()`
- * - Usa expresiones regulares para extraer el nombre de la variable dentro de `{{ ... }}`
+ * - Recorta los espacios dentro de los `{{ ... }}` antes de buscar la clave
+ * - Este paso es esencial para generar contenido dinámico en la web
  */

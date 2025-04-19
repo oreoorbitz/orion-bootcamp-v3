@@ -1,15 +1,22 @@
 /**
  * MÓDULO 3: MANEJO DE ATRIBUTOS
  *
- * Objetivo: Extraer y almacenar los atributos dentro de las etiquetas HTML.
+ * 🧠 Concepto clave:
+ * En HTML, las etiquetas pueden tener *atributos* que modifican su comportamiento: `<div class="box" id="main">`.
+ * Estos atributos se usan para aplicar estilos, referenciar elementos, o darles comportamiento.
+ * En este módulo, vamos a extraer esa información para que luego podamos buscar elementos por `id`, `class`, etc.
+ *
+ * Objetivo:
+ * Detectar y extraer los atributos presentes dentro de las etiquetas de apertura o autocierre.
  *
  * Instrucciones:
- * 1. Modifica la función del módulo anterior (o crea una nueva) para procesar los atributos de cada etiqueta de apertura/autocierre.
- * 2. Usa expresiones regulares o división con `.split` para detectar atributos como `class="btn"` o `id="main"`.
- * 3. Devuelve los tokens con un campo adicional: `atributos: Record<string, string>`
+ * 1. Modifica la salida del módulo 2 (o crea una nueva función) para detectar atributos.
+ * 2. Para cada etiqueta que tenga atributos, crea un campo `atributos` como un objeto:
+ *    `{ class: 'box', id: 'main' }`
+ * 3. Usa expresiones regulares o divisiones con `.split`, `.matchAll`, etc.
  *
- * Ejemplo:
- * Entrada: `<div class="box" id="main">`
+ * Ejemplo de entrada:
+ * `<div class="box" id="main">`
  *
  * Resultado esperado:
  * {
@@ -19,7 +26,7 @@
  *   atributos: { class: 'box', id: 'main' }
  * }
  *
- * Sugerencia:
- * - Busca las comillas para separar los valores.
- * - Usa el método `.matchAll()` o una expresión regular tipo `(\w+)="([^"]*)"`
+ * Consejo:
+ * - Busca solo dentro del contenido de la etiqueta (no el texto externo)
+ * - Este paso te ayudará a construir funciones como `getElementById` o `getElementsByClassName` más adelante.
  */

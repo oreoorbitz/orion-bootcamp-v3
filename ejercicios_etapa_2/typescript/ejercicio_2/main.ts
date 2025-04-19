@@ -1,23 +1,29 @@
 /**
  * MÓDULO 2: CLASIFICACIÓN DE ETIQUETAS
  *
- * Objetivo: Analizar los tokens generados anteriormente y clasificarlos como:
- * - apertura (`<div>`),
- * - cierre (`</div>`),
- * - autocierre (`<img />`),
- * - o contenido de texto.
+ * 🧠 Concepto clave:
+ * Los navegadores no solo leen las etiquetas HTML — también interpretan si están *abriendo* algo (`<div>`),
+ * *cerrando* algo (`</div>`), o si son *autocontenidas* (`<img />`).
+ * Antes de poder construir una estructura similar al DOM (el árbol que representa una página),
+ * necesitamos clasificar los tokens generados en el módulo anterior.
+ *
+ * Objetivo:
+ * Clasificar cada token en uno de estos tipos:
+ * - etiqueta de apertura
+ * - etiqueta de cierre
+ * - etiqueta autocontenida
+ * - contenido de texto
  *
  * Instrucciones:
- * 1. Crea una función `clasificarTokens(tokens: string[]): any[]`
- * 2. Devuelve un array de objetos con esta estructura:
- *    {
- *      tipo: 'apertura' | 'cierre' | 'autocierre' | 'texto',
- *      nombre: 'div' | null,
- *      contenido: string | null
- *    }
- * 3. Si es una etiqueta, extrae el nombre del tag (por ejemplo: `div`, `span`, etc.)
+ * 1. Crea una función llamada `clasificarTokens(tokens: string[]): any[]`
+ * 2. Para cada token, determina su tipo.
+ * 3. Devuelve un objeto con:
+ *    - tipo: 'apertura' | 'cierre' | 'autocierre' | 'texto'
+ *    - nombre: el nombre de la etiqueta (por ejemplo `div`, `img`, etc.)
+ *    - contenido: solo en caso de tipo 'texto'
  *
- * Ejemplo (entrada del módulo anterior):
+ * Ejemplo:
+ * Entrada:
  * [
  *   "<div>",
  *   "Hello ",
@@ -36,4 +42,7 @@
  *   { tipo: 'cierre', nombre: 'span', contenido: null },
  *   { tipo: 'cierre', nombre: 'div', contenido: null }
  * ]
+ *
+ * Consejo:
+ * - Este paso es equivalente a que el navegador reconozca qué etiquetas están empezando, terminando o actuando solas.
  */

@@ -1,14 +1,21 @@
 /**
  * MÓDULO 9: CONSTRUCCIÓN DE BUCLES EN PLANTILLAS
  *
- * Objetivo: Implementar `{% for item in lista %}` con `{{ item }}`
+ * 🧠 Concepto clave:
+ * Los motores de plantillas como Liquid permiten generar listas de contenido usando bucles `{% for item in lista %}`.
+ * Esto es útil, por ejemplo, para generar un bloque por cada producto en una tienda.
+ *
+ * En este módulo, vas a procesar bloques repetibles y a renderizar cada ítem de forma dinámica.
+ *
+ * Objetivo:
+ * Repetir secciones de la plantilla por cada elemento de un arreglo en el contexto.
  *
  * Instrucciones:
  * 1. Crea una función `procesarBucles(tokens: string[], contexto: Record<string, any>): string[]`
- * 2. Detecta `{% for item in lista %}` y `{% endfor %}`
- * 3. Para cada elemento de `contexto['lista']`, duplica los tokens del bloque y reemplaza `{{ item }}` con el valor actual
+ * 2. Detecta los bloques `{% for item in lista %} ... {% endfor %}`
+ * 3. Para cada elemento de `contexto['lista']`, repite ese bloque reemplazando `{{ item }}` con el valor actual
  *
- * Entrada de ejemplo:
+ * Entrada:
  * tokens:
  * [
  *   "Lista: ",
@@ -21,7 +28,7 @@
  *   frutas: ["manzana", "plátano", "uva"]
  * }
  *
- * Salida esperada:
+ * Resultado esperado:
  * [
  *   "Lista: ",
  *   "manzana ",
@@ -30,6 +37,6 @@
  * ]
  *
  * Consejo:
- * - Requiere detectar el rango entre `{% for ... %}` y `{% endfor %}`
- * - Puedes usar `.replace()` o una subfunción `renderizarVariables()` para el interior del bloque
+ * - Este patrón de bucle es uno de los más usados en generación de HTML con datos
+ * - Puedes usar `renderizarVariables` dentro del cuerpo del bucle para reemplazar `{{ item }}`
  */
