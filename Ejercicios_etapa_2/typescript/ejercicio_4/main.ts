@@ -160,6 +160,10 @@ const construirArbol = (tokens: Token[]): Token | null => {
   for ( const token of tokens) {
     if(esTokenDeApertura(token)) {
       console.log('token de apertura', token)
+      if(stack.length === 0) {
+        console.log('stack vacio')
+        currentNode = token;
+      }
     } else if(esTokenDeCierre(token)) {
       console.log('token de cierre', token)
     } else if(esTokenDeTexto(token)) {
