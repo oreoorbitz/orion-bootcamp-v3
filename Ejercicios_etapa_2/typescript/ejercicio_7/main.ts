@@ -36,5 +36,4 @@
  *
  * Consejo:
  * - Recorta los espacios dentro de los `{{ ... }}` antes de buscar la clave
- * - Este paso es esencial para generar contenido dinámico en la web
  */
