@@ -13,13 +13,23 @@
 export function crearUsuarioConPrototipo(nombre, rol) {
     // TODO: Crea una función constructora llamada Usuario.
     // function Usuario(nombre, rol) { ... }
-
     // TODO: Agrega un método "saludar" al prototipo de Usuario.
     // Usuario.prototype.saludar = function () { ... }
-
     // TODO: Retorna una nueva instancia de Usuario.
-    return {}; // Reemplazar por la implementación correcta.
-}
+    // Reemplazar por la implementación correcta.
+     function Usuario(nombre, rol) {
+      this.nombre = nombre
+      this.rol = rol
+    }
+    Usuario.prototype.saludar = function() {
+      return `Hola, soy ${this.nombre} y soy ${this.rol}.`
+    }
+
+    return new Usuario(nombre, rol)
+  }
+
+
+
 
 // Ejemplo de uso
 const usuarioProto = crearUsuarioConPrototipo("Luis", "admin");
@@ -40,6 +50,8 @@ export class Usuario {
      */
     constructor(nombre, rol) {
         // TODO: Asigna las propiedades nombre y rol
+        this.nombre = nombre
+        this.rol = rol
     }
 
     /**
@@ -48,7 +60,7 @@ export class Usuario {
      */
     saludar() {
         // TODO: Retorna un string como "Hola, soy Ana y soy cliente."
-        return "";
+        return `Hola, soy ${this.nombre} y soy ${this.rol}.`;
     }
 }
 
@@ -75,11 +87,15 @@ console.log(usuarioClase.saludar()); // "Hola, soy Ana y soy cliente."
 export class PubSub {
     // TODO: Define una propiedad estática TOPICS que contenga eventos como:
     // SHOW_ERROR_NOTIFICATION, SHOW_SUCCESS_NOTIFICATION
-
+    static TOPICS = {
+      SHOW_ERROR_NOTIFICATION: 'ERROR',
+      SHOW_SUCCESS_NOTIFICATION: 'SUCCESS',
+    }
     constructor() {
         // TODO: Crea un objeto llamado topics para almacenar los listeners por cada evento.
-
-        // TODO: Guarda una referencia a Object.prototype.hasOwnProperty para validar topics.
+        this.topics = { }
+        // TODO: Guarda un  referencia a Object.prototype.hasOwnProperty para validar topics.
+        this.hOP = Object.prototype.hasOwnProperty;
     }
 
     /**
@@ -92,12 +108,13 @@ export class PubSub {
      */
     suscribirse(evento, listener) {
         // TODO: Si el evento no existe aún en this.topics, inicialízalo con un array vacío.
-
+        if (!this.hOP.call (this.topics, evento)) this.topics [evento] = [ ];
         // TODO: Agrega el listener al array y guarda su posición.
-
+        const index = this.topics [evento].push (listener) -1;
         // TODO: Retorna un objeto con una función `remover` para cancelar la suscripción.
         return {
-            remover: () => {},
+            remover: () => {delete this.topics [evento] [index];
+            },
         };
     }
 
@@ -110,10 +127,21 @@ export class PubSub {
      */
     publicar(evento, info) {
         // TODO: Si no hay listeners para este evento, salir de la función.
+        if (!this.hOP.call (this.topics, evento)) return;
 
         // TODO: Ejecutar todos los listeners del evento, pasando la info como argumento.
+        this.topics [evento].forEach (function (item) {
+          item (info != undefined ? info : { });
+        });
     }
 }
+
+const pubsub = new PubSub();
+const cancel = pubsub.suscribirse("MI_EVENTO", (info) => {
+console.log("Se recibió el evento con info:", info);
+});
+pubsub.publicar("MI_EVENTO", { mensaje: "¡Hola mundo!" });
+cancel.remover();
 
 // Ejemplo de uso
 // const pubsub = new PubSub();

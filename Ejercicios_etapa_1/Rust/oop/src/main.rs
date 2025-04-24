@@ -20,19 +20,23 @@ pub struct Usuario {
 impl Usuario {
     pub fn new(nombre: &str, rol: &str) -> Self {
         // TODO: Implementa la creación de una nueva instancia de Usuario.
-        unimplemented!()
+        Self {
+          nombre: nombre.to_string(),
+          rol: rol.to_string()
+        }
     }
 
     pub fn saludar(&self) -> String {
         // TODO: Retorna un saludo en el formato "Hola, soy <nombre> y soy <rol>".
-        unimplemented!()
+        format!("Hola, soy {} y soy {}", self.nombre, self.rol)
     }
 }
 
 pub fn crear_usuario_con_factory(nombre: &str, rol: &str) -> Usuario {
     // TODO: Retorna una nueva instancia de Usuario utilizando el método new.
-    unimplemented!()
+  Usuario::new(nombre, rol)
 }
+
 
 pub const MOSTRAR_NOTIFICACION_ERROR: &str = "MOSTRAR_NOTIFICACION_ERROR";
 pub const MOSTRAR_NOTIFICACION_EXITO: &str = "MOSTRAR_NOTIFICACION_EXITO";
@@ -47,7 +51,7 @@ pub struct PubSub {
 impl PubSub {
     pub fn new() -> Self {
         // TODO: Crea una nueva instancia de PubSub inicializando la propiedad temas.
-        unimplemented!()
+        pub struct eventos{}
     }
 
     pub fn suscribirse<F>(&mut self, evento: &str, escuchador: F) -> Suscripcion
@@ -57,12 +61,12 @@ impl PubSub {
         // TODO: Si el evento no existe en self.temas, inicialízalo con un vector vacío.
         // Agrega el escuchador al vector correspondiente y guarda su índice.
         // Retorna una Suscripcion con el evento, índice y una referencia mutable a self.
-        unimplemented!()
+
     }
 
     pub fn publicar(&self, evento: &str, info: &Info) {
         // TODO: Si existen escuchadores para el evento, itera sobre ellos y ejecútalos pasando la info.
-        unimplemented!()
+
     }
 }
 
