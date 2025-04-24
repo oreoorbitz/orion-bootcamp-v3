@@ -42,11 +42,3 @@ Aprende y practica **declaraciones de funciones, expresiones de función y arrow
 ```sh
 node cli_3.js
 ```
-
-### **CLI 4 - Puzzle de Parsons con funciones**
-Sin ver ejemplos previos, ordena el código correctamente de memoria.
-
-```sh
-node cli_4.js
-```
-
