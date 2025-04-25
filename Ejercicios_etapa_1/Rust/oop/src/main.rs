@@ -49,24 +49,37 @@ pub struct PubSub {
 }
 
 impl PubSub {
-    pub fn new() -> Self {
+    pub fn new() -> Self { PubSub {
         // TODO: Crea una nueva instancia de PubSub inicializando la propiedad temas.
-        pub struct eventos{}
-    }
+        temas: HashMap::new()
+    } }
 
     pub fn suscribirse<F>(&mut self, evento: &str, escuchador: F) -> Suscripcion
     where
         F: Fn(&Info) + 'static,
     {
         // TODO: Si el evento no existe en self.temas, inicialízalo con un vector vacío.
+        let escuchadores = self.temas.entry(evento.to_string()).or_insert(Vec::new());
         // Agrega el escuchador al vector correspondiente y guarda su índice.
+        escuchadores.push(Box::new(escuchador));
         // Retorna una Suscripcion con el evento, índice y una referencia mutable a self.
+        let indice = escuchadores.len() -1;
+
+        Suscripcion {
+          evento: evento.to_string(),
+          indice,
+          pubsub: self,
+        }
 
     }
 
     pub fn publicar(&self, evento: &str, info: &Info) {
         // TODO: Si existen escuchadores para el evento, itera sobre ellos y ejecútalos pasando la info.
-
+      if let Some(escuchadores) = self.temas.get(evento) {
+        for escuchador in escuchadores {
+          escuchador(info);
+        }
+      }
     }
 }
 
@@ -79,11 +92,32 @@ pub struct Suscripcion {
 impl Suscripcion {
     pub fn remover(self) {
         // TODO: Accede a la estructura PubSub a través de pubsub y remueve el escuchador en el índice indicado.
-        unimplemented!()
+        unsafe {
+          if let Some (escuchadores) = (*self.pubsub).temas.get_mut(&self.evento) {
+            if self.indice < escuchadores.len() {
+              let _ = escuchadores.remove(self.indice);
+            }
+          }
+        }
     }
 }
 
 fn main() {
+  let mut pubsub = PubSub::new();
+
+  let _sub = pubsub.suscribirse(MOSTRAR_NOTIFICACION_EXITO, |info| {
+      println!("¡Éxito! {}", info.get("mensaje").unwrap());
+  });
+
+  let mut datos = Info::new();
+  datos.insert("mensaje".to_string(), "Guardado correctamente".to_string());
+
+  pubsub.publicar(MOSTRAR_NOTIFICACION_EXITO, &datos);
+}
+
+
+
+/* fn main() {
     // Ejemplo de uso del patrón Factory:
     // let usuario = crear_usuario_con_factory("Luis", "admin");
     // println!("{}", usuario.saludar()); // "Hola, soy Luis y soy admin"
@@ -100,7 +134,7 @@ fn main() {
     // pubsub.publicar(MOSTRAR_NOTIFICACION_EXITO, &info);
     // suscripcion.remover();
 }
-
+ */
 #[cfg(test)]
 mod tests {
     use super::*;
