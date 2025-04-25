@@ -100,6 +100,7 @@ function PublicadorSubscriptor:new()
     return obj
 end
 
+
 --- Permite suscribirse a un evento.
 -- @param evento string: El nombre del evento.
 -- @param escuchador function: Función que se ejecutará cuando se publique el evento.
