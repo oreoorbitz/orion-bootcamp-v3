@@ -59,13 +59,12 @@ int main() {
 
 ```
 
-Con el tiempo, los usuarios de computadores se volvieron más usuarios comunes que científicos. Por tanto se inventó los navegadores. Un sistema de abstracción para compartir información. Texto y imágenes y videos, encapsulado en direcciones estáticas y compartibles. Sitios web, y navegadores para acceder los sitios web.
+Con el tiempo, los usarios de computadoras nessitaban una forma mas consistent para compartir archivos de text. Tim Berners-Lee (TimBL) invento Nexus, el primero navegador web. Antes, los usuarios de computadoras compartian informacion usando email, un system llamada FTP, o manualmente compartiendo archivos. Nexus permitio compartir texto y visualizar documentos en una forma consistent
 
-Netscape, un navegador de ejemplo, fue escrito en c++.
+Nexus fue hecho para funcionar en el sistem operative, NeXT (Steve jobs!), y fue escrito en un lenguaje llamada `Objective-C`.
 
-Los sitios fueron hechos de una cierta forma, con cierto código, que los navegadores podían procesar.
 
-Los lenguajes de marcado fueron creados para estructurar y mostrar contenido de una forma entendible para humanos. Un ejemplo es HTML, que el navegador interpreta para construir y renderizar la estructura visual que ves en la pantalla.
+Para mostrar informacion en Nexus, TimBL invento HTML, un lenguaje `Markup` para mostrar informacion en una forma estructurada.
 
 El navegador, al procesar un archivo HTML, utiliza el sistema operativo para comunicarse con el hardware de tu computadora. El sistema operativo coordina el acceso a la memoria, la CPU y la tarjeta gráfica, lo que finalmente genera los píxeles que forman el texto y las imágenes que ves.
 
@@ -89,7 +88,9 @@ Motores que leen Markdown, toman Markdown y lo convierten a HTML primero.
 
 Eventualmente habia un nessitidad de hacer lo que se podia hacer con los navegadores mas complejo, asi que se creo otra abstracion.
 
-Javasacript es un lenguaje de programacion, escrito en `C++`,escrito originalmente con la intencion de manipular el HTML que aparece en una pagina. 
+Javasacript es un lenguaje de programacion,escrito originalmente con la intencion de manipular el HTML que aparece en una pagina. 
+
+Javascript fue implementando usando `C` y `C++`
 
 ```js
 function add(a, b) {
@@ -204,9 +205,9 @@ npm install vitest
 Aqui estamos installando un paquete llamado vitest.
 NPM crea un a carpeta, llamada `node_modules`, donde se guarda todo los packquetes que instalamos. NPM usa un archivo de configuracion, llamada package.lock para saber cuales modulos tiene que descargar.
 
-Los paquetes estan guardados en un servidor manejador por NPM inc, que maneja el registro de paquetes y manda la data a tu computadora cuando tu installes los modulos.
+Los paquetes estan guardados en un servidor manejador por NPM Inc, que maneja el registro de paquetes y manda la data a tu computadora cuando tu installes los modulos.
 
-NPM es una compania benevolente y justa que nunca haria un decision que tendria resultados desastrosas para milliones de usaurios.
+NPM, Inc. es una compania benevolente y justa que nunca haria un decision que tendria resultados desastrosas para milliones de usaurios.
 
 Una ves que un paquete esta installado, puedes importar el packet en tu archivo
 
