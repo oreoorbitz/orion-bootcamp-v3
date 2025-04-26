@@ -1,0 +1,60 @@
+// ───────────────────────────────────────── TEXTO DE PRUEBA
+const ARTICULO = `
+The novel catalyst (CAS 123-45-6) based on Fe2O3–SiO2 was evaluated for the
+selective hydrogenation of 3-nitrophenol. A second batch used a palladium
+nanoparticle system registered under CAS 98765-43-2. High yields (92 %) were
+obtained in ethanol (C2H5OH) as solvent, while control reactions in water
+(H2O) dropped below 50 % yield. Additional tests with sulfuric acid (H2SO4)
+showed no significant improvement.
+`;
+
+// ───────────────────────────────────────── TAREA A
+function extraerCAS(texto) {
+  const regexCAS = /\b\d{2,7}-\d{2}-\d\b/g;
+  const matches = texto.match(regexCAS) || [];
+  return [...new Set(matches)];
+}
+
+// ───────────────────────────────────────── TAREA B
+function extraerFormulas(texto) {
+  const regexFormula = /\b([A-Z][a-z]?\d{0,3}){2,}\b/g;
+  const matches = texto.match(regexFormula) || [];
+  return [...new Set(matches)];
+}
+
+// ───────────────────────────────────────── TAREA C
+function analizarArticulo(texto) {
+  const casEncontrados = extraerCAS(texto);
+  const formulasEncontradas = extraerFormulas(texto);
+
+  let resultado = [];
+
+  if (casEncontrados.length >= 1) {
+    resultado.push("CAS OK");
+  }
+
+  if (formulasEncontradas.length >= 2) {
+    resultado.push("Fórmulas OK");
+  }
+
+  const contieneCatalyst = /catalyst/i.test(texto);
+  const yieldMatch = texto.match(/(\d{2,3})\s*%/);
+  const yieldPorcentaje = yieldMatch ? parseInt(yieldMatch[1], 10) : 0;
+
+  if (contieneCatalyst && yieldPorcentaje >= 90) {
+    resultado.push("Alto rendimiento");
+  }
+
+  return resultado.join(" | ");
+}
+
+/* ---------------------------------------------------------------------------*/
+/* DEMO (descomenta para probar)                                              */
+const cas       = extraerCAS(ARTICULO);
+const formulas  = extraerFormulas(ARTICULO);
+const resumen   = analizarArticulo(ARTICULO);
+
+console.log("CAS encontrados:", cas);
+console.log("Fórmulas:", formulas);
+console.log("Resultado:", resumen);
+/* ---------------------------------------------------------------------------*/
