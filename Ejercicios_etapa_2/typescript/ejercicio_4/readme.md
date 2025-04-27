@@ -1,0 +1,1 @@
+Lee la lectura primero y atempta el ejercicio. Si estas completamente atorado, lee implementacion-rust.txt y/o implementacion-lua.txt para inspirarte en como resolver el problema.
