@@ -2,95 +2,98 @@
  * MÓDULO 4: CONSTRUCCIÓN DEL ÁRBOL DOM A PARTIR DE TOKENS
  *
  * 🧠 Concepto clave:
- * Un documento HTML es naturalmente una estructura en forma de árbol.
- * Cada etiqueta de apertura crea un nuevo "nodo padre", cada etiqueta de cierre cierra el nodo actual,
- * y los textos son hijos normales dentro de las etiquetas.
+ * Un documento HTML es una estructura jerárquica de elementos y textos.
+ * Cada apertura de etiqueta crea un nuevo nodo, cada cierre cierra un contexto, y los textos son hijos normales.
  *
  * En este módulo vas a construir:
- * - Un árbol jerárquico que representa tu HTML
- * - Usando **un stack** para saber en qué nivel del árbol estás
- * - Usando **tipos explícitos** en TypeScript para representar nodos
+ * - Un árbol anidado que representa tu HTML
+ * - Usando un **stack** para seguir la jerarquía de elementos
+ * - Usando **tipos explícitos** en TypeScript
  *
  * 🎯 Objetivo:
  * 1. Crear una función `construirArbol(tokens: Token[]): Nodo`
- * 2. Construir recursivamente un árbol de nodos a partir de los tokens
+ * 2. Recorrer los tokens y construir un árbol de nodos
  *
- * ✅ Entrada esperada:
- * Un arreglo de objetos tipo `Token`:
- * ```ts
- * type Token = {
- *   tipo: 'apertura' | 'cierre' | 'autocierre' | 'texto';
- *   nombre: string | null;
- *   contenido: string | null;
- *   atributos?: Record<string, string>;
- * }
+ * ✅ Ejemplo de HTML de partida:
+ * ```html
+ * <div>
+ *   Hola
+ *   <span>mundo</span>
+ * </div>
  * ```
  *
- * ✅ Ejemplo de tokens:
+ * ✅ Ejemplo de entrada esperada (los tokens que ya generaste en módulos anteriores):
  * ```ts
  * [
- *   { tipo: 'apertura', nombre: 'div', contenido: null, atributos: {} },
- *   { tipo: 'texto', nombre: null, contenido: 'Hola' },
- *   { tipo: 'apertura', nombre: 'span', contenido: null, atributos: {} },
- *   { tipo: 'texto', nombre: null, contenido: 'mundo' },
- *   { tipo: 'cierre', nombre: 'span', contenido: null },
- *   { tipo: 'cierre', nombre: 'div', contenido: null }
+ *   { tipo: TipoToken.Apertura, nombre: "div", contenido: null, atributos: {} },
+ *   { tipo: TipoToken.Texto, nombre: null, contenido: "Hola", atributos: null },
+ *   { tipo: TipoToken.Apertura, nombre: "span", contenido: null, atributos: {} },
+ *   { tipo: TipoToken.Texto, nombre: null, contenido: "mundo", atributos: null },
+ *   { tipo: TipoToken.Cierre, nombre: "span", contenido: null, atributos: null },
+ *   { tipo: TipoToken.Cierre, nombre: "div", contenido: null, atributos: null }
  * ]
  * ```
  *
- * ✅ ¿Qué tipos usar para el árbol de nodos?
- * Recomendamos usar **dos tipos separados** para que sea más claro:
- *
- * ```ts
- * type NodoElemento = {
- *   tipo: 'elemento';
- *   nombre: string;
- *   atributos: Record<string, string>;
- *   hijos: Nodo[];
- * };
-
- * type NodoTexto = {
- *   tipo: 'texto';
- *   contenido: string;
- * };
-
- * type Nodo = NodoElemento | NodoTexto;
- * ```
- *
- * - Un `NodoElemento` tiene nombre, atributos, y un arreglo de `hijos`
- * - Un `NodoTexto` tiene solo el contenido de texto
- * - El tipo general `Nodo` es la unión (`|`) de ambos
- *
- * ✅ Salida esperada:
- * Un objeto tipo `Nodo` que representa el árbol DOM:
+ * ✅ Salida esperada (el árbol):
  * ```ts
  * {
- *   tipo: 'elemento',
- *   nombre: 'div',
+ *   tipo: "elemento",
+ *   nombre: "div",
  *   atributos: {},
  *   hijos: [
- *     { tipo: 'texto', contenido: 'Hola' },
+ *     { tipo: "texto", contenido: "Hola" },
  *     {
- *       tipo: 'elemento',
- *       nombre: 'span',
+ *       tipo: "elemento",
+ *       nombre: "span",
  *       atributos: {},
  *       hijos: [
- *         { tipo: 'texto', contenido: 'mundo' }
+ *         { tipo: "texto", contenido: "mundo" }
  *       ]
  *     }
  *   ]
  * }
  * ```
  *
+ * ✅ Tipos recomendados para este ejercicio:
+ * ```ts
+ * export enum TipoToken {
+ *   Apertura = "apertura",
+ *   Cierre = "cierre",
+ *   Autocierre = "autocierre",
+ *   Texto = "texto"
+ * }
+
+ * export interface Token {
+ *   tipo: TipoToken | null;
+ *   nombre: string | null;
+ *   contenido: string | null;
+ *   atributos: Record<string, string> | null;
+ * }
+
+ * interface NodoElemento {
+ *   tipo: "elemento";
+ *   nombre: string;
+ *   atributos: Record<string, string>;
+ *   hijos: Nodo[];
+ * }
+
+ * interface NodoTexto {
+ *   tipo: "texto";
+ *   contenido: string;
+ * }
+
+ * export type Nodo = NodoElemento | NodoTexto;
+ * ```
+ *
  * ✅ Instrucciones:
  * 1. Crea una función `construirArbol(tokens: Token[]): Nodo`
- * 2. Usa una pila (stack) para construir la jerarquía:
+ * 2. Usa una pila (stack) para mantener la jerarquía:
  *    - Cuando encuentres una etiqueta de apertura:
- *      - Crea un nuevo `NodoElemento`
+ *      - Crea un `NodoElemento`
  *      - Agrégalo como hijo del nodo actual
- *      - Haz `push` del nuevo nodo como el nodo actual
+ *      - Haz `push` al stack
  *    - Cuando encuentres una etiqueta de cierre:
- *      - Haz `pop` del stack para volver al padre
+ *      - Haz `pop` para volver al padre
  *    - Cuando encuentres un texto:
  *      - Crea un `NodoTexto`
  *      - Agrégalo como hijo del nodo actual
@@ -99,18 +102,14 @@
  *      - Agrégalo directamente como hijo del nodo actual
  *
  * ✅ Reglas clave:
- * - El primer `NodoElemento` que se abre será el **nodo raíz** de tu árbol
- * - Cada nodo puede tener múltiples `hijos`
- * - Un `NodoTexto` nunca tiene `hijos`
- *
- * Conceptos clave que vas a practicar:
- * - Estructuras de árbol
- * - Uso de `stack` para seguir jerarquía
- * - Modelado de tipos con TypeScript
- * - Pensar en estructuras de datos dinámicas
+ * - El primer nodo abierto será el **nodo raíz**
+ * - Los textos son nodos sin hijos
+ * - Todos los hijos se almacenan en el array `hijos` de su padre
  *
  * Consejo:
- * - Si ves que todo se complica, **haz primero un pseudocódigo**:  
- *   "Si apertura -> crear hijo y mover contexto... Si cierre -> regresar al padre..."
- * - Así entenderás cómo un navegador construye el DOM real.
+ * - No tienes que volver a tokenizar el HTML aquí. ¡El arreglo de tokens ya viene preparado del módulo anterior!
+ * - Usa pseudocódigo si sientes que te pierdes:  
+ *   "Si apertura → crear hijo → moverse abajo... Si cierre → volver arriba..."
+ *
+ * Este ejercicio simula **cómo un navegador construye el DOM real**: un proceso de lectura y anidación basado en apertura y cierre de etiquetas.
  */
