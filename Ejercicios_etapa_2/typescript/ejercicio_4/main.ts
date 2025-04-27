@@ -119,104 +119,115 @@ export enum TipoToken {
     Cierre = 'cierre',
     Autocierre = 'autocierre',
     Texto = 'texto',
-  }
-  
-  export interface Token {
+}
+
+export interface Token {
     nombre: string | null;
     tipo: TipoToken | null;
     contenido: string | null;
     atributos: Record<string, string> | null;
-  }
+}
 
-  interface NodoElemento {
+interface NodoElemento {
     tipo: 'elemento';
     nombre: string | null;
     atributos: Record<string, string> | null;
     hijos: Nodo[];
-  }
+}
 
-  interface NodoTexto {
+interface NodoTexto {
     tipo: 'texto';
     contenido: string | null;
-  }
+}
 
- export type Nodo = NodoElemento | NodoTexto;
+export type Nodo = NodoElemento | NodoTexto;
 
-  
-  const objetizaratributo = (atributo: string): Record<string, string> | null => {
+
+const objetizaratributo = (atributo: string): Record<string, string> | null => {
     const regex = /(\w+)="([^"]*)"/g;
     const matches = [...atributo.matchAll(regex)];
     const result: Record<string, string> = {};
     for (const match of matches) {
-      const key = match[1];
-      const value = match[2];
-      result[key] = value;
+        const key = match[1];
+        const value = match[2];
+        result[key] = value;
     }
     return result;
-  }
-  
-  const esText = (string: string) => /^[a-zA-Z]+$/.test(string.trim());
-  
-  const esAppertura = (string: string) => string.startsWith("<") && !string.startsWith("</") && !string.endsWith("/>");
-  
-  const esCierre = (string: string) => string.startsWith("</") && string.endsWith(">");
-  
-  const esAutocierre = (string: string) => string.startsWith("<") && string.endsWith("/>");
-  
-  const encontrarTipo = (string: string): TipoToken | null => {
+}
+
+const esText = (string: string) => /^[a-zA-Z]+$/.test(string.trim());
+
+const esAppertura = (string: string) => string.startsWith("<") && !string.startsWith("</") && !string.endsWith("/>");
+
+const esCierre = (string: string) => string.startsWith("</") && string.endsWith(">");
+
+const esAutocierre = (string: string) => string.startsWith("<") && string.endsWith("/>");
+
+const encontrarTipo = (string: string): TipoToken | null => {
     if (esAppertura(string)) return TipoToken.Apertura;
     if (esCierre(string)) return TipoToken.Cierre;
     if (esAutocierre(string)) return TipoToken.Autocierre;
     if (esText(string)) return TipoToken.Texto;
     return null;
-  }
-  
-  const encontrarNombreDeTag = (string: string) => {
+}
+
+const encontrarNombreDeTag = (string: string) => {
     const regex = /<(\w+)/;
     const match = string.match(regex);
     return match ? match[1] : null;
-  }
-  
-  const HTML = `<div class="box" id="main">`;
-  
-  const tokenizarTag = (tag: string): Token => {
+}
+
+const HTML = `<div>Hola<span>mundo</span></div>`
+
+const tokenizarTag = (tag: string): Token => {
     const tipo = encontrarTipo(tag);
     const nombre = encontrarNombreDeTag(tag);
     const atributos = objetizaratributo(tag);
     console.log(atributos)
-  
+
     return {
-      nombre,
-      tipo,
-      contenido: null,
-      atributos
+        nombre,
+        tipo,
+        contenido: null,
+        atributos
     }
-  }
-  
-  export const construirNodo = (token: Token): Nodo => {
+}
+
+export const construirNodo = (token: Token): Nodo => {
     if (token.tipo === TipoToken.Texto) {
-      return {
-        tipo: 'texto',
-        contenido: token.contenido
-      };
+        return {
+            tipo: 'texto',
+            contenido: token.contenido
+        };
     } else {
-      return {
-        tipo: 'elemento',
-        nombre: token.nombre ?? '',
-        atributos: token.atributos ?? {},
-        hijos: []
-      };
+        return {
+            tipo: 'elemento',
+            nombre: token.nombre ?? '',
+            atributos: token.atributos ?? {},
+            hijos: []
+        };
     }
 
-  }
+}
 
-export const construirArbol = (tokens: Token[]): Nodo => {
+export const construirArbol = (tokens: Token[]): Nodo | null => {
     const stack: Nodo[] = [];
     let nodoActual: Nodo | null = null;
     for (const token of tokens) {
-        console.log(token);
+        const nuevoNodo = construirNodo(token);
+
+        if (token.tipo === TipoToken.Apertura) {
+            if(stack.length === 0) {
+                nodoActual = nuevoNodo;
+                stack.push(nodoActual);
+            }
+        } else if(token.tipo === TipoToken.Texto) {
+            console.log("Texto")
+            console.log(token)
+        }
     }
-    return construirNodo(tokens[0]);
+    console.log(nodoActual)
+    return nodoActual
 }
 
 const tagsTokenizados = tokenizarTag(HTML);
