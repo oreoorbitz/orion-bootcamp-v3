@@ -4,7 +4,7 @@
 
 Cuando escribimos javascript, nuestro código no es directamente ejecutado por el navegador, pero por un motor de javascript. En caso de Google Chrome, `V8`. Los motores de javascript son corridos dentro de un navegador. Un navegador es una aplicación que se ejecuta en un sistema operativo. Un sistema operativo es una colección de programas que comunican con el `Kernel` del sistema operativo. El Kernel comunica con el hardware de tu computadora, que permite la interactividad con un humano como tú.
 
-El `Binary Code` es un método de comunicación para hardware. Es representado en 0 y 1s. La razón es para comunicar con los logic gates de tu hardware.
+El `Binary Code` es un método de comunicación para hardware. Es representado en 0 y 1s. La razón de esto, es para que haya comunicación con los logic gates de tu hardware.
 
 ```
 0001 0010 0011
@@ -35,7 +35,7 @@ int main() {
 
 ```
 
-Eventualmente, gente formaron opinions sobre las abstracciones de lenguajes tempranos. Decidieron que las abstracciones en `C` limitaban su habilidad de escribir software según sus necesidades.
+Eventualmente, gente formaron opiniones sobre las abstracciones de lenguajes tempranos. Decidieron que las abstracciones en `C` limitaban su habilidad de escribir software según sus necesidades.
 
 `C++` Originalmente fue una extensión de `C`, escrito en `C`.
 
@@ -59,7 +59,7 @@ int main() {
 
 ```
 
-Con el tiempo, los usuarios de computadores se volvieron más usuarios comunes que científicos. Por tanto se inventó los navegadores. Un sistema de abstracción para compartir información. Texto y imágenes y videos, encapsulado en direcciones estáticas y compartibles. Sitios web, y navegadores para acceder los sitios web.
+Con el tiempo, los usuarios de computadores se volvieron más usuarios comunes que científicos. Por lo tanto se inventaron los navegadores. Un sistema de abstracción para compartir información. Texto y imágenes y videos, encapsulados en direcciones estáticas y compartibles. Sitios web, y navegadores para acceder los sitios web.
 
 Netscape, un navegador de ejemplo, fue escrito en c++.
 
@@ -71,7 +71,7 @@ El navegador, al procesar un archivo HTML, utiliza el sistema operativo para com
 
 ```HTML
 <h4>Esto es un ejemplo de HTML</h4>
-<li> El lenguaje que los navegadores usando para mostrar informacion en la pagina</li>
+<li> El lenguaje que los navegadores usan para mostrar informacion en la pagina</li>
 
 ```
 
@@ -87,9 +87,9 @@ Motores que leen Markdown, toman Markdown y lo convierten a HTML primero.
 ##### Este es un ejemplo de Markdown, renderizado en programa que lee markdown
 - Un lenguaje que se transpila a `HTML`.
 
-Eventualmente habia un nessitidad de hacer lo que se podia hacer con los navegadores mas complejo, asi que se creo otra abstracion.
+Eventualmente habia un necesidad de que lo que se podia hacer con los navegadores fuese mas complejo, asi que se creo otra abstración.
 
-Javasacript es un lenguaje de programacion, escrito en `C++`,escrito originalmente con la intencion de manipular el HTML que aparece en una pagina. 
+Javasacript es un lenguaje de programacion, escrito en `C++`, fue escrito originalmente con la intencion de manipular el HTML que aparece en una página.
 
 ```js
 function add(a, b) {
@@ -101,33 +101,33 @@ console.log("El resultado es:", result);
 
 ```
 
-Eventualmente, los sitios web se volverion el uso princepal para computadoras, y como tal javascript se volvio unos de, si no el mas, popular lenguajes de programacion. Como tal, habia una enroma cantidad de programadores que aprenderion a usar javascript, y querian usar javascript afuera del contexto limitado del navegador. Como tal, fue creado `node`, usando `C++`.
+Eventualmente, los sitios web se volverion de uso principal para computadoras, y como tal javascript se volvio uno de, si no el mas, popular lenguajes de programacion. Como tal, habia una enorme cantidad de programadores que aprenderon a usar javascript, y querian usarlo fuera del contexto limitado del navegador. Como tal, fue creado `node`, usando `C++`.
 
 node es un coretiempo de `javascript`. Toma sintaxis de javascript, y crea abstraciones que permiten hacer interaciones con los sistemas operativos.
 
 
 ### Modulos
 
-Archivos son una forma de abstrear logica computacional para que sea mas facil entender para los humans.
+Los archivos son una forma de abstraer la logica computacional para que sea mas fácil de entender para los humanos.
 
-En HTML, nosotros le dicemos a el navegador que queremos cargar y ejecutar codigo de javscript usando un `tag` especifico de html.
+En HTML, nosotros le decimos al navegador que queremos cargar y ejecutar codigo de javscript usando un `tag` especifico de html.
 
 ```HTML
 <script src="index.js"></script>
 ```
 
-El; navegador ve es `tag` y sabe que tiene que buscar en la direcion dada para el archivo.
+El; navegador ve el `tag` y sabe que tiene que buscar en la direcion dada para el archivo.
 
-Originalmente usando un `script` tag era la unica forma de cargar y/o leer codigo javascript.
+Originalmente usando un `script` el tag era la unica forma de cargar y/o leer codigo javascript.
 
-Para node, no hace sentido usar tags de HTML en javascript (En mi opnion <___<). Asi que node tiene sus propias forma de cargar y ejecutar archivos de js. Node siendo una applicacion, que core directamente en tu computadora, core archivos de js directamente.
+Para node, no hace sentido usar tags de HTML en javascript (En mi opnion <___<). Asi que node tiene sus propias forma de cargar y ejecutar archivos de js. Node siendo una applicacion, que corre directamente en tu computadora, corre archivos de js directamente.
 
 ```sh
 node index.js
 ```
 
-Con este commando, node abrer y corer el codigo en index.js
-Endentro de un archivo.
+Con este comando, node abre y corre el codigo en index.js
+Dentro de un archivo.
 
 Tambien podemos cargar otros archivos que saran ejecutados cuando el archivo principal los core.
 
