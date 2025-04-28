@@ -1,34 +1,25 @@
 /**
- * MÓDULO 11: RENDERIZAR A HTML
+ * MÓDULO 11: ESCAPE DE CARACTERES Y CASOS ESPECIALES
  *
- * Objetivo: Tomar una estructura de elemento JS (como un árbol) y convertirla en una cadena HTML.
+ * Objetivo: Asegurar que los textos renderizados no rompan el HTML, y proteger contra contenido peligroso.
  *
  * Instrucciones:
- * 1. Crea una función `renderizarHTML(nodo: any): string`
- * 2. Si el nodo es de tipo "texto", devuelve el contenido de texto
- * 3. Si es un "elemento", construye una cadena HTML:
- *    - comienza con `<nombre ...atributos>`
- *    - si tiene hijos, colócalos entre la etiqueta de apertura y cierre
- *    - si no tiene hijos, puedes cerrar la etiqueta como `<br />` (opcional)
+ * 1. Crea una función `escapeTexto(texto: string): string`
+ * 2. Reemplaza los caracteres peligrosos por sus entidades HTML:
+ *    - `&` → `&amp;`
+ *    - `<` → `&lt;`
+ *    - `>` → `&gt;`
+ *    - `"` → `&quot;`
+ *    - `'` → `&#39;`
+ * 3. Asegúrate de que `renderizarHTML()` use esta función cuando se encuentre un nodo de tipo `texto`.
  *
- * Estructura de ejemplo:
- * {
- *   tipo: 'elemento',
- *   nombre: 'div',
- *   atributos: { class: 'box', id: 'main' },
- *   hijos: [
- *     { tipo: 'texto', contenido: 'Hola mundo' },
- *     {
- *       tipo: 'elemento',
- *       nombre: 'span',
- *       atributos: {},
- *       hijos: [{ tipo: 'texto', contenido: '✨' }]
- *     }
- *   ]
- * }
+ * Entrada de ejemplo:
+ * Texto: `"Hola <script>alert('hack')</script>"`
  *
- * Salida esperada:
- * "<div class=\"box\" id=\"main\">Hola mundo<span>✨</span></div>"
+ * Resultado esperado:
+ * `"Hola &lt;script&gt;alert(&#39;hack&#39;)&lt;/script&gt;"`
  *
- * Enfócate en: construir cadenas, recursión, formateo de atributos HTML
+ * Consejo:
+ * - Usa `.replace()` en cadena, o un mapa de reemplazo
+ * - Puedes escribir pruebas para cada carácter especial como validación
  */

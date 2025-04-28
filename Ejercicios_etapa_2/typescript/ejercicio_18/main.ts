@@ -1,77 +1,121 @@
 /**
- * MÓDULO 18: TRANSFORMAR TYPESCRIPT A JAVASCRIPT PARA EL NAVEGADOR + PILA DE EVENTOS
+ * MÓDULO 19: IMPLEMENTAR HOT RELOAD PARA EL SERVIDOR LOCAL USANDO WEBSOCKETS
  *
  * 🧠 Concepto clave:
- * Hasta ahora, tu código se ha ejecutado en **Deno**, que permite correr directamente archivos TypeScript (`.ts`).
- * Pero los navegadores no entienden TypeScript — solo pueden ejecutar JavaScript.
+ * Cuando estás desarrollando un sitio web, es molesto tener que refrescar manualmente el navegador cada vez que cambias un dato o plantilla.
+ * Para mejorar la experiencia de desarrollo, se usa una técnica llamada **hot reload**:
+ * - El sistema detecta que un archivo cambió
+ * - Regenera automáticamente el HTML
+ * - Recarga el navegador sin que el usuario haga nada
  *
- * Para usar tus scripts en una página HTML real, necesitas primero convertirlos a `.js`.
- * Este proceso se llama **transpilación**.
+ * Para lograr esto, usaremos **WebSockets**.
  *
- * En este módulo vas a:
- * - Crear un flujo de trabajo para convertir tus archivos `.ts` a `.js` automáticamente
- * - Inyectar el contenido `.js` como un `<script>` al final del `<body>`
- * - Registrar cada operación en una **pila de eventos**, que te servirá para rastrear el orden de las tareas ejecutadas
+ * 🚨 ¿Qué es un WebSocket?
+ * - Es una conexión bidireccional y persistente entre el navegador y el servidor.
+ * - A diferencia del protocolo HTTP, donde el cliente hace peticiones y el servidor responde,
+ *   con WebSockets el servidor puede **enviar mensajes en cualquier momento** al cliente.
+ * - Esto lo hace ideal para **notificaciones en tiempo real**, como el hot reload.
+ *
+ * 📘 API de WebSocket en JavaScript (lado del navegador):
+ * ```js
+ * const ws = new WebSocket("ws://localhost:3000/ws");
+ * ws.onmessage = (event) => {
+ *   if (event.data === "reload") {
+ *     window.location.reload();
+ *   }
+ * };
+ * ```
+ * En este código, el navegador se conecta a `/ws` y espera mensajes del servidor.
+ * Cuando recibe `"reload"`, recarga la página automáticamente.
  *
  * 🎯 Objetivo:
- * 1. Transpilar archivos TypeScript a JavaScript usando `Deno.emit()`
- * 2. Inyectar los resultados como scripts inline en tu HTML
- * 3. Registrar cada paso en una pila de eventos para tener trazabilidad de lo que ocurre en el proceso
+ * 1. Incluir un `<script>` en tu HTML con un cliente WebSocket como el de arriba
+ * 2. Modificar tu servidor local (`server.ts`) para aceptar conexiones WebSocket
+ * 3. Crear un archivo `watcher.ts` que detecta cambios y notifica al navegador por WebSocket
  *
  * 📦 Estructura sugerida:
  * ```
  * /scripts/
- *   global.ts
- *   ui.ts
  * /dist/
- *   index.html
  * /theme.html
- * main.ts
+ * /data.ts
+ * main.ts         ← genera HTML
+ * server.ts       ← servidor + WebSocket
+ * watcher.ts      ← vigila cambios y manda "reload"
  * ```
  *
- * ✅ Parte 1: Transpilación
- * 1. Crea una función llamada `transpilarTSADefaultJS(filePath: string): string`
- *    - Usa `Deno.emit(filePath)` para obtener el JS correspondiente
- *    - Devuelve el contenido como string
- *
- * ✅ Parte 2: Inyección
- * 2. Crea una función `inyectarScriptsEnHTML(html: string, scripts: string[], stackEventos: string[]): string`
- *    - Inserta los scripts como `<script>...</script>` justo antes del cierre de `</body>`
- *    - Por cada script inyectado, agrega una entrada en `stackEventos` con el mensaje: `"script inyectado: [nombre archivo]"`
- *    - Al final, agrega `"html con scripts completado"`
- *
- * ✅ Parte 3: Pila de eventos
- * 3. Declara una pila como:
- * ```ts
- * const stackEventos: string[] = [];
+ * ✅ Paso 1: Inyecta el script de WebSocket en tu HTML generado
+ * Al final de tu `<body>`, agrega:
+ * ```html
+ * <script>
+ *   const ws = new WebSocket("ws://" + location.host + "/ws");
+ *   ws.onmessage = (event) => {
+ *     if (event.data === "reload") {
+ *       window.location.reload();
+ *     }
+ *   };
+ * </script>
  * ```
- *    - Esta pila se va llenando conforme ejecutas cada etapa de tu proceso
- *    - Puedes imprimirla en la consola o escribirla como comentario HTML:
- *    ```html
- *    <!-- stackEventos: ["ts compilado: global.ts", "script inyectado: global.js", ...] -->
- *    ```
+ * Esto mantiene una conexión abierta con el servidor, lista para recibir notificaciones.
  *
- * ✅ Ejemplo de uso:
+ * ✅ Paso 2: Implementa WebSocket en el servidor (`server.ts`)
+ * Usa `Deno.upgradeWebSocket(req)` para aceptar conexiones WebSocket:
  * ```ts
- * const htmlBase = await Deno.readTextFile('theme.html');
- * const contenido = generarContenido(); // contenido generado por tu pipeline
- * const htmlFinal = htmlBase.replace('{{ content_for_index }}', contenido);
+ * const sockets: WebSocket[] = [];
+
+ * Deno.serve({ port: 3000 }, async (req) => {
+ *   const { pathname } = new URL(req.url);
+ *   if (pathname === "/ws") {
+ *     const { socket, response } = Deno.upgradeWebSocket(req);
+ *     socket.onopen = () => sockets.push(socket);
+ *     return response;
+ *   }
+
+ *   const filePath = pathname === "/" ? "/index.html" : pathname;
+ *   try {
+ *     const html = await Deno.readTextFile(`./dist${filePath}`);
+ *     return new Response(html, { headers: { "Content-Type": "text/html" } });
+ *   } catch {
+ *     return new Response("404 - No encontrado", { status: 404 });
+ *   }
+ * });
  *
- * const tsFiles = ['scripts/global.ts', 'scripts/ui.ts'];
- * const scripts = await Promise.all(tsFiles.map(transpilarTSADefaultJS));
- * const finalConScripts = inyectarScriptsEnHTML(htmlFinal, scripts, stackEventos);
+ * export function notificarReload() {
+ *   for (const ws of sockets) ws.send("reload");
+ * }
+ * ```
  *
- * await Deno.writeTextFile('dist/index.html', finalConScripts);
+ * ✅ Paso 3: Implementa el watcher (`watcher.ts`)
+ * Este archivo observará archivos clave como `data.ts`, `theme.html`, etc.
+ * Cuando detecte un cambio:
+ * 1. Ejecuta el generador (`main.ts`)
+ * 2. Llama a `notificarReload()` para decirle al navegador que se recargue
+ *
+ * Ejemplo:
+ * ```ts
+ * import { notificarReload } from "./server.ts";
+
+ * const watcher = Deno.watchFs(["data.ts", "theme.html", "scripts/"]);
+ * for await (const _event of watcher) {
+ *   const p = new Deno.Command("deno", {
+ *     args: ["run", "--allow-all", "main.ts"],
+ *   });
+ *   await p.output();
+
+ *   notificarReload();
+ * }
  * ```
  *
  * ✅ Resultado esperado:
- * - Cada archivo `.ts` en la carpeta `/scripts/` se convierte en JavaScript
- * - El JS se inyecta en tu HTML generado como script inline
- * - Una pila de eventos registra exactamente qué pasos se realizaron
+ * - Abres tu navegador en http://localhost:3000
+ * - Editas `data.ts` o `theme.html`
+ * - El servidor regenera `dist/index.html`
+ * - El navegador recibe un mensaje `"reload"` y se actualiza solo
  *
  * Consejo:
- * - Puedes mostrar la pila de eventos como comentario dentro del HTML para depurar
- * - Si en el futuro quieres hacer esto con archivos `.js` externos, solo cambia el tipo de inyección
+ * - Usa `deno task` o dos terminales: una para `deno run server.ts`, otra para `deno run watcher.ts`
+ * - Este patrón es el núcleo de herramientas como Vite, Next.js, y Astro
  *
- * Este módulo cierra el ciclo de build moderno: fuente `.ts` → transformación → inyección en HTML → depuración con pila de eventos.
+ * Este módulo refuerza cómo funciona la comunicación tiempo real, la separación de responsabilidades (servidor vs generador),
+ * y cómo crear una experiencia fluida para el desarrollo web.
  */

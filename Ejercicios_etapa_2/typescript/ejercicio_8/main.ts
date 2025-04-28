@@ -1,42 +1,42 @@
 /**
- * MÓDULO 8: LÓGICA CONDICIONAL EN PLANTILLAS
+ * MÓDULO 8: CONSTRUCCIÓN DE BUCLES EN PLANTILLAS
  *
  * 🧠 Concepto clave:
- * Una plantilla no solo puede mostrar datos, también puede mostrar u ocultar secciones.
- * Con estructuras como `{% if variable %}`, se pueden incluir bloques condicionales que solo aparecen si se cumple una condición.
- * Esto es esencial para mostrar contenido personalizado según el contexto.
+ * Los motores de plantillas como Liquid permiten generar listas de contenido usando bucles `{% for item in lista %}`.
+ * Esto es útil, por ejemplo, para generar un bloque por cada producto en una tienda.
+ *
+ * En este módulo, vas a procesar bloques repetibles y a renderizar cada ítem de forma dinámica.
  *
  * Objetivo:
- * Detectar bloques condicionales `{% if ... %}` y `{% endif %}` y decidir si deben mostrarse o eliminarse según los datos.
+ * Repetir secciones de la plantilla por cada elemento de un arreglo en el contexto.
  *
  * Instrucciones:
- * 1. Crea una función `procesarCondicionales(tokens: string[], contexto: Record<string, any>): string[]`
- * 2. Evalúa las condiciones tipo `{% if variable %}` como `Boolean(contexto['variable'])`
- * 3. Si la condición es falsa, elimina todos los tokens entre `{% if ... %}` y `{% endif %}`
- * 4. No necesitas soportar condiciones anidadas por ahora
+ * 1. Crea una función `procesarBucles(tokens: string[], contexto: Record<string, any>): string[]`
+ * 2. Detecta los bloques `{% for item in lista %} ... {% endfor %}`
+ * 3. Para cada elemento de `contexto['lista']`, repite ese bloque reemplazando `{{ item }}` con el valor actual
  *
  * Entrada:
  * tokens:
  * [
- *   "Hola ",
- *   "{% if admin %}",
- *   "Administrador ",
- *   "{% endif %}",
- *   "!"
+ *   "Lista: ",
+ *   "{% for item in frutas %}",
+ *   "{{ item }} ",
+ *   "{% endfor %}"
  * ]
  * contexto:
  * {
- *   admin: true
+ *   frutas: ["manzana", "plátano", "uva"]
  * }
  *
  * Resultado esperado:
  * [
- *   "Hola ",
- *   "Administrador ",
- *   "!"
+ *   "Lista: ",
+ *   "manzana ",
+ *   "plátano ",
+ *   "uva "
  * ]
  *
  * Consejo:
- * - Usa un bucle e índices para marcar el inicio y fin de los bloques
- * - Este tipo de lógica condicional es común en todos los sistemas de plantillas
+ * - Este patrón de bucle es uno de los más usados en generación de HTML con datos
+ * - Puedes usar `renderizarVariables` dentro del cuerpo del bucle para reemplazar `{{ item }}`
  */
