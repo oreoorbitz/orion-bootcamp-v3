@@ -113,3 +113,151 @@
  *
  * Este ejercicio simula **cómo un navegador construye el DOM real**: un proceso de lectura y anidación basado en apertura y cierre de etiquetas.
  */
+
+export const HTML = `<div id="greeting" >Hello <span>World</span></div>`;
+
+export enum TipoToken {
+    Apertura = 'apertura',
+    Cierre = 'cierre',
+    Autocierre = 'autocierre',
+    Texto = 'texto',
+}
+
+export interface Token {
+    nombre: string | null;
+    tipo: TipoToken | null;
+    contenido: string | null;
+    atributos: Record<string, string> | null;
+}
+
+export interface NodoElemento {
+    tipo: 'elemento';
+    nombre: string;
+    atributos: Record<string, string>;
+    hijos: Nodo[];
+}
+
+export interface NodoTexto {
+    tipo: 'texto';
+    contenido: string;
+}
+
+export type Nodo = NodoElemento | NodoTexto;
+
+const crearNodoElemento = (nombre: string, atributos: Record<string, string>, hijos: Nodo[]): NodoElemento => ({
+    tipo: 'elemento',
+    nombre,
+    atributos,
+    hijos,
+})
+
+const crearNodoTexto = (contenido: string): NodoTexto => ({
+    tipo: 'texto',
+    contenido,
+})
+
+const objetizaratributo = (atributo: string): Record<string, string> | null => {
+    const regex = /(\w+)="([^"]*)"/g;
+    const matches = [...atributo.matchAll(regex)];
+    const result: Record<string, string> = {};
+    for (const match of matches) {
+        const key = match[1];
+        const value = match[2];
+        result[key] = value;
+    }
+    return result;
+}
+
+const objetizarToken = (nombre: string | null, tipo: TipoToken, contenido: string | null, atributos: Record<string, string> | null): Token => ({ nombre, tipo, contenido, atributos })
+
+const esText = (string: string) => /^[a-zA-Z]+$/.test(string.trim());
+
+const esTag = (string: string) => string.startsWith("<") && string.endsWith(">");
+
+const esAppertura = (string: string) => string.startsWith("<") && !string.startsWith("</") && !string.endsWith("/>");
+
+const esCierre = (string: string) => string.startsWith("</") && string.endsWith(">");
+
+const esAutocierre = (string: string) => string.startsWith("<") && string.endsWith("/>");
+
+const ArrEmpty = <T>(arr: T[]) => arr.length === 0;
+
+const encontrarNombreDeTag = (string: string) => {
+    const regex = /<(\w+)/;
+    const match = string.match(regex);
+    return match ? match[1] : null;
+}
+
+const tokenizarHTML = (html: string): string[] => {
+    const tokens = html.match(/<[^>]+>|[^<]+/g);
+    const tokenArray = tokens ? tokens : [];
+    return tokenArray
+}
+
+export const clasificarTokens = (tokens: string[]): Token[] => {
+    const tokensClassificados = tokens.map(token => {
+        if (esTag(token)) {
+            const nombreTag = encontrarNombreDeTag(token);
+            if (esAppertura(token)) {
+                return objetizarToken(nombreTag, TipoToken.Apertura, null, objetizaratributo(token))
+            }
+            if (esCierre(token)) {
+                return objetizarToken(nombreTag, TipoToken.Cierre, null, null)
+            }
+            if (esAutocierre(token)) {
+                return objetizarToken(nombreTag, TipoToken.Autocierre, null, objetizaratributo(token))
+            }
+            return null
+        }
+
+        if (esText(token)) {
+            return objetizarToken(null, TipoToken.Texto, token, null)
+        }
+
+        return null
+    })
+    .filter((token): token is Token => token !== null)
+
+
+    return tokensClassificados
+}
+
+const construirArbol = (tokens: Token[]): Nodo | null => {
+    const stack: NodoElemento[] = []
+    let arbol: NodoElemento | null = null
+
+    for (const token of tokens) {
+        const tokenNombre = token.nombre ?? ''
+        const tokenAttributos = token.atributos ?? {}
+        const tokenContenido = token.contenido ?? ''
+
+        if (token.tipo === TipoToken.Apertura) {
+
+            const nuevoNodo = crearNodoElemento(tokenNombre, tokenAttributos, [])
+            const lastIndex = stack.length - 1
+
+            ArrEmpty(stack) ? arbol = nuevoNodo : stack[lastIndex].hijos.push(nuevoNodo)
+            stack.push(nuevoNodo)
+        } else if (token.tipo === TipoToken.Cierre) {
+            stack.pop()
+        } else if (token.tipo === TipoToken.Texto) {
+            const nuevoNodo = crearNodoTexto(tokenContenido)
+            const lastIndex = stack.length - 1
+
+            if (!ArrEmpty(stack))  stack[lastIndex].hijos.push(nuevoNodo)
+        } else if (token.tipo === TipoToken.Autocierre) {
+            const nuevoNodo = crearNodoElemento(tokenNombre, tokenAttributos, [])
+            const lastIndex = stack.length - 1
+
+            if (!ArrEmpty(stack)) stack[lastIndex].hijos.push(nuevoNodo)
+         }
+    }
+
+    return arbol as Nodo
+}
+
+const tokens = tokenizarHTML(HTML);
+const tokensClasificados = clasificarTokens(tokens);
+const arbol = construirArbol(tokensClasificados);
+
+console.log(arbol)
