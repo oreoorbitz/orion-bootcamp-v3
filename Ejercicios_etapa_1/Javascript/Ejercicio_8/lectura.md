@@ -4,7 +4,7 @@
 
 Cuando escribimos javascript, nuestro código no es directamente ejecutado por el navegador, pero por un motor de javascript. En caso de Google Chrome, `V8`. Los motores de javascript son corridos dentro de un navegador. Un navegador es una aplicación que se ejecuta en un sistema operativo. Un sistema operativo es una colección de programas que comunican con el `Kernel` del sistema operativo. El Kernel comunica con el hardware de tu computadora, que permite la interactividad con un humano como tú.
 
-El `Binary Code` es un método de comunicación para hardware. Es representado en 0 y 1s. La razón es para comunicar con los logic gates de tu hardware.
+El `Binary Code` es un método de comunicación para hardware. Es representado en 0 y 1s. La razón de esto, es para que haya comunicación con los logic gates de tu hardware.
 
 ```
 0001 0010 0011
@@ -35,7 +35,7 @@ int main() {
 
 ```
 
-Eventualmente, gente formaron opinions sobre las abstracciones de lenguajes tempranos. Decidieron que las abstracciones en `C` limitaban su habilidad de escribir software según sus necesidades.
+Eventualmente, gente formaron opiniones sobre las abstracciones de lenguajes tempranos. Decidieron que las abstracciones en `C` limitaban su habilidad de escribir software según sus necesidades.
 
 `C++` Originalmente fue una extensión de `C`, escrito en `C`.
 
@@ -59,7 +59,7 @@ int main() {
 
 ```
 
-Con el tiempo, los usuarios de computadores se volvieron más usuarios comunes que científicos. Por tanto se inventó los navegadores. Un sistema de abstracción para compartir información. Texto y imágenes y videos, encapsulado en direcciones estáticas y compartibles. Sitios web, y navegadores para acceder los sitios web.
+Con el tiempo, los usuarios de computadores se volvieron más usuarios comunes que científicos. Por lo tanto se inventaron los navegadores. Un sistema de abstracción para compartir información. Texto y imágenes y videos, encapsulados en direcciones estáticas y compartibles. Sitios web, y navegadores para acceder los sitios web.
 
 Netscape, un navegador de ejemplo, fue escrito en c++.
 
@@ -71,7 +71,7 @@ El navegador, al procesar un archivo HTML, utiliza el sistema operativo para com
 
 ```HTML
 <h4>Esto es un ejemplo de HTML</h4>
-<li> El lenguaje que los navegadores usando para mostrar informacion en la pagina</li>
+<li> El lenguaje que los navegadores usan para mostrar informacion en la pagina</li>
 
 ```
 
@@ -87,9 +87,9 @@ Motores que leen Markdown, toman Markdown y lo convierten a HTML primero.
 ##### Este es un ejemplo de Markdown, renderizado en programa que lee markdown
 - Un lenguaje que se transpila a `HTML`.
 
-Eventualmente habia un nessitidad de hacer lo que se podia hacer con los navegadores mas complejo, asi que se creo otra abstracion.
+Eventualmente habia un necesidad de que lo que se podia hacer con los navegadores fuese mas complejo, asi que se creo otra abstración.
 
-Javasacript es un lenguaje de programacion, escrito en `C++`,escrito originalmente con la intencion de manipular el HTML que aparece en una pagina. 
+Javasacript es un lenguaje de programacion, escrito en `C++`, fue escrito originalmente con la intencion de manipular el HTML que aparece en una página.
 
 ```js
 function add(a, b) {
@@ -101,53 +101,52 @@ console.log("El resultado es:", result);
 
 ```
 
-Eventualmente, los sitios web se volverion el uso princepal para computadoras, y como tal javascript se volvio unos de, si no el mas, popular lenguajes de programacion. Como tal, habia una enroma cantidad de programadores que aprenderion a usar javascript, y querian usar javascript afuera del contexto limitado del navegador. Como tal, fue creado `node`, usando `C++`.
+Eventualmente, los sitios web se volverion de uso principal para computadoras, y como tal javascript se volvio uno de, si no el mas, popular lenguajes de programacion. Como tal, habia una enorme cantidad de programadores que aprenderon a usar javascript, y querian usarlo fuera del contexto limitado del navegador. Como tal, fue creado `node`, usando `C++`.
 
 node es un coretiempo de `javascript`. Toma sintaxis de javascript, y crea abstraciones que permiten hacer interaciones con los sistemas operativos.
 
 
 ### Modulos
 
-Archivos son una forma de abstrear logica computacional para que sea mas facil entender para los humans.
+Los archivos son una forma de abstraer la lógica computacional para que sea más fácil de entender para los humanos.
 
-En HTML, nosotros le dicemos a el navegador que queremos cargar y ejecutar codigo de javscript usando un `tag` especifico de html.
+En HTML, nosotros le decimos al navegador que queremos cargar y ejecutar código de javascript usando un `tag` específico de HTML.
 
 ```HTML
 <script src="index.js"></script>
 ```
 
-El; navegador ve es `tag` y sabe que tiene que buscar en la direcion dada para el archivo.
+El navegador ve el `tag` y sabe que tiene que buscar en la dirección dada para el archivo.
 
-Originalmente usando un `script` tag era la unica forma de cargar y/o leer codigo javascript.
+Originalmente usando un `script` el tag era la única forma de cargar y/o leer código javascript.
 
-Para node, no hace sentido usar tags de HTML en javascript (En mi opnion <___<). Asi que node tiene sus propias forma de cargar y ejecutar archivos de js. Node siendo una applicacion, que core directamente en tu computadora, core archivos de js directamente.
+Para Node, no hace sentido usar tags de HTML en javascript (En mi opinión <___<). Así que Node tiene sus propias formas de cargar y ejecutar archivos de js. Node siendo una aplicación, que corre directamente en tu computadora, corre archivos de js directamente.
 
 ```sh
 node index.js
 ```
 
-Con este commando, node abrer y corer el codigo en index.js
-Endentro de un archivo.
+Con este comando, Node abre y corre el código en index.js dentro de un archivo.
 
-Tambien podemos cargar otros archivos que saran ejecutados cuando el archivo principal los core.
+También podemos cargar otros archivos que serán ejecutados cuando el archivo principal los corra.
 
 ```Node
 let product = require('./data/product.js')
 ```
 
-Eventualmente, como pasa seguido, la presencia de cierta funcionalidad ajena de la implementacion de `javascript` en el navegador, fue implementadad en `javascript` de el navegador.
+Eventualmente, como pasa seguido, la presencia de cierta funcionalidad ajena de la implementación de `javascript` en el navegador, fue implementada en `javascript` del navegador.
 
-Esta implementacion no tuvo nada de contraversia.
+Esta implementación no tuvo nada de controversia.
 
 ```js
 import { product } from './data/product.js'
 ```
 
-La sintax para importar modules en la web era distintca a la sintaxis usada en `node`. Como tal, node siendo un `runtime` con la intencion de ser una implentacion de `javascript` dicidio copia la sintax de import de javascript.
+La sintaxis para importar módulos en la web era distinta a la sintaxis usada en `node`. Como tal, Node siendo un `runtime` con la intención de ser una implementación de `javascript`, decidió copiar la sintaxis de import de javascript.
 
-Esta deciscion no tuvo nada de controversial no creo nada de complicaciones.
+Esta decisión no tuvo nada de controversial ni creó nada de complicaciones.
 
-para exportar un elemento de javascript, usamos la parabla clave export
+Para exportar un elemento de javascript, usamos la palabra clave export.
 
 ```js
  export const a = 'a'
@@ -163,7 +162,7 @@ para exportar un elemento de javascript, usamos la parabla clave export
     c
  }
 ```
-Para importar multiples elementos de un solo archivo, los ponemos en un objecto, y de ayi son usables en el contexto de nuestra pagina
+Para importar múltiples elementos de un solo archivo, los ponemos en un objeto, y de ahí son usables en el contexto de nuestra página.
 
 ```js
 import {a,b,c} from 'alphabet.js'
@@ -173,7 +172,7 @@ console.log(a)
 
 ```
 
-Para exportar solo un elemento en el archivo, como el defaulto, usamos export default
+Para exportar solo un elemento en el archivo, como el defecto, usamos export default.
 
 ```js
 const productos = {
@@ -185,7 +184,7 @@ const productos = {
 export default  productos
 ```
 
-Cuando importamos un elemento de default de un archivo, no tenemos que usar objecto
+Cuando importamos un elemento de default de un archivo, no tenemos que usar objeto.
 
 ```js
 import products from 'productos.js'
@@ -193,29 +192,30 @@ import products from 'productos.js'
 
 ### NPM
 
-`Node Package Manage`, NPM de corto, es un manejador de paquetes para node. Es un programa, escrito princepalmente con node, para crear, organizar, y compartir modulos escritos en javascript, con la intencion de corer en node.
+`Node Package Manager`, NPM de corto, es un manejador de paquetes para Node. Es un programa, escrito principalmente con Node, para crear, organizar, y compartir módulos escritos en javascript, con la intención de correr en Node.
 
-es un programa, que puede ser ejecutado con sus commandos
+Es un programa, que puede ser ejecutado con sus comandos.
 
 ```sh
 npm install vitest
 ```
 
-Aqui estamos installando un paquete llamado vitest.
-NPM crea un a carpeta, llamada `node_modules`, donde se guarda todo los packquetes que instalamos. NPM usa un archivo de configuracion, llamada package.lock para saber cuales modulos tiene que descargar.
+Aquí estamos instalando un paquete llamado vitest.
 
-Los paquetes estan guardados en un servidor manejador por NPM inc, que maneja el registro de paquetes y manda la data a tu computadora cuando tu installes los modulos.
+NPM crea una carpeta, llamada `node_modules`, donde se guarda todos los paquetes que instalamos. NPM usa un archivo de configuración, llamado package.lock para saber cuáles módulos tiene que descargar.
 
-NPM es una compania benevolente y justa que nunca haria un decision que tendria resultados desastrosas para milliones de usaurios.
+Los paquetes están guardados en un servidor manejado por NPM Inc, que maneja el registro de paquetes y manda la data a tu computadora cuando tú instalas los módulos.
 
-Una ves que un paquete esta installado, puedes importar el packet en tu archivo
+NPM es una compañía benevolente y justa que nunca haría una decisión que tendría resultados desastrosos para millones de usuarios.
+
+Una vez que un paquete está instalado, puedes importar el paquete en tu archivo.
 
 ```javascript
 import { describe, it, expect, vi } from 'vitest';
 ```
 
 ### Notas de velocidad
-La cantidad de archivos de javascript hace un impacto en la velocidad en lo que se carga una pagina, eso es afuero del tema de este articulo, pero es importante tener en mente.
+La cantidad de archivos de javascript hace un impacto en la velocidad en la que se carga una página, eso es afuera del tema de este artículo, pero es importante tener en mente.
 
 ### Notas finales
-En el final, puedes organizar tus archivos de javascript segun tu gusto (o el gusto de tu gerente).
+En el final, puedes organizar tus archivos de javascript según tu gusto (o el gusto de tu gerente).
