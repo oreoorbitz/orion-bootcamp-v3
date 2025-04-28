@@ -1,30 +1,36 @@
 /**
- * MÓDULO 13: INTEGRAR PLANTILLA + ÁRBOL DE NODOS
+ * MÓDULO 13: SIMULACIÓN DE PIPELINE DE BUILD ESTÁTICO
  *
- * Objetivo: Tomar una plantilla con placeholders, rellenarla con datos, parsearla a estructura JS, y luego renderizarla como HTML.
+ * Objetivo: Simular cómo un generador de sitios estáticos transforma datos en HTML final usando plantillas y componentes.
  *
  * Instrucciones:
- * 1. Usa tu sistema de plantillas del Proyecto 2 (hasta filtros).
- * 2. Usa tu parser del Proyecto 1 para transformar el HTML procesado en una estructura de árbol.
- * 3. Usa `renderizarHTML()` para convertir el árbol en una cadena HTML final.
- * 4. Define una función principal como:
- *    `generarHTMLDesdePlantilla(template: string, contexto: Record<string, any>): string`
+ * 1. Simula una lista de datos de ejemplo (como un arreglo de productos o artículos)
+ * 2. Usa un archivo de plantilla como base para cada elemento
+ * 3. Genera una estructura DOM para cada entrada y renderízala como HTML
+ * 4. Imprime o guarda los resultados como si fueran archivos individuales (`index.html`, `producto1.html`, etc.)
  *
- * Flujo esperado:
- * - Plantilla + datos → renderizado con variables
- * - Resultado se tokeniza y convierte en árbol DOM JS
- * - Árbol se renderiza a HTML con escape de texto
+ * Entrada de ejemplo:
+ * datos:
+ * [
+ *   { titulo: "Producto 1", descripcion: "Este producto es genial" },
+ *   { titulo: "Producto 2", descripcion: "Otro gran producto" }
+ * ]
+ *
+ * plantilla:
+ * "<article><h2>{{ titulo }}</h2><p>{{ descripcion }}</p></article>"
+ *
+ * Salida simulada:
+ * - producto1.html → "<article><h2>Producto 1</h2><p>Este producto es genial</p></article>"
+ * - producto2.html → "<article><h2>Producto 2</h2><p>Otro gran producto</p></article>"
  *
  * Consejo:
- * - Mantén la separación entre partes: renderizado de plantilla, parsing, renderizado final
- * - Usa ejemplos simples como:
+ * - Estructura funciones como si fueran pasos de una compilación:
+ *   1. Preparar datos
+ *   2. Procesar plantilla
+ *   3. Parsear a árbol
+ *   4. Renderizar a HTML
+ *   5. Escribir en archivo (opcional en Deno)
  *
- * template:
- * "<h1>{{ titulo }}</h1><p>{{ descripcion }}</p>"
- *
- * contexto:
- * { titulo: "Hola", descripcion: "Texto <seguro>" }
- *
- * resultado:
- * "<h1>Hola</h1><p>Texto &lt;seguro&gt;</p>"
+ * Desafío extra:
+ * - Usa `Deno.writeTextFile()` para guardar el resultado en archivos reales
  */

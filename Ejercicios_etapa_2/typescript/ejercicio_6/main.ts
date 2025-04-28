@@ -1,40 +1,39 @@
 /**
- * MÓDULO 6: DETECCIÓN DE PLACEHOLDERS EN PLANTILLAS
+ * MÓDULO 6: REEMPLAZO DE VARIABLES EN PLANTILLAS
  *
  * 🧠 Concepto clave:
- * Una *plantilla* es una cadena de texto que puede incluir variables, directivas y expresiones especiales.
- * Estas plantillas no se usan directamente — primero deben ser procesadas para insertar datos reales.
+ * En los motores de plantillas como Liquid, `{{ nombre }}` se reemplaza por el valor real de una variable del contexto.
+ * Esto permite generar contenido dinámico desde datos, como hacer que el título de una página cambie según el usuario.
  *
- * En lenguajes como Liquid, los placeholders se representan con dos tipos de marcadores:
- *   - `{{ variable }}` → muestra un valor del contexto
- *   - `{% directiva %}` → indica instrucciones como condicionales o bucles
- *
- * En este módulo, aprenderás a reconocer y separar esos bloques dentro del texto.
+ * En este módulo, empezarás a conectar *datos reales* con *plantillas de texto*.
  *
  * Objetivo:
- * Dividir una cadena de plantilla en partes manejables: texto normal, variables, y directivas.
+ * Reemplazar todos los bloques `{{ variable }}` por sus valores del objeto `contexto`.
  *
  * Instrucciones:
- * 1. Crea una función llamada `detectarTokensPlantilla(entrada: string): string[]`
- * 2. Devuelve un arreglo con:
- *    - los bloques `{{ ... }}` (variables),
- *    - los bloques `{% ... %}` (directivas),
- *    - y el texto restante entre ellos.
+ * 1. Crea una función `renderizarVariables(tokens: string[], contexto: Record<string, any>): string`
+ * 2. Para cada token:
+ *    - Si es una variable `{{ ... }}`, busca el valor correspondiente en el `contexto`
+ *    - Si no existe, puedes dejarlo vacío (`""`) o usar un valor por defecto
+ *    - El resto del texto debe conservarse sin cambios
  *
- * Entrada de ejemplo:
- * "Hola, {{ nombre }}. {% if admin %}Eres administrador.{% endif %}"
- *
- * Salida esperada:
+ * Entrada:
+ * tokens:
  * [
  *   "Hola, ",
  *   "{{ nombre }}",
- *   ". ",
- *   "{% if admin %}",
- *   "Eres administrador.",
- *   "{% endif %}"
+ *   ". Bienvenido a {{ ciudad }}."
  * ]
  *
+ * contexto:
+ * {
+ *   nombre: "Carlos",
+ *   ciudad: "Madrid"
+ * }
+ *
+ * Resultado esperado:
+ * "Hola, Carlos. Bienvenido a Madrid."
+ *
  * Consejo:
- * - Usa `.split()` con expresiones regulares o `.match()` con `/({{.*?}}|{%.*?%})/g`
- * - No interpretes aún el significado de los bloques — solo identifícalos.
+ * - Recorta los espacios dentro de los `{{ ... }}` antes de buscar la clave
  */

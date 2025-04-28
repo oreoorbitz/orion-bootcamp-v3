@@ -1,63 +1,40 @@
 /**
- * MÓDULO 5: FUNCIONES DE BÚSQUEDA EN NODOS (getElementById y getElementsByClassName)
+ * MÓDULO 5: DETECCIÓN DE PLACEHOLDERS EN PLANTILLAS
  *
  * 🧠 Concepto clave:
- * En los navegadores reales, cuando el DOM ya está construido, los objetos tipo `HTMLElement`
- * permiten buscar contenido dentro de sí mismos con métodos como:
+ * Una *plantilla* es una cadena de texto que puede incluir variables, directivas y expresiones especiales.
+ * Estas plantillas no se usan directamente — primero deben ser procesadas para insertar datos reales.
  *
- *   - `element.getElementById("header")`
- *   - `element.getElementsByClassName("item")`
+ * En lenguajes como Liquid, los placeholders se representan con dos tipos de marcadores:
+ *   - `{{ variable }}` → muestra un valor del contexto
+ *   - `{% directiva %}` → indica instrucciones como condicionales o bucles
  *
- * En este módulo, vas a simular ese comportamiento en tu propio árbol DOM virtual.
- * Vas a agregar estos métodos a cada nodo de tipo `elemento`, de modo que se puedan llamar como:
- *
- *   nodo.getElementById('algo') o nodo.getElementsByClassName('algo')
+ * En este módulo, aprenderás a reconocer y separar esos bloques dentro del texto.
  *
  * Objetivo:
- * Implementar **como métodos de instancia** dos funciones que permitan buscar en el árbol:
- *    - `getElementById(id: string): NodoElemento | null`
- *    - `getElementsByClassName(className: string): NodoElemento[]`
- *
- * 🧩 Estructura base esperada para tus nodos:
- *
- * interface NodoElemento {
- *   tipo: 'elemento';
- *   nombre: string;
- *   atributos: Record<string, string>;
- *   hijos: (NodoElemento | NodoTexto)[];
- *   getElementById?: (id: string) => NodoElemento | null;
- *   getElementsByClassName?: (className: string) => NodoElemento[];
- * }
- *
- * interface NodoTexto {
- *   tipo: 'texto';
- *   contenido: string;
- * }
- *
- * ✅ Ejemplo de uso esperado:
- * const nodoRaiz = construirArbol(tokens);
- * const resultado = nodoRaiz.getElementById("principal");
+ * Dividir una cadena de plantilla en partes manejables: texto normal, variables, y directivas.
  *
  * Instrucciones:
- * 1. Al final del proceso de construcción de árbol (Módulo 4), asegúrate de agregar estos dos métodos
- *    a **cada nodo de tipo 'elemento'**:
- *    - `getElementById(id: string): NodoElemento | null`
- *    - `getElementsByClassName(className: string): NodoElemento[]`
+ * 1. Crea una función llamada `detectarTokensPlantilla(entrada: string): string[]`
+ * 2. Devuelve un arreglo con:
+ *    - los bloques `{{ ... }}` (variables),
+ *    - los bloques `{% ... %}` (directivas),
+ *    - y el texto restante entre ellos.
  *
- * 2. Ambos métodos deben funcionar recursivamente:
- *    - `getElementById` devuelve el **primer** nodo que tenga el atributo `id` igual al buscado.
- *    - `getElementsByClassName` devuelve un arreglo con **todos los nodos** que incluyan esa clase dentro del atributo `class`.
+ * Entrada de ejemplo:
+ * "Hola, {{ nombre }}. {% if admin %}Eres administrador.{% endif %}"
  *
- * Detalles clave:
- * - El atributo `class` puede tener múltiples clases separadas por espacio.
- * - Estos métodos **solo aplican a nodos tipo 'elemento'** (ignora los tipo 'texto').
- * - Puedes crear una función auxiliar (helper) para no repetir lógica de recorrido recursivo.
+ * Salida esperada:
+ * [
+ *   "Hola, ",
+ *   "{{ nombre }}",
+ *   ". ",
+ *   "{% if admin %}",
+ *   "Eres administrador.",
+ *   "{% endif %}"
+ * ]
  *
  * Consejo:
- * - Así como en el navegador puedes hacer `document.getElementById(...)` o `element.getElementsByClassName(...)`,
- *   ahora tú podrás hacer lo mismo sobre tu árbol JS personalizado.
- *
- * Sugerencia:
- * Si no quieres mutar directamente los objetos, también puedes definir una función
- * `agregarMetodosDOM(nodo: NodoElemento)` que recorra el árbol y agregue los métodos a cada nodo de tipo elemento.
+ * - Usa `.split()` con expresiones regulares o `.match()` con `/({{.*?}}|{%.*?%})/g`
+ * - No interpretes aún el significado de los bloques — solo identifícalos.
  */
