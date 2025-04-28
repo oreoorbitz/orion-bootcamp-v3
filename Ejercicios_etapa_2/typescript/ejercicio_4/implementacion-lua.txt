@@ -1,0 +1,42 @@
+function construirArbol(tokens)
+  local stack = {}
+
+  for _, token in ipairs(tokens) do
+    if token.tipo == "apertura" then
+      local nodo = {
+        tipo = "elemento",
+        nombre = token.nombre or "",
+        atributos = token.atributos or {},
+        hijos = {}
+      }
+      table.insert(stack, nodo)
+
+    elseif token.tipo == "texto" then
+      local nodoTexto = {
+        tipo = "texto",
+        contenido = token.contenido or ""
+      }
+      local actual = stack[#stack]
+      table.insert(actual.hijos, nodoTexto)
+
+    elseif token.tipo == "autocierre" then
+      local nodo = {
+        tipo = "elemento",
+        nombre = token.nombre or "",
+        atributos = token.atributos or {},
+        hijos = {}
+      }
+      local actual = stack[#stack]
+      table.insert(actual.hijos, nodo)
+
+    elseif token.tipo == "cierre" then
+      if #stack > 1 then
+        local hijo = table.remove(stack)
+        local actual = stack[#stack]
+        table.insert(actual.hijos, hijo)
+      end
+    end
+  end
+
+  return stack[1]
+end

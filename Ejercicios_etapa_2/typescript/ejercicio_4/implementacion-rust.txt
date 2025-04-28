@@ -1,0 +1,71 @@
+#[derive(Debug)]
+enum TipoToken {
+    Apertura,
+    Cierre,
+    Autocierre,
+    Texto,
+}
+
+#[derive(Debug)]
+struct Token {
+    tipo: TipoToken,
+    nombre: Option<String>,
+    contenido: Option<String>,
+    atributos: Option<std::collections::HashMap<String, String>>,
+}
+
+#[derive(Debug)]
+enum Nodo {
+    Elemento {
+        nombre: String,
+        atributos: std::collections::HashMap<String, String>,
+        hijos: Vec<Nodo>,
+    },
+    Texto {
+        contenido: String,
+    },
+}
+
+fn construir_arbol(tokens: Vec<Token>) -> Option<Nodo> {
+    use Nodo::*;
+    let mut stack: Vec<Nodo> = Vec::new();
+
+    for token in tokens {
+        match token.tipo {
+            TipoToken::Apertura => {
+                let nodo = Elemento {
+                    nombre: token.nombre.unwrap_or_default(),
+                    atributos: token.atributos.unwrap_or_default(),
+                    hijos: Vec::new(),
+                };
+                stack.push(nodo);
+            },
+            TipoToken::Texto => {
+                if let Some(Nodo::Elemento { hijos, .. }) = stack.last_mut() {
+                    hijos.push(Texto {
+                        contenido: token.contenido.unwrap_or_default(),
+                    });
+                }
+            },
+            TipoToken::Autocierre => {
+                if let Some(Nodo::Elemento { hijos, .. }) = stack.last_mut() {
+                    hijos.push(Elemento {
+                        nombre: token.nombre.unwrap_or_default(),
+                        atributos: token.atributos.unwrap_or_default(),
+                        hijos: Vec::new(),
+                    });
+                }
+            },
+            TipoToken::Cierre => {
+                if stack.len() > 1 {
+                    let hijo = stack.pop().unwrap();
+                    if let Some(Nodo::Elemento { hijos, .. }) = stack.last_mut() {
+                        hijos.push(hijo);
+                    }
+                }
+            },
+        }
+    }
+
+    stack.pop()
+}

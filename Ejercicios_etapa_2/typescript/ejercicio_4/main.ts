@@ -2,84 +2,114 @@
  * MÓDULO 4: CONSTRUCCIÓN DEL ÁRBOL DOM A PARTIR DE TOKENS
  *
  * 🧠 Concepto clave:
- * En los navegadores reales, el contenido HTML se convierte en una estructura en forma de árbol llamada DOM (Document Object Model).
- * En este árbol, cada etiqueta se convierte en un "nodo", y si una etiqueta contiene otras etiquetas o texto, estas se representan como "hijos".
- * 
- * En este módulo, vas a construir una versión simplificada de ese árbol, usando JavaScript puro.
+ * Un documento HTML es una estructura jerárquica de elementos y textos.
+ * Cada apertura de etiqueta crea un nuevo nodo, cada cierre cierra un contexto, y los textos son hijos normales.
  *
- * Objetivo:
- * Tomar un arreglo de tokens clasificados (generados en los módulos 2 y 3) y construir un árbol jerárquico de nodos.
- * Cada nodo del árbol representará una etiqueta o un texto, con información de sus atributos y sus hijos.
+ * En este módulo vas a construir:
+ * - Un árbol anidado que representa tu HTML
+ * - Usando un **stack** para seguir la jerarquía de elementos
+ * - Usando **tipos explícitos** en TypeScript
  *
- * 🔁 ¿Qué estructura espera construirArbol?
- * La función `construirArbol(tokens: Token[]): NodoElemento` debe tomar un arreglo de objetos con la siguiente forma:
+ * 🎯 Objetivo:
+ * 1. Crear una función `construirArbol(tokens: Token[]): Nodo`
+ * 2. Recorrer los tokens y construir un árbol de nodos
  *
- * interface Token {
- *   tipo: 'apertura' | 'cierre' | 'autocierre' | 'texto';
- *   nombre: string | null;
- *   contenido: string | null;
- *   atributos?: Record<string, string>;
- * }
+ * ✅ Ejemplo de HTML de partida:
+ * ```html
+ * <div>
+ *   Hola
+ *   <span>mundo</span>
+ * </div>
+ * ```
  *
- * Y devolver un objeto anidado con esta forma recursiva:
- *
- * interface NodoElemento {
- *   tipo: 'elemento';
- *   nombre: string;
- *   atributos: Record<string, string>;
- *   hijos: (NodoElemento | NodoTexto)[];
- * }
- *
- * interface NodoTexto {
- *   tipo: 'texto';
- *   contenido: string;
- * }
- *
- * ✅ Ejemplo de entrada:
+ * ✅ Ejemplo de entrada esperada (los tokens que ya generaste en módulos anteriores):
+ * ```ts
  * [
- *   { tipo: 'apertura', nombre: 'div', contenido: null, atributos: {} },
- *   { tipo: 'texto', nombre: null, contenido: 'Hola' },
- *   { tipo: 'apertura', nombre: 'span', contenido: null, atributos: {} },
- *   { tipo: 'texto', nombre: null, contenido: 'mundo' },
- *   { tipo: 'cierre', nombre: 'span', contenido: null },
- *   { tipo: 'cierre', nombre: 'div', contenido: null }
+ *   { tipo: TipoToken.Apertura, nombre: "div", contenido: null, atributos: {} },
+ *   { tipo: TipoToken.Texto, nombre: null, contenido: "Hola", atributos: null },
+ *   { tipo: TipoToken.Apertura, nombre: "span", contenido: null, atributos: {} },
+ *   { tipo: TipoToken.Texto, nombre: null, contenido: "mundo", atributos: null },
+ *   { tipo: TipoToken.Cierre, nombre: "span", contenido: null, atributos: null },
+ *   { tipo: TipoToken.Cierre, nombre: "div", contenido: null, atributos: null }
  * ]
+ * ```
  *
- * ✅ Resultado esperado:
+ * ✅ Salida esperada (el árbol):
+ * ```ts
  * {
- *   tipo: 'elemento',
- *   nombre: 'div',
+ *   tipo: "elemento",
+ *   nombre: "div",
  *   atributos: {},
  *   hijos: [
- *     { tipo: 'texto', contenido: 'Hola' },
+ *     { tipo: "texto", contenido: "Hola" },
  *     {
- *       tipo: 'elemento',
- *       nombre: 'span',
+ *       tipo: "elemento",
+ *       nombre: "span",
  *       atributos: {},
  *       hijos: [
- *         { tipo: 'texto', contenido: 'mundo' }
+ *         { tipo: "texto", contenido: "mundo" }
  *       ]
  *     }
  *   ]
  * }
+ * ```
  *
- * Instrucciones:
- * 1. Crea una función `construirArbol(tokens: Token[]): NodoElemento`
- * 2. Usa una estructura tipo *pila* (`stack`) para mantener el seguimiento del nodo actual (el nodo padre).
- * 3. Recorre cada token y:
- *    - Si es una etiqueta de apertura: crea un nuevo nodo y agrégalo como hijo del nodo actual. Luego haz `push` de ese nuevo nodo.
- *    - Si es una etiqueta de cierre: haz `pop` para regresar al nodo padre.
- *    - Si es una etiqueta autocontenida: crea el nodo y agrégalo como hijo directamente (no haces `push`).
- *    - Si es texto: crea un nodo de tipo `texto` y agrégalo como hijo del nodo actual.
+ * ✅ Tipos recomendados para este ejercicio:
+ * ```ts
+ * export enum TipoToken {
+ *   Apertura = "apertura",
+ *   Cierre = "cierre",
+ *   Autocierre = "autocierre",
+ *   Texto = "texto"
+ * }
+
+ * export interface Token {
+ *   tipo: TipoToken | null;
+ *   nombre: string | null;
+ *   contenido: string | null;
+ *   atributos: Record<string, string> | null;
+ * }
+
+ * interface NodoElemento {
+ *   tipo: "elemento";
+ *   nombre: string;
+ *   atributos: Record<string, string>;
+ *   hijos: Nodo[];
+ * }
+
+ * interface NodoTexto {
+ *   tipo: "texto";
+ *   contenido: string;
+ * }
+
+ * export type Nodo = NodoElemento | NodoTexto;
+ * ```
  *
- * Reglas clave:
- * - La pila debe comenzar con un nodo raíz ficticio (puedes usar un `div` vacío o una etiqueta genérica).
- * - Solo puede haber un nodo raíz real al final (retorna su primer hijo si lo deseas).
- * - Todos los nodos `elemento` tienen: `tipo`, `nombre`, `atributos`, `hijos`.
- * - Todos los nodos `texto` tienen: `tipo` y `contenido`.
+ * ✅ Instrucciones:
+ * 1. Crea una función `construirArbol(tokens: Token[]): Nodo`
+ * 2. Usa una pila (stack) para mantener la jerarquía:
+ *    - Cuando encuentres una etiqueta de apertura:
+ *      - Crea un `NodoElemento`
+ *      - Agrégalo como hijo del nodo actual
+ *      - Haz `push` al stack
+ *    - Cuando encuentres una etiqueta de cierre:
+ *      - Haz `pop` para volver al padre
+ *    - Cuando encuentres un texto:
+ *      - Crea un `NodoTexto`
+ *      - Agrégalo como hijo del nodo actual
+ *    - Cuando encuentres una etiqueta de autocierre:
+ *      - Crea un `NodoElemento` sin hijos
+ *      - Agrégalo directamente como hijo del nodo actual
  *
- * Conceptos clave:
- * - Árboles y estructuras recursivas
- * - Control de contexto con pila
- * - Construcción dinámica de objetos
+ * ✅ Reglas clave:
+ * - El primer nodo abierto será el **nodo raíz**
+ * - Los textos son nodos sin hijos
+ * - Todos los hijos se almacenan en el array `hijos` de su padre
+ *
+ * Consejo:
+ * - No tienes que volver a tokenizar el HTML aquí. ¡El arreglo de tokens ya viene preparado del módulo anterior!
+ * - Usa pseudocódigo si sientes que te pierdes:  
+ *   "Si apertura → crear hijo → moverse abajo... Si cierre → volver arriba..."
+ *
+ * Este ejercicio simula **cómo un navegador construye el DOM real**: un proceso de lectura y anidación basado en apertura y cierre de etiquetas.
  */
