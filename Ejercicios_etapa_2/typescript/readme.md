@@ -1,32 +1,37 @@
-### Installando deno
+### Instalando Deno
 
-En los  de javascript en etapa 1, hemos estado usando javascript, con node. Recuerda que Javascipt fue hecho para funcionar en el navegador. Como tal Node fue creado para que javascript pueda funcional afuera del navegador. Node se volvio el "runtime"[^1]. Se volvio tan popular que el creado de Node, se volvio desolucionado por la dificultidad en hacer mejoras a Node, asi que hice Deno. Porque escojio ese nombre es un misterio completo. Alguna gente teoriza que el ultimo runtime de javasceipt que va crear Ryan Dahl, se llamar Endo.
+En los cursos de JavaScript en etapa 1, hemos estado usando JavaScript con Node. Recuerda que JavaScript fue hecho para funcionar en el navegador. Como tal, Node fue creado para que JavaScript pueda funcionar fuera del navegador. Node es un runtime[^1] de JavaScript. Node se volvió tan popular que el creador de Node (Ryan Dahl) se desilusionó por la dificultad de hacer mejoras a Node, así que creó Deno. Por qué escogió ese nombre es un misterio completo. Alguna gente teoriza que el último runtime de JavaScript que va a crear Ryan Dahl se llamará Endo.
 
-Las mejoras mas notables de Deno sobre node es su support nativo de typescript, cual es la razon que lo vamos a usar.
+Una de las mejoras más notables de Deno sobre Node es su soporte nativo de TypeScript, que es la razón por la que lo vamos a usar.
 
+#### Para Mac OS
 
-#### Para mac OS
+```bash
+curl -fsSL https://deno.land/install.sh | sh
+```
 
-`curl -fsSL https://deno.land/install.sh | sh`
+#### Para WSL en Windows
 
-#### Para WSL en windows
+```bash
+curl -fsSL https://deno.land/install.sh | sh
+```
 
-`curl -fsSL https://deno.land/install.sh | sh`
+[^1]: Un "runtime" es un ambiente donde se puede correr algo. Un runtime de JavaScript es simplemente un ambiente para correr JavaScript.
 
+#### Para correr scripts de TypeScript con Deno
 
-[^1]: Un "runtime" un ambiente donde se puede correr algo. un runtime de javascript solo es un ambiente para corer javascript.
+```bash
+deno run main.ts
+```
 
-#### para corer scripts de typescript con deno
+#### Escribiendo tests para tu código
 
-`deno main.ts`
+Para esta etapa del curso, en los ejercicios de TypeScript, van a tener que escribir las pruebas para todo el código que escriban. Los archivos donde se escriben los tests serán `main_test.ts`. Para correr los tests, el comando es:
 
+```bash
+deno test
+```
 
-#### Escrbiendo tests para tu codigo
+#### Instalando el plugin de Deno para VS Code
 
-Para esta etapa de cursos, para los ejercicios de typescript, van a tener que escribir las pruebas para todo el codigo que escriban. los archivos donde se escriben el test seran `main_test.ts`, para corer los tests, es:
-
-`deno test`
-
-#### Instalando el deno plugin para vs code
-
-En el mercado de plugins de vscode, busca por "deno". El que quieres es el plugin hecho por "deno.land"
+En el mercado de extensiones de VSCode, busca "deno". El que quieres es el plugin hecho por "deno.land".
