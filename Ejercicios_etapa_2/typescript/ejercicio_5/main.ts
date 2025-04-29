@@ -38,3 +38,14 @@
  * - Usa `.split()` con expresiones regulares o `.match()` con `/({{.*?}}|{%.*?%})/g`
  * - No interpretes aún el significado de los bloques — solo identifícalos.
  */
+
+const LIQUID_HTML = `"Hola, {{ nombre }}. {% if admin %}Eres administrador.{% endif %}"`
+const regex = /({{.*?}}|{%.*?%})/g
+
+
+const detectarTokensPlantilla = (entrenda: string): string[] => {
+    const tokens = entrenda.split(regex)
+    return tokens
+}
+
+console.log(detectarTokensPlantilla(LIQUID_HTML))
