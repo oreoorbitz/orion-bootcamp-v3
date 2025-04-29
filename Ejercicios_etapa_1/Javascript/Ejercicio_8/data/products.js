@@ -20,3 +20,5 @@ const products = [
         handle: "basic-tee",
     }
 ]
+
+export default products

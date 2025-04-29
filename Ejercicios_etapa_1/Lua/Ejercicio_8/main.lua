@@ -1,10 +1,12 @@
 -- main.lua
 -- Punto de entrada para ejecutar la funcionalidad
 
--- TODO: importa products 
--- TODO: importa getProductHandlesAndIds 
+-- TODO: importa products
+local products = require('data/products')
+-- TODO: importa getProductHandlesAndIds
+local productUtils = require('modules.get_product_handles_and_ids')
 
-local resultado = getProductHandlesAndIds(products)
+local resultado = productUtils.getProductHandlesAndIds(products)
 
 -- Imprime el resultado
 for i, producto in ipairs(resultado) do

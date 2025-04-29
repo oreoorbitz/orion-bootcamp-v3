@@ -5,3 +5,9 @@ const getproductHandles = products => {
 const getproductIds = products => {
     return products.map(product => product.id);
 }
+
+
+export {
+  getproductHandles,
+  getproductIds,
+}

@@ -23,3 +23,6 @@ local products = {
 }
 
 -- Aquí debe ir el return de products
+return {
+  products
+}
