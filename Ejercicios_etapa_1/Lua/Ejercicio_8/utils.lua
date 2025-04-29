@@ -20,3 +20,7 @@ local function getProductIds(products)
 end
 
 -- Aquí debe ir el return de la tabla de funciones
+return {
+  getProductHandles = getProductHandles,
+  getProductIds = getProductIds
+}

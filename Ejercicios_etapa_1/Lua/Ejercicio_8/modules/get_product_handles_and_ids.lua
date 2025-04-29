@@ -3,11 +3,13 @@
 
 -- TODO: importa las funciones desde utils.lua
 -- local utils = require("utils")
-local utils = require('utils')
+local utils = require("utils")
 
 local function getProductHandlesAndIds(products)
     local handles = utils.getProductHandles(products)
     local ids = utils.getProductIds(products)
+
+
 
     local resultado = {}
     for i = 1, #products do
