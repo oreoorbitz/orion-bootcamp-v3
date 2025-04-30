@@ -1,39 +1,55 @@
 /**
- * MÓDULO 6: REEMPLAZO DE VARIABLES EN PLANTILLAS
+ * MÓDULO 6: CLASIFICACIÓN DE TOKENS DE PLANTILLA
  *
  * 🧠 Concepto clave:
- * En los motores de plantillas como Liquid, `{{ nombre }}` se reemplaza por el valor real de una variable del contexto.
- * Esto permite generar contenido dinámico desde datos, como hacer que el título de una página cambie según el usuario.
+ * Ya separaste la plantilla en partes individuales (texto, variables y directivas), pero todas son solo cadenas.
+ * Antes de poder renderizar variables o interpretar directivas, necesitas saber **qué es cada una**.
  *
- * En este módulo, empezarás a conectar *datos reales* con *plantillas de texto*.
+ * Este módulo es el equivalente al que hiciste en HTML cuando clasificaste etiquetas como apertura, cierre o texto.
+ * Aquí harás algo similar: clasificar cada string como tipo `texto`, `variable`, o `directiva`.
  *
  * Objetivo:
- * Reemplazar todos los bloques `{{ variable }}` por sus valores del objeto `contexto`.
+ * Convertir un arreglo de strings en un arreglo de objetos con tipo explícito.
  *
  * Instrucciones:
- * 1. Crea una función `renderizarVariables(tokens: string[], contexto: Record<string, any>): string`
- * 2. Para cada token:
- *    - Si es una variable `{{ ... }}`, busca el valor correspondiente en el `contexto`
- *    - Si no existe, puedes dejarlo vacío (`""`) o usar un valor por defecto
- *    - El resto del texto debe conservarse sin cambios
+ * 1. Crea una función llamada `clasificarTokensPlantilla(tokens: string[]): TokenPlantilla[]`
+ * 2. Devuelve un arreglo donde cada string se convierte en un objeto con esta estructura:
+ *
+ * ```ts
+ * type TipoTokenPlantilla = 'texto' | 'variable' | 'directiva'
+ *
+ * interface TokenPlantilla {
+ *   tipo: TipoTokenPlantilla;
+ *   contenido: string;
+ * }
+ * ```
+ *
+ * 3. Clasifica según las reglas:
+ *   - Si comienza con `{{` y termina con `}}`, es tipo `'variable'`
+ *   - Si comienza con `{%` y termina con `%}`, es tipo `'directiva'`
+ *   - Si no es ninguno de los dos, es tipo `'texto'`
  *
  * Entrada:
- * tokens:
  * [
  *   "Hola, ",
  *   "{{ nombre }}",
- *   ". Bienvenido a {{ ciudad }}."
+ *   ". ",
+ *   "{% if admin %}",
+ *   "Eres administrador.",
+ *   "{% endif %}"
  * ]
  *
- * contexto:
- * {
- *   nombre: "Carlos",
- *   ciudad: "Madrid"
- * }
- *
  * Resultado esperado:
- * "Hola, Carlos. Bienvenido a Madrid."
+ * [
+ *   { tipo: "texto", contenido: "Hola, " },
+ *   { tipo: "variable", contenido: "nombre" },
+ *   { tipo: "texto", contenido: ". " },
+ *   { tipo: "directiva", contenido: "if admin" },
+ *   { tipo: "texto", contenido: "Eres administrador." },
+ *   { tipo: "directiva", contenido: "endif" }
+ * ]
  *
  * Consejo:
- * - Recorta los espacios dentro de los `{{ ... }}` antes de buscar la clave
+ * - Usa `.startsWith()` y `.endsWith()` para clasificar cada string
+ * - Recorta los delimitadores (`{{ }}`, `{% %}`) usando `.slice()` o `.replace()` para extraer solo el contenido
  */
