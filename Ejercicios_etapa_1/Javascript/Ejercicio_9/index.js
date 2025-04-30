@@ -60,6 +60,8 @@ export const PRODUCTO_STRING_DOS = `{
 
 // 1b. TODO: Convierte la cadena PRODUCTO_STRING_UNO y PRODUCTO_STRING_DOS a objetos reales usando JSON.parse.
 // llama las variables, productoUno y productoDos Asegúrate de exportarlos para la prueba.
+export const productoUno = JSON.parse(PRODUCTO_STRING_UNO)
+export const productoDos = JSON.parse(PRODUCTO_STRING_DOS)
 
 // ------------------------------------------------------------------------------------------------
 // 2. Crea la función "generarSKU"
@@ -74,15 +76,41 @@ export const PRODUCTO_STRING_DOS = `{
  * @returns {string} El SKU generado
  */
 // la funcion debria llamarse generarSKU, asegura exportarla
+export const generarSKU = (object) => {
+  const vendorUPP = object.vendor.slice(0, 2).toUpperCase();
 
+  const idPad = object.id.toString().padStart(4, '0');
+
+  let priceX = '';
+    if (object.price > 100) {
+      priceX = 'X';
+    } else {
+       priceX = '';
+    }
+
+  return `${vendorUPP}-${idPad}${priceX}`;
+};
+ console.log(generarSKU(productoUno))
+ console.log(generarSKU(productoDos))
 // ------------------------------------------------------------------------------------------------
 // 3. Crea la función "validarSKU"
 // ------------------------------------------------------------------------------------------------
 /**
  * Valida un SKU según la regla:
- *  ^[A-Z]{2}-\\d{4}[A-Z]?$
+ *  ^[A-Z]{2}-\d{4}[A-Z]?$
  * @param {string} sku - El SKU a validar
  * @returns {boolean} true si es válido, false en caso contrario
  */
 // la funcion debria llamarse validarSKU, asegura exportarla
+export const validarSKU = (str) => {
+  const regex = /^[A-Z]{2}-\d{4}[A-Z]?$/;
+  if (regex.test(str) === true) {
+    return "skuValido"
+  } else {
+    return "skuInvalido"
+  }
 
+}
+
+const sku1 = generarSKU(productoUno)
+console.log(validarSKU(sku1))
