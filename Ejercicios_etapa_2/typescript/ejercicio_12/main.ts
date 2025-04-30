@@ -1,30 +1,25 @@
 /**
- * MÓDULO 12: INTEGRAR PLANTILLA + ÁRBOL DE NODOS
+ * MÓDULO 11: ESCAPE DE CARACTERES Y CASOS ESPECIALES
  *
- * Objetivo: Tomar una plantilla con placeholders, rellenarla con datos, parsearla a estructura JS, y luego renderizarla como HTML.
+ * Objetivo: Asegurar que los textos renderizados no rompan el HTML, y proteger contra contenido peligroso.
  *
  * Instrucciones:
- * 1. Usa tu sistema de plantillas del Proyecto 2 (hasta filtros).
- * 2. Usa tu parser del Proyecto 1 para transformar el HTML procesado en una estructura de árbol.
- * 3. Usa `renderizarHTML()` para convertir el árbol en una cadena HTML final.
- * 4. Define una función principal como:
- *    `generarHTMLDesdePlantilla(template: string, contexto: Record<string, any>): string`
+ * 1. Crea una función `escapeTexto(texto: string): string`
+ * 2. Reemplaza los caracteres peligrosos por sus entidades HTML:
+ *    - `&` → `&amp;`
+ *    - `<` → `&lt;`
+ *    - `>` → `&gt;`
+ *    - `"` → `&quot;`
+ *    - `'` → `&#39;`
+ * 3. Asegúrate de que `renderizarHTML()` use esta función cuando se encuentre un nodo de tipo `texto`.
  *
- * Flujo esperado:
- * - Plantilla + datos → renderizado con variables
- * - Resultado se tokeniza y convierte en árbol DOM JS
- * - Árbol se renderiza a HTML con escape de texto
+ * Entrada de ejemplo:
+ * Texto: `"Hola <script>alert('hack')</script>"`
+ *
+ * Resultado esperado:
+ * `"Hola &lt;script&gt;alert(&#39;hack&#39;)&lt;/script&gt;"`
  *
  * Consejo:
- * - Mantén la separación entre partes: renderizado de plantilla, parsing, renderizado final
- * - Usa ejemplos simples como:
- *
- * template:
- * "<h1>{{ titulo }}</h1><p>{{ descripcion }}</p>"
- *
- * contexto:
- * { titulo: "Hola", descripcion: "Texto <seguro>" }
- *
- * resultado:
- * "<h1>Hola</h1><p>Texto &lt;seguro&gt;</p>"
+ * - Usa `.replace()` en cadena, o un mapa de reemplazo
+ * - Puedes escribir pruebas para cada carácter especial como validación
  */

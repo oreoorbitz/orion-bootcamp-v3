@@ -1,34 +1,38 @@
 /**
- * MÓDULO 10: RENDERIZAR A HTML
+ * MÓDULO 10: FILTROS EN VARIABLES DE PLANTILLA
  *
- * Objetivo: Tomar una estructura de elemento JS (como un árbol) y convertirla en una cadena HTML.
+ * 🧠 Concepto clave:
+ * En Liquid (y otros motores), puedes transformar variables con *filtros*, como:
+ *   - `{{ nombre | upcase }}` → convierte a mayúsculas
+ *   - `{{ precio | currency }}` → formatea como moneda
+ *
+ * Los filtros se encadenan y se aplican uno tras otro.
+ *
+ * Objetivo:
+ * Permitir que una variable tenga uno o más filtros que transforman su valor antes de mostrarse.
  *
  * Instrucciones:
- * 1. Crea una función `renderizarHTML(nodo: any): string`
- * 2. Si el nodo es de tipo "texto", devuelve el contenido de texto
- * 3. Si es un "elemento", construye una cadena HTML:
- *    - comienza con `<nombre ...atributos>`
- *    - si tiene hijos, colócalos entre la etiqueta de apertura y cierre
- *    - si no tiene hijos, puedes cerrar la etiqueta como `<br />` (opcional)
+ * 1. Define una función `aplicarFiltros(nombreVariable: string, filtros: string[], contexto: Record<string, any>, filtrosRegistrados: Record<string, Function>): string`
+ * 2. Encuentra el valor de la variable en `contexto`
+ * 3. Aplica cada filtro, en orden, desde `filtrosRegistrados`
+ * 4. Extiende `renderizarVariables()` para que soporte filtros como `{{ variable | upcase | reverse }}`
  *
- * Estructura de ejemplo:
+ * Entrada:
+ * token: `{{ nombre | upcase | reverse }}`
+ * contexto:
  * {
- *   tipo: 'elemento',
- *   nombre: 'div',
- *   atributos: { class: 'box', id: 'main' },
- *   hijos: [
- *     { tipo: 'texto', contenido: 'Hola mundo' },
- *     {
- *       tipo: 'elemento',
- *       nombre: 'span',
- *       atributos: {},
- *       hijos: [{ tipo: 'texto', contenido: '✨' }]
- *     }
- *   ]
+ *   nombre: "carlos"
+ * }
+ * filtrosRegistrados:
+ * {
+ *   upcase: (x) => x.toUpperCase(),
+ *   reverse: (x) => x.split('').reverse().join('')
  * }
  *
- * Salida esperada:
- * "<div class=\"box\" id=\"main\">Hola mundo<span>✨</span></div>"
+ * Resultado esperado:
+ * "SOLRAC"
  *
- * Enfócate en: construir cadenas, recursión, formateo de atributos HTML
+ * Consejo:
+ * - Usa `.split('|')` para separar la variable del resto de filtros
+ * - Este módulo introduce la idea de *tuberías de transformación* (transform pipelines), muy usada en programación funcional
  */

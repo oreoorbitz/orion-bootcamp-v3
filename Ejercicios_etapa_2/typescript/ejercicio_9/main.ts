@@ -1,38 +1,42 @@
 /**
- * MÓDULO 9: FILTROS EN VARIABLES DE PLANTILLA
+ * MÓDULO 8: CONSTRUCCIÓN DE BUCLES EN PLANTILLAS
  *
  * 🧠 Concepto clave:
- * En Liquid (y otros motores), puedes transformar variables con *filtros*, como:
- *   - `{{ nombre | upcase }}` → convierte a mayúsculas
- *   - `{{ precio | currency }}` → formatea como moneda
+ * Los motores de plantillas como Liquid permiten generar listas de contenido usando bucles `{% for item in lista %}`.
+ * Esto es útil, por ejemplo, para generar un bloque por cada producto en una tienda.
  *
- * Los filtros se encadenan y se aplican uno tras otro.
+ * En este módulo, vas a procesar bloques repetibles y a renderizar cada ítem de forma dinámica.
  *
  * Objetivo:
- * Permitir que una variable tenga uno o más filtros que transforman su valor antes de mostrarse.
+ * Repetir secciones de la plantilla por cada elemento de un arreglo en el contexto.
  *
  * Instrucciones:
- * 1. Define una función `aplicarFiltros(nombreVariable: string, filtros: string[], contexto: Record<string, any>, filtrosRegistrados: Record<string, Function>): string`
- * 2. Encuentra el valor de la variable en `contexto`
- * 3. Aplica cada filtro, en orden, desde `filtrosRegistrados`
- * 4. Extiende `renderizarVariables()` para que soporte filtros como `{{ variable | upcase | reverse }}`
+ * 1. Crea una función `procesarBucles(tokens: string[], contexto: Record<string, any>): string[]`
+ * 2. Detecta los bloques `{% for item in lista %} ... {% endfor %}`
+ * 3. Para cada elemento de `contexto['lista']`, repite ese bloque reemplazando `{{ item }}` con el valor actual
  *
  * Entrada:
- * token: `{{ nombre | upcase | reverse }}`
+ * tokens:
+ * [
+ *   "Lista: ",
+ *   "{% for item in frutas %}",
+ *   "{{ item }} ",
+ *   "{% endfor %}"
+ * ]
  * contexto:
  * {
- *   nombre: "carlos"
- * }
- * filtrosRegistrados:
- * {
- *   upcase: (x) => x.toUpperCase(),
- *   reverse: (x) => x.split('').reverse().join('')
+ *   frutas: ["manzana", "plátano", "uva"]
  * }
  *
  * Resultado esperado:
- * "SOLRAC"
+ * [
+ *   "Lista: ",
+ *   "manzana ",
+ *   "plátano ",
+ *   "uva "
+ * ]
  *
  * Consejo:
- * - Usa `.split('|')` para separar la variable del resto de filtros
- * - Este módulo introduce la idea de *tuberías de transformación* (transform pipelines), muy usada en programación funcional
+ * - Este patrón de bucle es uno de los más usados en generación de HTML con datos
+ * - Puedes usar `renderizarVariables` dentro del cuerpo del bucle para reemplazar `{{ item }}`
  */

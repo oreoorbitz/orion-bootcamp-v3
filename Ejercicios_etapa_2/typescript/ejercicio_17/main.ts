@@ -1,77 +1,84 @@
 /**
- * MÓDULO 18: TRANSFORMAR TYPESCRIPT A JAVASCRIPT PARA EL NAVEGADOR + PILA DE EVENTOS
+ * MÓDULO 16: SERVIDOR LOCAL + ESTRUCTURA HTML + USO DE TEMA Y `{{ content_for_index }}`
  *
  * 🧠 Concepto clave:
- * Hasta ahora, tu código se ha ejecutado en **Deno**, que permite correr directamente archivos TypeScript (`.ts`).
- * Pero los navegadores no entienden TypeScript — solo pueden ejecutar JavaScript.
+ * Hasta ahora, tu pipeline ha generado contenido HTML aislado (por ejemplo: listas, artículos, productos).
+ * En este módulo, aprenderás cómo envolver ese contenido dentro de una plantilla de página completa (un **theme**),
+ * y luego servirlo desde un servidor local para visualizarlo en el navegador.
  *
- * Para usar tus scripts en una página HTML real, necesitas primero convertirlos a `.js`.
- * Este proceso se llama **transpilación**.
+ * Esta es una práctica común en todos los generadores de sitios estáticos:
+ * - Se tiene una plantilla base (`theme.html`)
+ * - Se define un espacio como `{{ content_for_index }}` donde va el contenido generado
+ * - El HTML final resultante combina la plantilla base + contenido dinámico
  *
- * En este módulo vas a:
- * - Crear un flujo de trabajo para convertir tus archivos `.ts` a `.js` automáticamente
- * - Inyectar el contenido `.js` como un `<script>` al final del `<body>`
- * - Registrar cada operación en una **pila de eventos**, que te servirá para rastrear el orden de las tareas ejecutadas
+ * También repasarás cómo funciona la estructura básica de un archivo HTML:
+ * - `<!DOCTYPE html>`: declara el tipo de documento
+ * - `<html>`: el elemento raíz
+ * - `<head>`: incluye título, metadatos, estilos, etc.
+ * - `<body>`: contiene el contenido visible generado por tu pipeline
  *
  * 🎯 Objetivo:
- * 1. Transpilar archivos TypeScript a JavaScript usando `Deno.emit()`
- * 2. Inyectar los resultados como scripts inline en tu HTML
- * 3. Registrar cada paso en una pila de eventos para tener trazabilidad de lo que ocurre en el proceso
+ * 1. Crear un archivo de **tema** (`theme.html`) con una estructura HTML válida
+ * 2. Inyectar tu contenido generado en el marcador `{{ content_for_index }}`
+ * 3. Servir el HTML resultante en un servidor local con Deno
  *
- * 📦 Estructura sugerida:
+ * 🧱 Estructura de archivos sugerida:
  * ```
- * /scripts/
- *   global.ts
- *   ui.ts
  * /dist/
- *   index.html
- * /theme.html
- * main.ts
+ * /theme.html        ← plantilla base (estructura HTML completa)
+ * /index.html        ← archivo final generado usando theme + contenido
+ * /server.ts         ← servidor local
+ * /main.ts           ← pipeline que genera `index.html`
  * ```
  *
- * ✅ Parte 1: Transpilación
- * 1. Crea una función llamada `transpilarTSADefaultJS(filePath: string): string`
- *    - Usa `Deno.emit(filePath)` para obtener el JS correspondiente
- *    - Devuelve el contenido como string
+ * 📦 theme.html:
+ * ```html
+ * <!DOCTYPE html>
+ * <html lang="es">
+ *   <head>
+ *     <meta charset="UTF-8" />
+ *     <title>Mi sitio</title>
+ *   </head>
+ *   <body>
+ *     {{ content_for_index }}
+ *   </body>
+ * </html>
+ * ```
  *
- * ✅ Parte 2: Inyección
- * 2. Crea una función `inyectarScriptsEnHTML(html: string, scripts: string[], stackEventos: string[]): string`
- *    - Inserta los scripts como `<script>...</script>` justo antes del cierre de `</body>`
- *    - Por cada script inyectado, agrega una entrada en `stackEventos` con el mensaje: `"script inyectado: [nombre archivo]"`
- *    - Al final, agrega `"html con scripts completado"`
+ * 🛠 Instrucciones:
+ * 1. Crea el archivo `theme.html` como plantilla base. Coloca `{{ content_for_index }}` en el lugar donde quieres insertar el contenido.
+ * 2. En tu pipeline (`main.ts`), haz lo siguiente:
+ *    - Genera el contenido HTML dinámico como lo hiciste en el Módulo 14
+ *    - Carga el archivo `theme.html`
+ *    - Reemplaza el marcador `{{ content_for_index }}` por el contenido generado
+ *    - Guarda el resultado final como `dist/index.html` usando `Deno.writeTextFile()`
  *
- * ✅ Parte 3: Pila de eventos
- * 3. Declara una pila como:
+ * 3. Crea un archivo `server.ts`
+ *    - Usa `Deno.serve()` para escuchar en `localhost:3000`
+ *    - Cuando se acceda a `/`, sirve el archivo `dist/index.html`
+ *
+ * Ejemplo de servidor mínimo:
  * ```ts
- * const stackEventos: string[] = [];
+ * Deno.serve({ port: 3000 }, async (req) => {
+ *   const url = new URL(req.url);
+ *   const path = url.pathname === '/' ? '/index.html' : url.pathname;
+ *   try {
+ *     const file = await Deno.readTextFile(`./dist${path}`);
+ *     return new Response(file, { headers: { 'Content-Type': 'text/html' } });
+ *   } catch {
+ *     return new Response('404 - No encontrado', { status: 404 });
+ *   }
+ * });
  * ```
- *    - Esta pila se va llenando conforme ejecutas cada etapa de tu proceso
- *    - Puedes imprimirla en la consola o escribirla como comentario HTML:
- *    ```html
- *    <!-- stackEventos: ["ts compilado: global.ts", "script inyectado: global.js", ...] -->
- *    ```
  *
- * ✅ Ejemplo de uso:
- * ```ts
- * const htmlBase = await Deno.readTextFile('theme.html');
- * const contenido = generarContenido(); // contenido generado por tu pipeline
- * const htmlFinal = htmlBase.replace('{{ content_for_index }}', contenido);
- *
- * const tsFiles = ['scripts/global.ts', 'scripts/ui.ts'];
- * const scripts = await Promise.all(tsFiles.map(transpilarTSADefaultJS));
- * const finalConScripts = inyectarScriptsEnHTML(htmlFinal, scripts, stackEventos);
- *
- * await Deno.writeTextFile('dist/index.html', finalConScripts);
- * ```
+ * 💡 Consejo:
+ * - Si quieres cambiar el diseño de todo el sitio, solo editas `theme.html`
+ * - Puedes extender la idea a múltiples plantillas y zonas de contenido (como `content_for_header`, `content_for_footer`)
  *
  * ✅ Resultado esperado:
- * - Cada archivo `.ts` en la carpeta `/scripts/` se convierte en JavaScript
- * - El JS se inyecta en tu HTML generado como script inline
- * - Una pila de eventos registra exactamente qué pasos se realizaron
+ * - HTML final ubicado en `dist/index.html`, generado combinando `theme.html` con tu contenido
+ * - Servidor local disponible en http://localhost:3000
+ * - Visualización real del contenido renderizado en navegador
  *
- * Consejo:
- * - Puedes mostrar la pila de eventos como comentario dentro del HTML para depurar
- * - Si en el futuro quieres hacer esto con archivos `.js` externos, solo cambia el tipo de inyección
- *
- * Este módulo cierra el ciclo de build moderno: fuente `.ts` → transformación → inyección en HTML → depuración con pila de eventos.
+ * Este módulo simula cómo funciona el sistema de themes en herramientas como Jekyll, Shopify, Liquid, y SvelteKit.
  */
