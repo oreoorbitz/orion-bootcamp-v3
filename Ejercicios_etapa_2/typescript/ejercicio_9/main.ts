@@ -1,42 +1,68 @@
 /**
- * MÓDULO 8: CONSTRUCCIÓN DE BUCLES EN PLANTILLAS
+ * MÓDULO 9: CONSTRUCCIÓN DE BUCLES EN PLANTILLAS
  *
  * 🧠 Concepto clave:
- * Los motores de plantillas como Liquid permiten generar listas de contenido usando bucles `{% for item in lista %}`.
- * Esto es útil, por ejemplo, para generar un bloque por cada producto en una tienda.
+ * Los motores de plantillas como Liquid permiten generar contenido dinámico a partir de arreglos usando bucles `{% for item in lista %}`.
+ * Esto es esencial para mostrar listas como productos, entradas de blog, comentarios, etc.
  *
- * En este módulo, vas a procesar bloques repetibles y a renderizar cada ítem de forma dinámica.
+ * En los módulos anteriores:
+ * - Aprendiste a detectar y clasificar tokens (`texto`, `variable`, `directiva`)
+ * - Procesaste condicionales `{% if %}` en base al contexto
+ * - Reemplazaste variables simples con `{{ nombre }}`
+ *
+ * Ahora vas a interpretar una nueva directiva: los bucles con `{% for item in lista %}`.
+ * Además, dentro del cuerpo del bucle puede haber condicionales — lo cual pondrá a prueba si tu motor procesa los bloques en orden correcto.
+ *
+ * ✅ Ejemplo de plantilla original:
+ * ```liquid
+ * Lista: 
+ * {% for fruta in frutas %}
+ *   {% if fruta != 'uva' %}
+ *     {{ fruta }} 
+ *   {% endif %}
+ * {% endfor %}
+ * ```
+ *
+ * ✅ Tokens clasificados de entrada:
+ * ```ts
+ * [
+ *   { tipo: "texto", contenido: "Lista: " },
+ *   { tipo: "directiva", contenido: "for fruta in frutas" },
+ *   { tipo: "directiva", contenido: "if fruta != 'uva'" },
+ *   { tipo: "variable", contenido: "fruta" },
+ *   { tipo: "texto", contenido: " " },
+ *   { tipo: "directiva", contenido: "endif" },
+ *   { tipo: "directiva", contenido: "endfor" }
+ * ]
+ * ```
+ *
+ * ✅ Resultado esperado (si frutas = ["manzana", "plátano", "uva"]):
+ * ```ts
+ * [
+ *   { tipo: "texto", contenido: "Lista: " },
+ *   { tipo: "texto", contenido: "manzana " },
+ *   { tipo: "texto", contenido: "plátano " }
+ * ]
+ * ```
  *
  * Objetivo:
- * Repetir secciones de la plantilla por cada elemento de un arreglo en el contexto.
+ * Detectar bloques `{% for %}` → `{% endfor %}` y repetir su contenido por cada elemento en el arreglo indicado.
+ * Los bloques internos pueden tener condicionales que debes procesar primero.
  *
  * Instrucciones:
- * 1. Crea una función `procesarBucles(tokens: string[], contexto: Record<string, any>): string[]`
- * 2. Detecta los bloques `{% for item in lista %} ... {% endfor %}`
- * 3. Para cada elemento de `contexto['lista']`, repite ese bloque reemplazando `{{ item }}` con el valor actual
- *
- * Entrada:
- * tokens:
- * [
- *   "Lista: ",
- *   "{% for item in frutas %}",
- *   "{{ item }} ",
- *   "{% endfor %}"
- * ]
- * contexto:
- * {
- *   frutas: ["manzana", "plátano", "uva"]
- * }
- *
- * Resultado esperado:
- * [
- *   "Lista: ",
- *   "manzana ",
- *   "plátano ",
- *   "uva "
- * ]
+ * 1. Crea una función `procesarBucles(tokens: TokenPlantilla[], contexto: Record<string, any>): TokenPlantilla[]`
+ * 2. Para cada directiva `{% for item in lista %}`:
+ *    - Identifica el bloque hasta el `{% endfor %}`
+ *    - Extrae el nombre del item y de la lista (`for fruta in frutas`)
+ *    - Busca `contexto['frutas']` y verifica que sea un arreglo
+ *    - Por cada valor, renderiza una copia del bloque interno:
+ *        - Reemplaza `{{ item }}` con el valor actual
+ *        - Aplica `procesarCondicionales()` al bloque interno antes de renderizar
+ * 3. El resultado debe ser un nuevo arreglo con los bloques repetidos y procesados
  *
  * Consejo:
- * - Este patrón de bucle es uno de los más usados en generación de HTML con datos
- * - Puedes usar `renderizarVariables` dentro del cuerpo del bucle para reemplazar `{{ item }}`
+ * - Puedes usar `renderizarVariables()` dentro del cuerpo del bucle
+ * - Aplica `procesarCondicionales()` para manejar `if` dentro del `for`
+ * - Haz un bucle externo para recorrer los tokens y detectar el inicio y fin del `for`
+ * - Asegúrate de mantener el orden de ejecución: primero condicionales, luego variables
  */
