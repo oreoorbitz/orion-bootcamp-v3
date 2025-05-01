@@ -104,12 +104,7 @@ export const generarSKU = (object) => {
 // la funcion debria llamarse validarSKU, asegura exportarla
 export const validarSKU = (str) => {
   const regex = /^[A-Z]{2}-\d{4}[A-Z]?$/;
-  if (regex.test(str) === true) {
-    return "skuValido"
-  } else {
-    return "skuInvalido"
-  }
-
+  return regex.test(str)
 }
 
 const sku1 = generarSKU(productoUno)
