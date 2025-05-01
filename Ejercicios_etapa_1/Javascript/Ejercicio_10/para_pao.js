@@ -23,7 +23,7 @@ function obtenerMuestrasDelServidor () {
   
     return new Promise(resolve => {
       // Simula 1 s de latencia de red/servidor
-      setTimeout(() => resolve(MOCK_MUESTRAS), 1000);
+      setTimeout(() => resolve(MOCK_MUESTRAS), 1000); 
     });
   }
   

@@ -1,4 +1,4 @@
-# Ejercicio 8 (JavaScript)
+# Ejercicio 10 (JavaScript)
 
 ## Ejecutar el script
 
