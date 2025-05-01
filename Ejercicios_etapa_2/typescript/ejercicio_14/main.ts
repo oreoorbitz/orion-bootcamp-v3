@@ -1,36 +1,59 @@
 /**
- * MÓDULO 13: SIMULACIÓN DE PIPELINE DE BUILD ESTÁTICO
+ * MÓDULO 14: CONVERTIR UN ARCHIVO `.liquid` EN HTML COMPLETO
  *
- * Objetivo: Simular cómo un generador de sitios estáticos transforma datos en HTML final usando plantillas y componentes.
+ * 🧠 Concepto clave:
+ * Hasta ahora has trabajado con plantillas y datos directamente en strings. Pero en proyectos reales, las plantillas viven en archivos `.liquid`,
+ * los datos en objetos o archivos `.json`, y el resultado se transforma en HTML para mostrar en un navegador o guardar como archivo.
+ *
+ * En este módulo, vas a crear una función que lea un archivo `.liquid`, procese sus directivas, y lo convierta en un HTML completo.
+ * Este es el paso final que convierte tu motor de plantillas en una herramienta funcional de compilación.
+ *
+ * ✅ Herramientas que vas a usar:
+ * - `Deno.readTextFile` para leer archivos `.liquid`
+ * - Todas tus funciones del motor de plantillas (`tokenizar`, `procesarCondicionales`, `renderizarVariables`, etc.)
+ * - Tu parser HTML (`tokenizarHTML`, `clasificarTokens`, `construirArbol`)
+ * - Tu renderer final (`renderizarHTML`)
+ *
+ * 🎯 Objetivo:
+ * Implementar una función `renderizarArchivoLiquid(ruta: string, contexto: Record<string, any>): Promise<string>` que:
+ * 1. Lea un archivo `.liquid` del disco
+ * 2. Procese la plantilla usando tu motor
+ * 3. Convierta el contenido a tokens HTML
+ * 4. Convierta los tokens en árbol DOM
+ * 5. Renderice el árbol como HTML final
+ *
+ * ✅ Ejemplo de uso:
+ * ```ts
+ * const contexto = {
+ *   titulo: "Hola mundo",
+ *   frutas: ["manzana", "uva", "naranja"]
+ * };
+ *
+ * const html = await renderizarArchivoLiquid("./plantillas/bienvenida.liquid", contexto);
+ * console.log(html);
+ * ```
+ *
+ * ✅ Resultado esperado (si la plantilla es válida):
+ * ```html
+ * <h1>Hola mundo</h1>
+ * <ul><li>manzana</li><li>uva</li><li>naranja</li></ul>
+ * ```
  *
  * Instrucciones:
- * 1. Simula una lista de datos de ejemplo (como un arreglo de productos o artículos)
- * 2. Usa un archivo de plantilla como base para cada elemento
- * 3. Genera una estructura DOM para cada entrada y renderízala como HTML
- * 4. Imprime o guarda los resultados como si fueran archivos individuales (`index.html`, `producto1.html`, etc.)
- *
- * Entrada de ejemplo:
- * datos:
- * [
- *   { titulo: "Producto 1", descripcion: "Este producto es genial" },
- *   { titulo: "Producto 2", descripcion: "Otro gran producto" }
- * ]
- *
- * plantilla:
- * "<article><h2>{{ titulo }}</h2><p>{{ descripcion }}</p></article>"
- *
- * Salida simulada:
- * - producto1.html → "<article><h2>Producto 1</h2><p>Este producto es genial</p></article>"
- * - producto2.html → "<article><h2>Producto 2</h2><p>Otro gran producto</p></article>"
+ * 1. Crea un archivo de plantilla `.liquid` (puede estar en una carpeta como `/plantillas`)
+ * 2. Implementa `renderizarArchivoLiquid(ruta, contexto)`
+ * 3. Usa tus funciones de los módulos anteriores en orden:
+ *    - detectarTokensPlantilla()
+ *    - procesarAsignaciones()
+ *    - procesarCondicionales()
+ *    - procesarBucles()
+ *    - renderizarVariables() con filtros
+ *    - tokenizarHTML() → clasificarTokens() → construirArbol()
+ *    - renderizarHTML()
+ * 4. Devuelve el HTML como string
  *
  * Consejo:
- * - Estructura funciones como si fueran pasos de una compilación:
- *   1. Preparar datos
- *   2. Procesar plantilla
- *   3. Parsear a árbol
- *   4. Renderizar a HTML
- *   5. Escribir en archivo (opcional en Deno)
- *
- * Desafío extra:
- * - Usa `Deno.writeTextFile()` para guardar el resultado en archivos reales
+ * - Puedes permitir que esta función sirva como el "compilador" principal de tu sistema
+ * - Esto simula cómo trabaja un generador de sitios estáticos como Jekyll, Eleventy o Astro
+ * - Usa `console.log()` para verificar en qué punto del pipeline algo puede estar fallando
  */

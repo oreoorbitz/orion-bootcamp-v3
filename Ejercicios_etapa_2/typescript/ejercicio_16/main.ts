@@ -1,30 +1,72 @@
 /**
- * MÓDULO 15: ESCRITURA DE ARCHIVOS HTML A LA CARPETA `dist/`
+ * MÓDULO 16: SIMULACIÓN DE ENLACE UNIDIRECCIONAL (ONE-WAY DATA BINDING) EN TERMINAL
  *
  * 🧠 Concepto clave:
- * Los generadores de sitios estáticos (como Eleventy, Astro, o Hugo) transforman datos y plantillas en archivos HTML
- * que se escriben a una carpeta lista para ser servida, generalmente llamada `dist/` o `public/`.
+ * En frameworks modernos como Vue, React o Angular, los datos cambian y la vista se actualiza automáticamente.
+ * A esto se le llama "enlace unidireccional" (one-way data binding).
  *
- * En este módulo, escribirás los archivos HTML que has generado previamente con tu pipeline a la carpeta `dist/`,
- * preparándolos para ser servidos en un navegador.
+ * En este módulo vas a simular ese comportamiento desde la terminal. Tu programa:
+ * - Detectará cambios en un archivo de datos
+ * - Volverá a procesar la plantilla `.liquid`
+ * - Mostrará el nuevo HTML renderizado directamente en la consola
  *
- * Objetivo:
- * Crear una función que escriba uno o más archivos HTML en una carpeta local.
+ * Este es el primer paso hacia un flujo de desarrollo automático (como un “live preview” básico).
  *
- * Instrucciones:
- * 1. Asegúrate de que el resultado final del procesamiento (como el generado por `generarHTMLDesdePlantilla(...)`) esté disponible como string.
- * 2. Usa la función `Deno.writeTextFile()` para escribir ese string en un archivo dentro de la carpeta `dist/`.
- *    - Si la carpeta no existe, créala con `Deno.mkdir('dist', { recursive: true })`
- * 3. Si estás generando múltiples archivos (por ejemplo, uno por producto), genera nombres como `producto1.html`, `producto2.html`, etc.
+ * 🎯 Objetivo:
+ * Crear un pequeño sistema que reacciona a cambios en archivos `.ts` o `.json` y actualiza el HTML renderizado en la terminal.
  *
- * Ejemplo de uso:
- * ```ts
- * const contenido = generarHTMLDesdePlantilla(template, contexto);
- * await Deno.mkdir('dist', { recursive: true });
- * await Deno.writeTextFile('dist/index.html', contenido);
+ * ✅ Estructura esperada:
+ * ```
+ * Ejercicios_etapa_2/
+ * ├── plantilla_motor/
+ * │   └── mod.ts                   ← Tu motor unificado
+ * ├── ejercicio_16/
+ * │   ├── main.ts                  ← Script principal con el watcher
+ * │   ├── data.ts                  ← Archivo editable que exporta el objeto `contexto`
+ * │   └── template.liquid          ← Tu plantilla HTML en formato liquid
  * ```
  *
- * Consejo:
- * - Si quieres generar múltiples archivos, puedes usar un loop sobre un arreglo de objetos.
- * - Este módulo es el último paso antes de servir tus archivos en un navegador.
+ * ✅ Instrucciones:
+ * 1. Crea un archivo `data.ts` con una exportación:
+ *    ```ts
+ *    export const contexto = { nombre: "Ana", edad: 30 };
+ *    ```
+ *
+ * 2. En `main.ts`:
+ *    - Usa `Deno.watchFs()` para observar cambios en `data.ts`
+ *    - Usa `import("file://" + path + "?version=" + Date.now())` para forzar la recarga del módulo cuando cambia
+ *    - Vuelve a cargar `template.liquid` con `Deno.readTextFile()`
+ *    - Usa `renderizarArchivoLiquid` desde tu `mod.ts` para procesar la plantilla con los datos
+ *    - Imprime el HTML resultante en consola. Opcional: usa `console.clear()` entre renders
+ *
+ * 3. Usa tu pipeline completo:
+ *    - Reemplazo de variables
+ *    - Condicionales
+ *    - Bucles
+ *    - Filtros
+ *    - Asignaciones
+ *    - Renderizado HTML (con escape de texto)
+ *
+ * ✅ Resultado esperado:
+ * Cada vez que guardes `data.ts`, tu terminal se actualiza mostrando el nuevo resultado HTML renderizado.
+ *
+ * Ejemplo:
+ * // template.liquid
+ * "<h1>{{ nombre }}</h1><p>Tienes {{ edad }} años.</p>"
+ *
+ * // data.ts
+ * export const contexto = { nombre: "Ana", edad: 30 };
+ *
+ * // salida en terminal:
+ * <h1>Ana</h1>
+ * <p>Tienes 30 años.</p>
+ *
+ * // Cambias edad a 31 en data.ts → la terminal se actualiza automáticamente:
+ * <h1>Ana</h1>
+ * <p>Tienes 31 años.</p>
+ *
+ * ✅ Consejo:
+ * - Usa `console.log()` al inicio del render para indicar que se recompiló
+ * - Si usas `.json` en vez de `.ts`, puedes leerlo directamente con `Deno.readTextFile()` y `JSON.parse()`
+ * - Este módulo demuestra cómo un flujo *reactivo* puede lograrse sin un navegador ni framework
  */

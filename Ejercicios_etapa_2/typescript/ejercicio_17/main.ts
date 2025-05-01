@@ -1,84 +1,62 @@
 /**
- * MÓDULO 16: SERVIDOR LOCAL + ESTRUCTURA HTML + USO DE TEMA Y `{{ content_for_index }}`
+ * MÓDULO 17: GENERAR ARCHIVOS HTML EN DISCO USANDO TU PIPELINE
  *
  * 🧠 Concepto clave:
- * Hasta ahora, tu pipeline ha generado contenido HTML aislado (por ejemplo: listas, artículos, productos).
- * En este módulo, aprenderás cómo envolver ese contenido dentro de una plantilla de página completa (un **theme**),
- * y luego servirlo desde un servidor local para visualizarlo en el navegador.
+ * Hasta ahora, tu motor de plantillas mostraba HTML directamente en consola. Pero en proyectos reales (como sitios estáticos),
+ * el HTML generado se guarda como archivos `.html` en una carpeta como `/dist` para ser servido por un servidor o subido a producción.
  *
- * Esta es una práctica común en todos los generadores de sitios estáticos:
- * - Se tiene una plantilla base (`theme.html`)
- * - Se define un espacio como `{{ content_for_index }}` donde va el contenido generado
- * - El HTML final resultante combina la plantilla base + contenido dinámico
- *
- * También repasarás cómo funciona la estructura básica de un archivo HTML:
- * - `<!DOCTYPE html>`: declara el tipo de documento
- * - `<html>`: el elemento raíz
- * - `<head>`: incluye título, metadatos, estilos, etc.
- * - `<body>`: contiene el contenido visible generado por tu pipeline
+ * En este módulo vas a modificar tu pipeline para que guarde archivos reales en vez de solo imprimirlos.
+ * Esto simula el comportamiento de herramientas como Jekyll, Astro o Eleventy.
  *
  * 🎯 Objetivo:
- * 1. Crear un archivo de **tema** (`theme.html`) con una estructura HTML válida
- * 2. Inyectar tu contenido generado en el marcador `{{ content_for_index }}`
- * 3. Servir el HTML resultante en un servidor local con Deno
+ * Escribir en el sistema de archivos el HTML generado a partir de una plantilla `.liquid` y un objeto `contexto`.
  *
- * 🧱 Estructura de archivos sugerida:
+ * ✅ Estructura sugerida:
  * ```
- * /dist/
- * /theme.html        ← plantilla base (estructura HTML completa)
- * /index.html        ← archivo final generado usando theme + contenido
- * /server.ts         ← servidor local
- * /main.ts           ← pipeline que genera `index.html`
- * ```
- *
- * 📦 theme.html:
- * ```html
- * <!DOCTYPE html>
- * <html lang="es">
- *   <head>
- *     <meta charset="UTF-8" />
- *     <title>Mi sitio</title>
- *   </head>
- *   <body>
- *     {{ content_for_index }}
- *   </body>
- * </html>
+ * Ejercicios_etapa_2/
+ * ├── plantilla_motor/
+ * │   └── mod.ts
+ * ├── ejercicio_17/
+ * │   ├── main.ts
+ * │   ├── template.liquid
+ * │   ├── data.ts
+ * │   └── dist/
+ * │       └── index.html       ← se genera automáticamente
  * ```
  *
- * 🛠 Instrucciones:
- * 1. Crea el archivo `theme.html` como plantilla base. Coloca `{{ content_for_index }}` en el lugar donde quieres insertar el contenido.
- * 2. En tu pipeline (`main.ts`), haz lo siguiente:
- *    - Genera el contenido HTML dinámico como lo hiciste en el Módulo 14
- *    - Carga el archivo `theme.html`
- *    - Reemplaza el marcador `{{ content_for_index }}` por el contenido generado
- *    - Guarda el resultado final como `dist/index.html` usando `Deno.writeTextFile()`
+ * ✅ Instrucciones:
+ * 1. Asegúrate de tener:
+ *    - Un archivo `template.liquid`
+ *    - Un archivo `data.ts` que exporte el objeto `contexto`
  *
- * 3. Crea un archivo `server.ts`
- *    - Usa `Deno.serve()` para escuchar en `localhost:3000`
- *    - Cuando se acceda a `/`, sirve el archivo `dist/index.html`
+ * 2. Crea o limpia una carpeta `dist/` en tu módulo
+ *    - Puedes usar `Deno.mkdir("dist", { recursive: true })`
+ *    - Puedes borrar el archivo anterior con `Deno.remove()` si deseas sobrescribirlo
  *
- * Ejemplo de servidor mínimo:
- * ```ts
- * Deno.serve({ port: 3000 }, async (req) => {
- *   const url = new URL(req.url);
- *   const path = url.pathname === '/' ? '/index.html' : url.pathname;
- *   try {
- *     const file = await Deno.readTextFile(`./dist${path}`);
- *     return new Response(file, { headers: { 'Content-Type': 'text/html' } });
- *   } catch {
- *     return new Response('404 - No encontrado', { status: 404 });
- *   }
- * });
- * ```
+ * 3. Usa tu función `renderizarArchivoLiquid()` para generar el HTML como string
  *
- * 💡 Consejo:
- * - Si quieres cambiar el diseño de todo el sitio, solo editas `theme.html`
- * - Puedes extender la idea a múltiples plantillas y zonas de contenido (como `content_for_header`, `content_for_footer`)
+ * 4. Guarda ese string como `dist/index.html` usando:
+ *    ```ts
+ *    await Deno.writeTextFile("dist/index.html", htmlGenerado);
+ *    ```
+ *
+ * 5. Opcional: muestra un mensaje de confirmación en consola (`console.log("✅ Archivo generado")`)
  *
  * ✅ Resultado esperado:
- * - HTML final ubicado en `dist/index.html`, generado combinando `theme.html` con tu contenido
- * - Servidor local disponible en http://localhost:3000
- * - Visualización real del contenido renderizado en navegador
+ * Un archivo `dist/index.html` con el HTML renderizado usando la plantilla y el contexto.
  *
- * Este módulo simula cómo funciona el sistema de themes en herramientas como Jekyll, Shopify, Liquid, y SvelteKit.
+ * Ejemplo:
+ * // template.liquid
+ * "<h1>{{ titulo }}</h1><p>{{ mensaje }}</p>"
+ *
+ * // data.ts
+ * export const contexto = { titulo: "Bienvenido", mensaje: "Este sitio fue generado con JavaScript." }
+ *
+ * // dist/index.html (salida)
+ * <h1>Bienvenido</h1>
+ * <p>Este sitio fue generado con JavaScript.</p>
+ *
+ * ✅ Consejo:
+ * - Este módulo convierte tu motor de plantillas en una herramienta funcional de compilación estática
+ * - Si usas múltiples plantillas en el futuro, puedes repetir esta lógica y generar `producto.html`, `contacto.html`, etc.
  */

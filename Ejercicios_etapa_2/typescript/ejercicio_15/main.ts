@@ -1,59 +1,49 @@
 /**
- * MÓDULO 14: SIMULACIÓN DE ENLACE UNIDIRECCIONAL (ONE-WAY DATA BINDING) EN TERMINAL
+ * MÓDULO 15: REUTILIZAR Y REFACTORIZAR TU MOTOR DE PLANTILLAS
  *
  * 🧠 Concepto clave:
- * En frameworks modernos como Vue, React o Angular, los datos cambian y la vista se actualiza automáticamente.
- * A esto se le llama "enlace unidireccional" (one-way data binding).
+ * A medida que tu sistema crece, copiar y pegar archivos entre carpetas ya no es sostenible.
+ * En este módulo, vas a **crear un archivo reutilizable** que contenga todas las funciones principales
+ * de tu motor de plantillas y lo importarás en los ejercicios siguientes.
  *
- * En este módulo, simularás este comportamiento en la consola:
- * - Cambias el archivo de datos manualmente
- * - El sistema detecta ese cambio
- * - Vuelve a ejecutar la plantilla y renderiza la salida en la terminal automáticamente
+ * Esto simula cómo los desarrolladores organizan librerías, reutilizan módulos, y preparan su código para crecer.
  *
- * Objetivo:
- * Implementar un "renderizador vivo" que observa un archivo `.json` o `.ts` y actualiza el contenido mostrado en consola
- * cada vez que los datos cambian.
+ * 🎯 Objetivo:
+ * Crear un archivo central donde vivan todas tus funciones relacionadas a:
+ * - Motor de plantillas (`tokenizar`, `condicionales`, `filtros`, `bucles`, etc.)
+ * - Parser de HTML (`tokenizarHTML`, `clasificarTokens`, `construirArbol`)
+ * - Renderizador (`renderizarHTML`, `escapeTexto`)
  *
- * Estructura esperada:
- * - `main.ts` — código del watcher y la función `render()`
- * - `data.ts` — archivo con el objeto `contexto` que puede ser editado manualmente
- * - `template.liquid.html` — archivo de plantilla HTML con variables de tipo `{{ }}` o directivas `{% %}`
+ * ✅ Instrucciones:
+ * 1. Crea una nueva carpeta en el directorio padre del curso:
+ *    `Ejercicios_etapa_2/plantilla_motor/`
  *
- * Instrucciones:
- * 1. Crea un archivo llamado `data.ts` que exporte un objeto `contexto`, por ejemplo:
- *    export const contexto = { nombre: "Ana", edad: 30 }
+ * 2. Dentro de esa carpeta, crea un archivo llamado `mod.ts` y organiza tus funciones ahí:
+ *    - Usa `export` para cada función o tipo
+ *    - Puedes dividir por secciones si lo deseas (parsing, rendering, liquid, etc.)
  *
- * 2. Usa `Deno.watchFs()` en `main.ts` para escuchar cambios en `data.ts`
- *    - Cada vez que cambie, usa `import("file:///.../data.ts?version=${Date.now()}")` para volver a importar los datos actualizados.
+ * 3. En cada carpeta de módulo (`ejercicio_{{n}}`), importa desde ahí:
+ *    ```ts
+ *    import { renderizarArchivoLiquid } from "../plantilla_motor/mod.ts";
+ *    ```
  *
- * 3. Crea una función `render()` que:
- *    - Cargue el contenido de la plantilla (puede estar embebida o en un archivo)
- *    - Reemplace los datos usando tu pipeline de módulos anteriores (tokens, variables, condiciones, bucles, filtros)
- *    - Imprima el resultado en consola (limpia la consola antes si es posible)
+ * 4. Elige si este módulo tiene pruebas:
+ *    - Puedes crear un `main.ts` para probar tu archivo central
+ *    - Puedes decidir si ya estás satisfecho con las pruebas existentes
+ *
+ * 5. Haz una pequeña reflexión sobre tu código:
+ *    - ¿Repetiste lógica innecesariamente?
+ *    - ¿Tus funciones tienen responsabilidades claras?
+ *    - ¿Deberías renombrar funciones para que sean más claras?
+ *    - ¿Estás satisfecho con cómo estructuraste tu pipeline?
+ *
+ * ✅ Resultado esperado:
+ * - Un archivo `mod.ts` con todo tu sistema de rendering.
+ * - Los siguientes ejercicios ya no necesitan copiar funciones previas.
+ * - Posiblemente un pequeño `main_test.ts` o `demo.ts` para verificar que sigue funcionando.
  *
  * Consejo:
- * - Usa `console.clear()` o imprime una línea de separación para mejorar la legibilidad
- * - Puedes usar un `setTimeout` o `setInterval` si prefieres evitar `Deno.watchFs` al principio
- *
- * Resultado esperado:
- * Cada vez que edites y guardes `data.ts`, el programa recompila la salida y la muestra en la terminal.
- *
- * Ejemplo de flujo:
- * // template.liquid.html
- * "<h1>{{ nombre }}</h1><p>Tienes {{ edad }} años.</p>"
- *
- * // data.ts
- * export const contexto = { nombre: "Ana", edad: 30 }
- *
- * // consola
- * <h1>Ana</h1>
- * <p>Tienes 30 años.</p>
- *
- * // Editas data.ts → edad: 31
- *
- * // consola actualizada automáticamente
- * <h1>Ana</h1>
- * <p>Tienes 31 años.</p>
- *
- * Este módulo convierte tu compilador en un renderizador en tiempo real con enlace unidireccional.
+ * - Esta es una oportunidad para limpiar tu código antes de seguir construyendo sobre él.
+ * - Piensa como si tu motor ya fuera una mini librería de verdad.
+ * - Puedes incluir una sección de tipos al inicio del archivo para mantener todo bien organizado.
  */

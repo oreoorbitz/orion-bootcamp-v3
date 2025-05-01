@@ -1,121 +1,55 @@
 /**
- * MÓDULO 19: IMPLEMENTAR HOT RELOAD PARA EL SERVIDOR LOCAL USANDO WEBSOCKETS
+ * MÓDULO 19: MODULARIZACIÓN DEL SERVIDOR LOCAL (slightlyLate)
  *
  * 🧠 Concepto clave:
- * Cuando estás desarrollando un sitio web, es molesto tener que refrescar manualmente el navegador cada vez que cambias un dato o plantilla.
- * Para mejorar la experiencia de desarrollo, se usa una técnica llamada **hot reload**:
- * - El sistema detecta que un archivo cambió
- * - Regenera automáticamente el HTML
- * - Recarga el navegador sin que el usuario haga nada
- *
- * Para lograr esto, usaremos **WebSockets**.
- *
- * 🚨 ¿Qué es un WebSocket?
- * - Es una conexión bidireccional y persistente entre el navegador y el servidor.
- * - A diferencia del protocolo HTTP, donde el cliente hace peticiones y el servidor responde,
- *   con WebSockets el servidor puede **enviar mensajes en cualquier momento** al cliente.
- * - Esto lo hace ideal para **notificaciones en tiempo real**, como el hot reload.
- *
- * 📘 API de WebSocket en JavaScript (lado del navegador):
- * ```js
- * const ws = new WebSocket("ws://localhost:3000/ws");
- * ws.onmessage = (event) => {
- *   if (event.data === "reload") {
- *     window.location.reload();
- *   }
- * };
- * ```
- * En este código, el navegador se conecta a `/ws` y espera mensajes del servidor.
- * Cuando recibe `"reload"`, recarga la página automáticamente.
- *
+ * En proyectos reales, no escribimos un servidor desde cero cada vez. 
+ * Usamos bibliotecas como **Express** (Node.js) o **Oak** (Deno) que encapsulan toda la lógica de servidor
+ * en funciones reutilizables y fáciles de mantener.
+
+ * En este módulo, vas a **extraer tu servidor a un módulo reutilizable** que te servirá para los siguientes ejercicios.
+
  * 🎯 Objetivo:
- * 1. Incluir un `<script>` en tu HTML con un cliente WebSocket como el de arriba
- * 2. Modificar tu servidor local (`server.ts`) para aceptar conexiones WebSocket
- * 3. Crear un archivo `watcher.ts` que detecta cambios y notifica al navegador por WebSocket
- *
- * 📦 Estructura sugerida:
- * ```
- * /scripts/
- * /dist/
- * /theme.html
- * /data.ts
- * main.ts         ← genera HTML
- * server.ts       ← servidor + WebSocket
- * watcher.ts      ← vigila cambios y manda "reload"
- * ```
- *
- * ✅ Paso 1: Inyecta el script de WebSocket en tu HTML generado
- * Al final de tu `<body>`, agrega:
- * ```html
- * <script>
- *   const ws = new WebSocket("ws://" + location.host + "/ws");
- *   ws.onmessage = (event) => {
- *     if (event.data === "reload") {
- *       window.location.reload();
- *     }
- *   };
- * </script>
- * ```
- * Esto mantiene una conexión abierta con el servidor, lista para recibir notificaciones.
- *
- * ✅ Paso 2: Implementa WebSocket en el servidor (`server.ts`)
- * Usa `Deno.upgradeWebSocket(req)` para aceptar conexiones WebSocket:
- * ```ts
- * const sockets: WebSocket[] = [];
+ * Crear un módulo llamado `slightlyLate.ts` que pueda iniciar un servidor básico y servir archivos HTML desde la carpeta `dist/`.
 
- * Deno.serve({ port: 3000 }, async (req) => {
- *   const { pathname } = new URL(req.url);
- *   if (pathname === "/ws") {
- *     const { socket, response } = Deno.upgradeWebSocket(req);
- *     socket.onopen = () => sockets.push(socket);
- *     return response;
- *   }
+ * ✅ Instrucciones:
+ * 1. Crea un archivo llamado `slightlyLate.ts` en la carpeta raíz de esta parte del curso (por ejemplo, en `Ejercicios_etapa_2/`)
+ * 
+ * 2. En este archivo, exporta una función llamada `iniciarServidor`, que reciba un puerto como parámetro:
+ *    ```ts
+ *    export function iniciarServidor(puerto: number = 3000) {
+ *      Deno.serve({ port: puerto }, async (req) => {
+ *        const url = new URL(req.url);
+ *        const path = url.pathname === "/" ? "/index.html" : url.pathname;
+ *        try {
+ *          const archivo = await Deno.readTextFile(`dist${path}`);
+ *          return new Response(archivo, {
+ *            headers: { "Content-Type": "text/html" }
+ *          });
+ *        } catch {
+ *          return new Response("404 - Página no encontrada", { status: 404 });
+ *        }
+ *      });
+ *    }
+ *    ```
 
- *   const filePath = pathname === "/" ? "/index.html" : pathname;
- *   try {
- *     const html = await Deno.readTextFile(`./dist${filePath}`);
- *     return new Response(html, { headers: { "Content-Type": "text/html" } });
- *   } catch {
- *     return new Response("404 - No encontrado", { status: 404 });
- *   }
- * });
- *
- * export function notificarReload() {
- *   for (const ws of sockets) ws.send("reload");
- * }
- * ```
- *
- * ✅ Paso 3: Implementa el watcher (`watcher.ts`)
- * Este archivo observará archivos clave como `data.ts`, `theme.html`, etc.
- * Cuando detecte un cambio:
- * 1. Ejecuta el generador (`main.ts`)
- * 2. Llama a `notificarReload()` para decirle al navegador que se recargue
- *
- * Ejemplo:
- * ```ts
- * import { notificarReload } from "./server.ts";
+ * 3. En tu archivo `server.ts`, importa esta función:
+ *    ```ts
+ *    import { iniciarServidor } from "../slightlyLate.ts";
+ *    iniciarServidor(3000);
+ *    ```
 
- * const watcher = Deno.watchFs(["data.ts", "theme.html", "scripts/"]);
- * for await (const _event of watcher) {
- *   const p = new Deno.Command("deno", {
- *     args: ["run", "--allow-all", "main.ts"],
- *   });
- *   await p.output();
+ * 4. Corre el servidor con los mismos permisos que antes:
+ *    ```bash
+ *    deno run --allow-net --allow-read ejercicio_19/server.ts
+ *    ```
 
- *   notificarReload();
- * }
- * ```
- *
- * ✅ Resultado esperado:
- * - Abres tu navegador en http://localhost:3000
- * - Editas `data.ts` o `theme.html`
- * - El servidor regenera `dist/index.html`
- * - El navegador recibe un mensaje `"reload"` y se actualiza solo
- *
- * Consejo:
- * - Usa `deno task` o dos terminales: una para `deno run server.ts`, otra para `deno run watcher.ts`
- * - Este patrón es el núcleo de herramientas como Vite, Next.js, y Astro
- *
- * Este módulo refuerza cómo funciona la comunicación tiempo real, la separación de responsabilidades (servidor vs generador),
- * y cómo crear una experiencia fluida para el desarrollo web.
+ * ✅ Consejo:
+ * - En el mundo real, Express (Node.js) o Oak (Deno) encapsulan este tipo de lógica.
+ * - Aquí estás simulando ese tipo de abstracción para entender cómo funcionan estos módulos internamente.
+
+ * 🧪 Bonus:
+ * Puedes mejorar tu módulo para que detecte automáticamente el tipo MIME (`text/html`, `text/css`, etc.)
+ * usando extensiones de archivo si quieres expandirlo.
+
+ * Este módulo sienta las bases para reutilizar tu servidor de forma sencilla a medida que tus proyectos crecen.
  */

@@ -1,77 +1,80 @@
 /**
- * MÓDULO 18: TRANSFORMAR TYPESCRIPT A JAVASCRIPT PARA EL NAVEGADOR + PILA DE EVENTOS
+ * MÓDULO 18: INTRODUCCIÓN A ESTRUCTURA HTML REAL + SERVIDOR LOCAL
  *
  * 🧠 Concepto clave:
- * Hasta ahora, tu código se ha ejecutado en **Deno**, que permite correr directamente archivos TypeScript (`.ts`).
- * Pero los navegadores no entienden TypeScript — solo pueden ejecutar JavaScript.
+ * Hasta ahora, tus plantillas generaban fragmentos sueltos de HTML.
+ * Pero un navegador espera un documento con esta estructura general:
  *
- * Para usar tus scripts en una página HTML real, necesitas primero convertirlos a `.js`.
- * Este proceso se llama **transpilación**.
+ * ```html
+ * <html>
+ *   <head>
+ *     <title>...</title>
+ *   </head>
+ *   <body>
+ *     ...contenido visual de la página...
+ *   </body>
+ * </html>
+ * ```
  *
- * En este módulo vas a:
- * - Crear un flujo de trabajo para convertir tus archivos `.ts` a `.js` automáticamente
- * - Inyectar el contenido `.js` como un `<script>` al final del `<body>`
- * - Registrar cada operación en una **pila de eventos**, que te servirá para rastrear el orden de las tareas ejecutadas
+ * En este módulo, vas a generar un archivo HTML **completo** y vas a crear un **servidor local**
+ * para verlo en tu navegador en lugar de solo imprimirlo en consola.
  *
  * 🎯 Objetivo:
- * 1. Transpilar archivos TypeScript a JavaScript usando `Deno.emit()`
- * 2. Inyectar los resultados como scripts inline en tu HTML
- * 3. Registrar cada paso en una pila de eventos para tener trazabilidad de lo que ocurre en el proceso
+ * Generar una página HTML estructurada correctamente y servirla en un navegador usando Deno.
  *
- * 📦 Estructura sugerida:
+ * ✅ Estructura sugerida:
  * ```
- * /scripts/
- *   global.ts
- *   ui.ts
- * /dist/
- *   index.html
- * /theme.html
- * main.ts
+ * Ejercicios_etapa_2/
+ * ├── plantilla_motor/
+ * ├── ejercicio_18/
+ * │   ├── main.ts                ← ejecuta la renderización y guarda el archivo
+ * │   ├── plantilla.liquid       ← incluye html, head, title, body, etc.
+ * │   ├── data.ts                ← exporta el objeto `contexto`
+ * │   └── server.ts              ← servidor que sirve el archivo generado
+ * └── dist/
+ *     └── index.html             ← se genera automáticamente
  * ```
  *
- * ✅ Parte 1: Transpilación
- * 1. Crea una función llamada `transpilarTSADefaultJS(filePath: string): string`
- *    - Usa `Deno.emit(filePath)` para obtener el JS correspondiente
- *    - Devuelve el contenido como string
+ * ✅ Instrucciones:
+ * 1. Escribe una plantilla `plantilla.liquid` que represente una página HTML completa.
+ *    - Incluye etiquetas `<html>`, `<head>`, `<title>`, y `<body>`
+ *    - Usa variables dentro del body como `{{ nombre }}` o `{{ descripcion }}`
  *
- * ✅ Parte 2: Inyección
- * 2. Crea una función `inyectarScriptsEnHTML(html: string, scripts: string[], stackEventos: string[]): string`
- *    - Inserta los scripts como `<script>...</script>` justo antes del cierre de `</body>`
- *    - Por cada script inyectado, agrega una entrada en `stackEventos` con el mensaje: `"script inyectado: [nombre archivo]"`
- *    - Al final, agrega `"html con scripts completado"`
- *
- * ✅ Parte 3: Pila de eventos
- * 3. Declara una pila como:
- * ```ts
- * const stackEventos: string[] = [];
- * ```
- *    - Esta pila se va llenando conforme ejecutas cada etapa de tu proceso
- *    - Puedes imprimirla en la consola o escribirla como comentario HTML:
- *    ```html
- *    <!-- stackEventos: ["ts compilado: global.ts", "script inyectado: global.js", ...] -->
+ * 2. Usa tu función de renderizado para procesar la plantilla con el `contexto` definido en `data.ts`
+ *    - Por ejemplo:
+ *      ```ts
+ *      import { contexto } from "./data.ts";
+ *      const html = renderizarArchivoLiquid("plantilla.liquid", contexto);
+ *      await Deno.writeTextFile("dist/index.html", html);
+ *      ```
+
+ * 3. Crea un archivo `server.ts` con un servidor local básico:
+ *    ```ts
+ *    Deno.serve({ port: 3000 }, async (req) => {
+ *      try {
+ *        const html = await Deno.readTextFile("dist/index.html");
+ *        return new Response(html, {
+ *          headers: { "Content-Type": "text/html" }
+ *        });
+ *      } catch {
+ *        return new Response("404 - Página no encontrada", { status: 404 });
+ *      }
+ *    });
  *    ```
- *
- * ✅ Ejemplo de uso:
- * ```ts
- * const htmlBase = await Deno.readTextFile('theme.html');
- * const contenido = generarContenido(); // contenido generado por tu pipeline
- * const htmlFinal = htmlBase.replace('{{ content_for_index }}', contenido);
- *
- * const tsFiles = ['scripts/global.ts', 'scripts/ui.ts'];
- * const scripts = await Promise.all(tsFiles.map(transpilarTSADefaultJS));
- * const finalConScripts = inyectarScriptsEnHTML(htmlFinal, scripts, stackEventos);
- *
- * await Deno.writeTextFile('dist/index.html', finalConScripts);
- * ```
+
+ * 4. Ejecuta tu servidor con:
+ *    ```bash
+ *    deno run --allow-net --allow-read server.ts
+ *    ```
+
+ * 5. Abre tu navegador y visita: `http://localhost:3000`
+
  *
  * ✅ Resultado esperado:
- * - Cada archivo `.ts` en la carpeta `/scripts/` se convierte en JavaScript
- * - El JS se inyecta en tu HTML generado como script inline
- * - Una pila de eventos registra exactamente qué pasos se realizaron
+ * Una página HTML bien estructurada que se muestra en el navegador.
+ * Puedes modificar el `contexto` y volver a ejecutar el generador para ver los cambios.
  *
- * Consejo:
- * - Puedes mostrar la pila de eventos como comentario dentro del HTML para depurar
- * - Si en el futuro quieres hacer esto con archivos `.js` externos, solo cambia el tipo de inyección
- *
- * Este módulo cierra el ciclo de build moderno: fuente `.ts` → transformación → inyección en HTML → depuración con pila de eventos.
+ * ✅ Consejo:
+ * - Este módulo conecta el mundo de **plantillas estáticas** con el del **servido de contenido real**.
+ * - A partir de ahora puedes ir simulando sitios completos con múltiples rutas.
  */
