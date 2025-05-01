@@ -1,38 +1,68 @@
 /**
- * MÓDULO 9: FILTROS EN VARIABLES DE PLANTILLA
+ * MÓDULO 9: CONSTRUCCIÓN DE BUCLES EN PLANTILLAS
  *
  * 🧠 Concepto clave:
- * En Liquid (y otros motores), puedes transformar variables con *filtros*, como:
- *   - `{{ nombre | upcase }}` → convierte a mayúsculas
- *   - `{{ precio | currency }}` → formatea como moneda
+ * Los motores de plantillas como Liquid permiten generar contenido dinámico a partir de arreglos usando bucles `{% for item in lista %}`.
+ * Esto es esencial para mostrar listas como productos, entradas de blog, comentarios, etc.
  *
- * Los filtros se encadenan y se aplican uno tras otro.
+ * En los módulos anteriores:
+ * - Aprendiste a detectar y clasificar tokens (`texto`, `variable`, `directiva`)
+ * - Procesaste condicionales `{% if %}` en base al contexto
+ * - Reemplazaste variables simples con `{{ nombre }}`
+ *
+ * Ahora vas a interpretar una nueva directiva: los bucles con `{% for item in lista %}`.
+ * Además, dentro del cuerpo del bucle puede haber condicionales — lo cual pondrá a prueba si tu motor procesa los bloques en orden correcto.
+ *
+ * ✅ Ejemplo de plantilla original:
+ * ```liquid
+ * Lista: 
+ * {% for fruta in frutas %}
+ *   {% if fruta != 'uva' %}
+ *     {{ fruta }} 
+ *   {% endif %}
+ * {% endfor %}
+ * ```
+ *
+ * ✅ Tokens clasificados de entrada:
+ * ```ts
+ * [
+ *   { tipo: "texto", contenido: "Lista: " },
+ *   { tipo: "directiva", contenido: "for fruta in frutas" },
+ *   { tipo: "directiva", contenido: "if fruta != 'uva'" },
+ *   { tipo: "variable", contenido: "fruta" },
+ *   { tipo: "texto", contenido: " " },
+ *   { tipo: "directiva", contenido: "endif" },
+ *   { tipo: "directiva", contenido: "endfor" }
+ * ]
+ * ```
+ *
+ * ✅ Resultado esperado (si frutas = ["manzana", "plátano", "uva"]):
+ * ```ts
+ * [
+ *   { tipo: "texto", contenido: "Lista: " },
+ *   { tipo: "texto", contenido: "manzana " },
+ *   { tipo: "texto", contenido: "plátano " }
+ * ]
+ * ```
  *
  * Objetivo:
- * Permitir que una variable tenga uno o más filtros que transforman su valor antes de mostrarse.
+ * Detectar bloques `{% for %}` → `{% endfor %}` y repetir su contenido por cada elemento en el arreglo indicado.
+ * Los bloques internos pueden tener condicionales que debes procesar primero.
  *
  * Instrucciones:
- * 1. Define una función `aplicarFiltros(nombreVariable: string, filtros: string[], contexto: Record<string, any>, filtrosRegistrados: Record<string, Function>): string`
- * 2. Encuentra el valor de la variable en `contexto`
- * 3. Aplica cada filtro, en orden, desde `filtrosRegistrados`
- * 4. Extiende `renderizarVariables()` para que soporte filtros como `{{ variable | upcase | reverse }}`
- *
- * Entrada:
- * token: `{{ nombre | upcase | reverse }}`
- * contexto:
- * {
- *   nombre: "carlos"
- * }
- * filtrosRegistrados:
- * {
- *   upcase: (x) => x.toUpperCase(),
- *   reverse: (x) => x.split('').reverse().join('')
- * }
- *
- * Resultado esperado:
- * "SOLRAC"
+ * 1. Crea una función `procesarBucles(tokens: TokenPlantilla[], contexto: Record<string, any>): TokenPlantilla[]`
+ * 2. Para cada directiva `{% for item in lista %}`:
+ *    - Identifica el bloque hasta el `{% endfor %}`
+ *    - Extrae el nombre del item y de la lista (`for fruta in frutas`)
+ *    - Busca `contexto['frutas']` y verifica que sea un arreglo
+ *    - Por cada valor, renderiza una copia del bloque interno:
+ *        - Reemplaza `{{ item }}` con el valor actual
+ *        - Aplica `procesarCondicionales()` al bloque interno antes de renderizar
+ * 3. El resultado debe ser un nuevo arreglo con los bloques repetidos y procesados
  *
  * Consejo:
- * - Usa `.split('|')` para separar la variable del resto de filtros
- * - Este módulo introduce la idea de *tuberías de transformación* (transform pipelines), muy usada en programación funcional
+ * - Puedes usar `renderizarVariables()` dentro del cuerpo del bucle
+ * - Aplica `procesarCondicionales()` para manejar `if` dentro del `for`
+ * - Haz un bucle externo para recorrer los tokens y detectar el inicio y fin del `for`
+ * - Asegúrate de mantener el orden de ejecución: primero condicionales, luego variables
  */

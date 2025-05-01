@@ -1,84 +1,72 @@
 /**
- * MÓDULO 16: SERVIDOR LOCAL + ESTRUCTURA HTML + USO DE TEMA Y `{{ content_for_index }}`
+ * MÓDULO 16: SIMULACIÓN DE ENLACE UNIDIRECCIONAL (ONE-WAY DATA BINDING) EN TERMINAL
  *
  * 🧠 Concepto clave:
- * Hasta ahora, tu pipeline ha generado contenido HTML aislado (por ejemplo: listas, artículos, productos).
- * En este módulo, aprenderás cómo envolver ese contenido dentro de una plantilla de página completa (un **theme**),
- * y luego servirlo desde un servidor local para visualizarlo en el navegador.
+ * En frameworks modernos como Vue, React o Angular, los datos cambian y la vista se actualiza automáticamente.
+ * A esto se le llama "enlace unidireccional" (one-way data binding).
  *
- * Esta es una práctica común en todos los generadores de sitios estáticos:
- * - Se tiene una plantilla base (`theme.html`)
- * - Se define un espacio como `{{ content_for_index }}` donde va el contenido generado
- * - El HTML final resultante combina la plantilla base + contenido dinámico
+ * En este módulo vas a simular ese comportamiento desde la terminal. Tu programa:
+ * - Detectará cambios en un archivo de datos
+ * - Volverá a procesar la plantilla `.liquid`
+ * - Mostrará el nuevo HTML renderizado directamente en la consola
  *
- * También repasarás cómo funciona la estructura básica de un archivo HTML:
- * - `<!DOCTYPE html>`: declara el tipo de documento
- * - `<html>`: el elemento raíz
- * - `<head>`: incluye título, metadatos, estilos, etc.
- * - `<body>`: contiene el contenido visible generado por tu pipeline
+ * Este es el primer paso hacia un flujo de desarrollo automático (como un “live preview” básico).
  *
  * 🎯 Objetivo:
- * 1. Crear un archivo de **tema** (`theme.html`) con una estructura HTML válida
- * 2. Inyectar tu contenido generado en el marcador `{{ content_for_index }}`
- * 3. Servir el HTML resultante en un servidor local con Deno
+ * Crear un pequeño sistema que reacciona a cambios en archivos `.ts` o `.json` y actualiza el HTML renderizado en la terminal.
  *
- * 🧱 Estructura de archivos sugerida:
+ * ✅ Estructura esperada:
  * ```
- * /dist/
- * /theme.html        ← plantilla base (estructura HTML completa)
- * /index.html        ← archivo final generado usando theme + contenido
- * /server.ts         ← servidor local
- * /main.ts           ← pipeline que genera `index.html`
- * ```
- *
- * 📦 theme.html:
- * ```html
- * <!DOCTYPE html>
- * <html lang="es">
- *   <head>
- *     <meta charset="UTF-8" />
- *     <title>Mi sitio</title>
- *   </head>
- *   <body>
- *     {{ content_for_index }}
- *   </body>
- * </html>
+ * Ejercicios_etapa_2/
+ * ├── plantilla_motor/
+ * │   └── mod.ts                   ← Tu motor unificado
+ * ├── ejercicio_16/
+ * │   ├── main.ts                  ← Script principal con el watcher
+ * │   ├── data.ts                  ← Archivo editable que exporta el objeto `contexto`
+ * │   └── template.liquid          ← Tu plantilla HTML en formato liquid
  * ```
  *
- * 🛠 Instrucciones:
- * 1. Crea el archivo `theme.html` como plantilla base. Coloca `{{ content_for_index }}` en el lugar donde quieres insertar el contenido.
- * 2. En tu pipeline (`main.ts`), haz lo siguiente:
- *    - Genera el contenido HTML dinámico como lo hiciste en el Módulo 14
- *    - Carga el archivo `theme.html`
- *    - Reemplaza el marcador `{{ content_for_index }}` por el contenido generado
- *    - Guarda el resultado final como `dist/index.html` usando `Deno.writeTextFile()`
+ * ✅ Instrucciones:
+ * 1. Crea un archivo `data.ts` con una exportación:
+ *    ```ts
+ *    export const contexto = { nombre: "Ana", edad: 30 };
+ *    ```
  *
- * 3. Crea un archivo `server.ts`
- *    - Usa `Deno.serve()` para escuchar en `localhost:3000`
- *    - Cuando se acceda a `/`, sirve el archivo `dist/index.html`
+ * 2. En `main.ts`:
+ *    - Usa `Deno.watchFs()` para observar cambios en `data.ts`
+ *    - Usa `import("file://" + path + "?version=" + Date.now())` para forzar la recarga del módulo cuando cambia
+ *    - Vuelve a cargar `template.liquid` con `Deno.readTextFile()`
+ *    - Usa `renderizarArchivoLiquid` desde tu `mod.ts` para procesar la plantilla con los datos
+ *    - Imprime el HTML resultante en consola. Opcional: usa `console.clear()` entre renders
  *
- * Ejemplo de servidor mínimo:
- * ```ts
- * Deno.serve({ port: 3000 }, async (req) => {
- *   const url = new URL(req.url);
- *   const path = url.pathname === '/' ? '/index.html' : url.pathname;
- *   try {
- *     const file = await Deno.readTextFile(`./dist${path}`);
- *     return new Response(file, { headers: { 'Content-Type': 'text/html' } });
- *   } catch {
- *     return new Response('404 - No encontrado', { status: 404 });
- *   }
- * });
- * ```
- *
- * 💡 Consejo:
- * - Si quieres cambiar el diseño de todo el sitio, solo editas `theme.html`
- * - Puedes extender la idea a múltiples plantillas y zonas de contenido (como `content_for_header`, `content_for_footer`)
+ * 3. Usa tu pipeline completo:
+ *    - Reemplazo de variables
+ *    - Condicionales
+ *    - Bucles
+ *    - Filtros
+ *    - Asignaciones
+ *    - Renderizado HTML (con escape de texto)
  *
  * ✅ Resultado esperado:
- * - HTML final ubicado en `dist/index.html`, generado combinando `theme.html` con tu contenido
- * - Servidor local disponible en http://localhost:3000
- * - Visualización real del contenido renderizado en navegador
+ * Cada vez que guardes `data.ts`, tu terminal se actualiza mostrando el nuevo resultado HTML renderizado.
  *
- * Este módulo simula cómo funciona el sistema de themes en herramientas como Jekyll, Shopify, Liquid, y SvelteKit.
+ * Ejemplo:
+ * // template.liquid
+ * "<h1>{{ nombre }}</h1><p>Tienes {{ edad }} años.</p>"
+ *
+ * // data.ts
+ * export const contexto = { nombre: "Ana", edad: 30 };
+ *
+ * // salida en terminal:
+ * <h1>Ana</h1>
+ * <p>Tienes 30 años.</p>
+ *
+ * // Cambias edad a 31 en data.ts → la terminal se actualiza automáticamente:
+ * <h1>Ana</h1>
+ * <p>Tienes 31 años.</p>
+ *
+ * ✅ Consejo:
+ * - Usa `console.log()` al inicio del render para indicar que se recompiló
+ * - Si usas `.json` en vez de `.ts`, puedes leerlo directamente con `Deno.readTextFile()` y `JSON.parse()`
+ * - Este módulo demuestra cómo un flujo *reactivo* puede lograrse sin un navegador ni framework
  */

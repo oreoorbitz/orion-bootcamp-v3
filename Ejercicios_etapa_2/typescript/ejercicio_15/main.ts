@@ -1,30 +1,49 @@
 /**
- * MÓDULO 15: ESCRITURA DE ARCHIVOS HTML A LA CARPETA `dist/`
+ * MÓDULO 15: REUTILIZAR Y REFACTORIZAR TU MOTOR DE PLANTILLAS
  *
  * 🧠 Concepto clave:
- * Los generadores de sitios estáticos (como Eleventy, Astro, o Hugo) transforman datos y plantillas en archivos HTML
- * que se escriben a una carpeta lista para ser servida, generalmente llamada `dist/` o `public/`.
+ * A medida que tu sistema crece, copiar y pegar archivos entre carpetas ya no es sostenible.
+ * En este módulo, vas a **crear un archivo reutilizable** que contenga todas las funciones principales
+ * de tu motor de plantillas y lo importarás en los ejercicios siguientes.
  *
- * En este módulo, escribirás los archivos HTML que has generado previamente con tu pipeline a la carpeta `dist/`,
- * preparándolos para ser servidos en un navegador.
+ * Esto simula cómo los desarrolladores organizan librerías, reutilizan módulos, y preparan su código para crecer.
  *
- * Objetivo:
- * Crear una función que escriba uno o más archivos HTML en una carpeta local.
+ * 🎯 Objetivo:
+ * Crear un archivo central donde vivan todas tus funciones relacionadas a:
+ * - Motor de plantillas (`tokenizar`, `condicionales`, `filtros`, `bucles`, etc.)
+ * - Parser de HTML (`tokenizarHTML`, `clasificarTokens`, `construirArbol`)
+ * - Renderizador (`renderizarHTML`, `escapeTexto`)
  *
- * Instrucciones:
- * 1. Asegúrate de que el resultado final del procesamiento (como el generado por `generarHTMLDesdePlantilla(...)`) esté disponible como string.
- * 2. Usa la función `Deno.writeTextFile()` para escribir ese string en un archivo dentro de la carpeta `dist/`.
- *    - Si la carpeta no existe, créala con `Deno.mkdir('dist', { recursive: true })`
- * 3. Si estás generando múltiples archivos (por ejemplo, uno por producto), genera nombres como `producto1.html`, `producto2.html`, etc.
+ * ✅ Instrucciones:
+ * 1. Crea una nueva carpeta en el directorio padre del curso:
+ *    `Ejercicios_etapa_2/plantilla_motor/`
  *
- * Ejemplo de uso:
- * ```ts
- * const contenido = generarHTMLDesdePlantilla(template, contexto);
- * await Deno.mkdir('dist', { recursive: true });
- * await Deno.writeTextFile('dist/index.html', contenido);
- * ```
+ * 2. Dentro de esa carpeta, crea un archivo llamado `mod.ts` y organiza tus funciones ahí:
+ *    - Usa `export` para cada función o tipo
+ *    - Puedes dividir por secciones si lo deseas (parsing, rendering, liquid, etc.)
+ *
+ * 3. En cada carpeta de módulo (`ejercicio_{{n}}`), importa desde ahí:
+ *    ```ts
+ *    import { renderizarArchivoLiquid } from "../plantilla_motor/mod.ts";
+ *    ```
+ *
+ * 4. Elige si este módulo tiene pruebas:
+ *    - Puedes crear un `main.ts` para probar tu archivo central
+ *    - Puedes decidir si ya estás satisfecho con las pruebas existentes
+ *
+ * 5. Haz una pequeña reflexión sobre tu código:
+ *    - ¿Repetiste lógica innecesariamente?
+ *    - ¿Tus funciones tienen responsabilidades claras?
+ *    - ¿Deberías renombrar funciones para que sean más claras?
+ *    - ¿Estás satisfecho con cómo estructuraste tu pipeline?
+ *
+ * ✅ Resultado esperado:
+ * - Un archivo `mod.ts` con todo tu sistema de rendering.
+ * - Los siguientes ejercicios ya no necesitan copiar funciones previas.
+ * - Posiblemente un pequeño `main_test.ts` o `demo.ts` para verificar que sigue funcionando.
  *
  * Consejo:
- * - Si quieres generar múltiples archivos, puedes usar un loop sobre un arreglo de objetos.
- * - Este módulo es el último paso antes de servir tus archivos en un navegador.
+ * - Esta es una oportunidad para limpiar tu código antes de seguir construyendo sobre él.
+ * - Piensa como si tu motor ya fuera una mini librería de verdad.
+ * - Puedes incluir una sección de tipos al inicio del archivo para mantener todo bien organizado.
  */
