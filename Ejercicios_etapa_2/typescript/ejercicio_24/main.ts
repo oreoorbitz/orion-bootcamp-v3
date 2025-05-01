@@ -60,7 +60,7 @@
  * ```
 
  *
- * 5. Crea en `assets/hotreload.css.ts` un script que observe cambios en los estilos y recargue la hoja de estilos **sin recargar la página**:
+ * 5. Crea en `hotreload.ts` un script que observe cambios en los estilos y recargue la hoja de estilos **sin recargar la página**:
 
  * ```ts
  * const link = document.querySelector('link[rel="stylesheet"]');
