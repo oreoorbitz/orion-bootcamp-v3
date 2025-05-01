@@ -59,9 +59,9 @@
  * ```
 
  *
- * 3. Modifica tu sistema de generación de archivos (`main.ts`) para que cada vez que generes nuevo HTML o CSS:
- *    - llames a `notificarReload()` del servidor WebSocket (puedes importarlo o hacer una llamada `fetch`)
-
+ * 3. Modifica tu sistema de generación de archivos (`main.ts`) o tu motor de plantillas Liquid personalizado
+ *    para que cada vez que se genere un nuevo archivo HTML desde una plantilla:
+ *    - llames a `notificarReload()` del servidor WebSocket (puedes importarlo o usar `fetch` si el servidor está separado)
  *
  * ✅ Resultado esperado:
  * - Tu HTML generado tendrá un script inline que se conecta al WebSocket
