@@ -14,50 +14,67 @@
  *
  * ✅ Ejemplo de plantilla original:
  * ```liquid
- * Hola {% if admin %}Administrador{% endif %}!
+ * Hola, {{ nombre }}.
+ * {% if admin %}
+ * Bienvenido, administrador.
+ * {% endif %}
  * ```
  *
- * ✅ Ejemplo de tokens clasificados:
+ * ✅ Ejemplo de `contexto`:
+ * ```ts
+ * const contexto = {
+ *   nombre: "Carlos",
+ *   admin: true
+ * }
+ * ```
+ *
+ * ✅ Ejemplo de tokens clasificados (antes de este módulo):
  * ```ts
  * [
- *   { tipo: "texto", contenido: "Hola " },
+ *   { tipo: "texto", contenido: "Hola, " },
+ *   { tipo: "variable", contenido: "nombre" },
+ *   { tipo: "texto", contenido: "." },
  *   { tipo: "directiva", contenido: "if admin" },
- *   { tipo: "texto", contenido: "Administrador" },
- *   { tipo: "directiva", contenido: "endif" },
- *   { tipo: "texto", contenido: "!" }
+ *   { tipo: "texto", contenido: "Bienvenido, administrador." },
+ *   { tipo: "directiva", contenido: "endif" }
  * ]
  * ```
  *
- * ✅ Resultado esperado (cuando `contexto.admin === true`):
+ * ✅ Resultado esperado si `admin` es `true`:
  * ```ts
  * [
- *   { tipo: "texto", contenido: "Hola " },
- *   { tipo: "texto", contenido: "Administrador" },
- *   { tipo: "texto", contenido: "!" }
+ *   { tipo: "texto", contenido: "Hola, " },
+ *   { tipo: "variable", contenido: "nombre" },
+ *   { tipo: "texto", contenido: "." },
+ *   { tipo: "texto", contenido: "Bienvenido, administrador." }
  * ]
  * ```
  *
- * ✅ Resultado esperado (cuando `contexto.admin === false`):
+ * ✅ Resultado esperado si `admin` es `false`:
  * ```ts
  * [
- *   { tipo: "texto", contenido: "Hola " },
- *   { tipo: "texto", contenido: "!" }
+ *   { tipo: "texto", contenido: "Hola, " },
+ *   { tipo: "variable", contenido: "nombre" },
+ *   { tipo: "texto", contenido: "." }
  * ]
  * ```
  *
- * Objetivo:
+ * 🎯 Objetivo:
  * Eliminar o conservar bloques `{% if %} ... {% endif %}` dependiendo de si la variable evaluada es verdadera.
  *
- * Instrucciones:
+ * 🛠️ Instrucciones:
  * 1. Crea una función `procesarCondicionales(tokens: TokenPlantilla[], contexto: Record<string, any>): TokenPlantilla[]`
  * 2. Busca los pares `{% if variable %}` y `{% endif %}`
  * 3. Evalúa el valor de la variable en `contexto`
- *    - Si es `true`, deja los tokens del bloque interno
- *    - Si es `false`, elimina esos tokens
+ *    - Si es `true`, conserva los tokens del bloque interno
+ *    - Si es `false`, elimínalos
  * 4. Solo implementa un nivel de condición (no anidado)
  *
- * Consejo:
+ * 💡 Consejo:
  * - Recorre el arreglo con un bucle `for`, y cuando encuentres un `if`, busca su cierre con otro bucle
  * - Extrae el nombre de la variable con `.split(' ')` sobre `contenido`
- * - Usa `.slice()` para recortar los tokens que quieras conservar
+ * - Usa `.slice()` para conservar los tokens del interior si la condición se cumple
+ * - Deja pasar los demás tokens sin cambios
+ *
+ * Esto es una simulación básica del sistema de condiciones de Liquid. Más adelante podrás anidar condiciones o usar `else`.
  */
