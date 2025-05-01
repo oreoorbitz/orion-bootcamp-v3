@@ -80,7 +80,7 @@
  */
 
 
-const LIQUID_HTML = `Hola, {{ nombre }}. Bienvenido a {{ ciudad }}.`
+const LIQUID_HTML = `hola {{ nombre }}. {% if admin %}Eres administrador.{% endif %}`
 const regex = /({{.*?}}|{%.*?%})/g
 enum delimiters {
     VARIABLE_START = '{{',
@@ -89,9 +89,13 @@ enum delimiters {
     DIRECTIVE_END = '%}'
 }
 
-enum contexto {
-    nombre = 'Carlos',
-    ciudad = 'Madrid'
+interface Contexto {
+    [key: string]: string | boolean | number
+}
+
+const contexto: Contexto = {
+    nombre: 'Carlos',
+    admin: true
 }
 
 interface TokenPlantilla {
@@ -132,7 +136,7 @@ const clasificarTokensPlantilla = (tokens: string[]): TokenPlantilla[] => {
     return result
 }
 
-const renderizarVariables = (tokens: TokenPlantilla[], contexto: Record<string, string>): string => {
+const renderizarVariables = (tokens: TokenPlantilla[], contexto: Contexto): string => {
     const resultado = tokens.map((token) => {
         if (token.tipo == 'variable') {
             const contextoVariable = contexto[token.contenido]
@@ -140,7 +144,13 @@ const renderizarVariables = (tokens: TokenPlantilla[], contexto: Record<string, 
                 return contextoVariable
             }
             return ''
-        } else {
+        } else if (token.tipo == 'directiva') {
+            console.log('Directiva:', token.contenido)
+            if(token.contenido.startsWith('if')) {
+                
+            }
+        }
+        else {
             return token.contenido
         }
     })
