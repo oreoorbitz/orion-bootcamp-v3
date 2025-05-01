@@ -1,42 +1,80 @@
 /**
- * MÓDULO 8: CONSTRUCCIÓN DE BUCLES EN PLANTILLAS
+ * MÓDULO 8: LÓGICA CONDICIONAL EN PLANTILLAS
  *
  * 🧠 Concepto clave:
- * Los motores de plantillas como Liquid permiten generar listas de contenido usando bucles `{% for item in lista %}`.
- * Esto es útil, por ejemplo, para generar un bloque por cada producto en una tienda.
+ * En motores como Liquid, las directivas controlan el flujo de una plantilla.
+ * Una de las directivas más comunes es `{% if %}`, que permite mostrar contenido **solo si se cumple una condición**.
  *
- * En este módulo, vas a procesar bloques repetibles y a renderizar cada ítem de forma dinámica.
+ * En los módulos anteriores:
+ * - Separaste la plantilla en tokens (`detectarTokensPlantilla`)
+ * - Clasificaste cada uno como texto, variable o directiva (`clasificarTokensPlantilla`)
+ * - Y reemplazaste variables por valores reales (`renderizarVariables`)
  *
- * Objetivo:
- * Repetir secciones de la plantilla por cada elemento de un arreglo en el contexto.
+ * Ahora vas a interpretar el significado de una **directiva**, en este caso: `{% if ... %}`.
  *
- * Instrucciones:
- * 1. Crea una función `procesarBucles(tokens: string[], contexto: Record<string, any>): string[]`
- * 2. Detecta los bloques `{% for item in lista %} ... {% endfor %}`
- * 3. Para cada elemento de `contexto['lista']`, repite ese bloque reemplazando `{{ item }}` con el valor actual
+ * ✅ Ejemplo de plantilla original:
+ * ```liquid
+ * Hola, {{ nombre }}.
+ * {% if admin %}
+ * Bienvenido, administrador.
+ * {% endif %}
+ * ```
  *
- * Entrada:
- * tokens:
- * [
- *   "Lista: ",
- *   "{% for item in frutas %}",
- *   "{{ item }} ",
- *   "{% endfor %}"
- * ]
- * contexto:
- * {
- *   frutas: ["manzana", "plátano", "uva"]
+ * ✅ Ejemplo de `contexto`:
+ * ```ts
+ * const contexto = {
+ *   nombre: "Carlos",
+ *   admin: true
  * }
+ * ```
  *
- * Resultado esperado:
+ * ✅ Ejemplo de tokens clasificados (antes de este módulo):
+ * ```ts
  * [
- *   "Lista: ",
- *   "manzana ",
- *   "plátano ",
- *   "uva "
+ *   { tipo: "texto", contenido: "Hola, " },
+ *   { tipo: "variable", contenido: "nombre" },
+ *   { tipo: "texto", contenido: "." },
+ *   { tipo: "directiva", contenido: "if admin" },
+ *   { tipo: "texto", contenido: "Bienvenido, administrador." },
+ *   { tipo: "directiva", contenido: "endif" }
  * ]
+ * ```
  *
- * Consejo:
- * - Este patrón de bucle es uno de los más usados en generación de HTML con datos
- * - Puedes usar `renderizarVariables` dentro del cuerpo del bucle para reemplazar `{{ item }}`
+ * ✅ Resultado esperado si `admin` es `true`:
+ * ```ts
+ * [
+ *   { tipo: "texto", contenido: "Hola, " },
+ *   { tipo: "variable", contenido: "nombre" },
+ *   { tipo: "texto", contenido: "." },
+ *   { tipo: "texto", contenido: "Bienvenido, administrador." }
+ * ]
+ * ```
+ *
+ * ✅ Resultado esperado si `admin` es `false`:
+ * ```ts
+ * [
+ *   { tipo: "texto", contenido: "Hola, " },
+ *   { tipo: "variable", contenido: "nombre" },
+ *   { tipo: "texto", contenido: "." }
+ * ]
+ * ```
+ *
+ * 🎯 Objetivo:
+ * Eliminar o conservar bloques `{% if %} ... {% endif %}` dependiendo de si la variable evaluada es verdadera.
+ *
+ * 🛠️ Instrucciones:
+ * 1. Crea una función `procesarCondicionales(tokens: TokenPlantilla[], contexto: Record<string, any>): TokenPlantilla[]`
+ * 2. Busca los pares `{% if variable %}` y `{% endif %}`
+ * 3. Evalúa el valor de la variable en `contexto`
+ *    - Si es `true`, conserva los tokens del bloque interno
+ *    - Si es `false`, elimínalos
+ * 4. Solo implementa un nivel de condición (no anidado)
+ *
+ * 💡 Consejo:
+ * - Recorre el arreglo con un bucle `for`, y cuando encuentres un `if`, busca su cierre con otro bucle
+ * - Extrae el nombre de la variable con `.split(' ')` sobre `contenido`
+ * - Usa `.slice()` para conservar los tokens del interior si la condición se cumple
+ * - Deja pasar los demás tokens sin cambios
+ *
+ * Esto es una simulación básica del sistema de condiciones de Liquid. Más adelante podrás anidar condiciones o usar `else`.
  */

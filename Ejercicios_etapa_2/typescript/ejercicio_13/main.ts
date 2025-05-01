@@ -1,36 +1,54 @@
 /**
- * MÓDULO 13: SIMULACIÓN DE PIPELINE DE BUILD ESTÁTICO
+ * MÓDULO 13: MANEJO DE ERRORES EN EL MOTOR DE PLANTILLAS
  *
- * Objetivo: Simular cómo un generador de sitios estáticos transforma datos en HTML final usando plantillas y componentes.
+ * 🧠 Concepto clave:
+ * Mientras que HTML real es bastante tolerante con errores (por ejemplo, etiquetas mal cerradas),
+ * los motores de plantillas como Liquid deben ser *estrictos* para que el desarrollador reciba retroalimentación clara.
+ *
+ * A medida que tu sistema crece, es crucial que puedas detectar errores comunes:
+ * - Variables que no existen
+ * - Filtros desconocidos
+ * - Sintaxis mal formada en `{% if %}`, `{% for %}`, etc.
+ * - Valores no válidos al hacer asignaciones
+ *
+ * Objetivo:
+ * Agregar validaciones a tu pipeline de plantillas para manejar errores con mensajes informativos,
+ * sin romper el programa de manera silenciosa.
  *
  * Instrucciones:
- * 1. Simula una lista de datos de ejemplo (como un arreglo de productos o artículos)
- * 2. Usa un archivo de plantilla como base para cada elemento
- * 3. Genera una estructura DOM para cada entrada y renderízala como HTML
- * 4. Imprime o guarda los resultados como si fueran archivos individuales (`index.html`, `producto1.html`, etc.)
- *
- * Entrada de ejemplo:
- * datos:
- * [
- *   { titulo: "Producto 1", descripcion: "Este producto es genial" },
- *   { titulo: "Producto 2", descripcion: "Otro gran producto" }
- * ]
- *
- * plantilla:
- * "<article><h2>{{ titulo }}</h2><p>{{ descripcion }}</p></article>"
- *
- * Salida simulada:
- * - producto1.html → "<article><h2>Producto 1</h2><p>Este producto es genial</p></article>"
- * - producto2.html → "<article><h2>Producto 2</h2><p>Otro gran producto</p></article>"
+ * 1. Revisa cada una de tus funciones principales del motor de plantillas:
+ *    - `procesarAsignaciones`
+ *    - `procesarCondicionales`
+ *    - `procesarBucles`
+ *    - `renderizarVariables`
+ *    - `aplicarFiltros`
+ * 2. Agrega validaciones defensivas:
+ *    - Si una variable no está en el `contexto`, lanza un error o registra una advertencia
+ *    - Si un filtro no existe en `filtrosRegistrados`, lanza un error
+ *    - Si `{% if %}` no tiene un `{% endif %}` correspondiente, lanza un error de sintaxis
+ *    - Si `{% for ... in ... %}` tiene una lista no definida, muestra advertencia
+ *    - Si se intenta `assign` sin `=`, o con un valor inválido, detén la ejecución
  *
  * Consejo:
- * - Estructura funciones como si fueran pasos de una compilación:
- *   1. Preparar datos
- *   2. Procesar plantilla
- *   3. Parsear a árbol
- *   4. Renderizar a HTML
- *   5. Escribir en archivo (opcional en Deno)
+ * - Usa `throw new Error(...)` para errores críticos
+ * - Puedes crear una función auxiliar `validarSintaxis()` para verificar tokens antes de procesarlos
+ * - Puedes registrar advertencias con `console.warn(...)` sin detener el flujo si el error no es grave
  *
- * Desafío extra:
- * - Usa `Deno.writeTextFile()` para guardar el resultado en archivos reales
+ * Opcional:
+ * - Crea un modo `estricto` (por ejemplo con una bandera `modoEstrictamenteTipado: true`) que detenga todo si hay errores
+ * - Permite continuar silenciosamente si el modo estricto está desactivado
+ *
+ * Ejemplo:
+ * ```ts
+ * // Si este token no tiene cierre correspondiente
+ * ["{% if usuario %}", "Contenido", "{{ nombre }}"]
+ * // Deberías lanzar un error:
+ * throw new Error("Bloque {% if %} sin cierre {% endif %}")
+ * ```
+ *
+ * Resultado esperado:
+ * Tu motor debe fallar claramente ante errores lógicos o de sintaxis,
+ * ayudando a depurar plantillas de forma más profesional.
+ *
+ * Este módulo marca el paso de "juguete funcional" a "herramienta real para desarrolladores".
  */

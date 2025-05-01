@@ -1,77 +1,62 @@
 /**
- * MÓDULO 18: TRANSFORMAR TYPESCRIPT A JAVASCRIPT PARA EL NAVEGADOR + PILA DE EVENTOS
+ * MÓDULO 17: GENERAR ARCHIVOS HTML EN DISCO USANDO TU PIPELINE
  *
  * 🧠 Concepto clave:
- * Hasta ahora, tu código se ha ejecutado en **Deno**, que permite correr directamente archivos TypeScript (`.ts`).
- * Pero los navegadores no entienden TypeScript — solo pueden ejecutar JavaScript.
+ * Hasta ahora, tu motor de plantillas mostraba HTML directamente en consola. Pero en proyectos reales (como sitios estáticos),
+ * el HTML generado se guarda como archivos `.html` en una carpeta como `/dist` para ser servido por un servidor o subido a producción.
  *
- * Para usar tus scripts en una página HTML real, necesitas primero convertirlos a `.js`.
- * Este proceso se llama **transpilación**.
- *
- * En este módulo vas a:
- * - Crear un flujo de trabajo para convertir tus archivos `.ts` a `.js` automáticamente
- * - Inyectar el contenido `.js` como un `<script>` al final del `<body>`
- * - Registrar cada operación en una **pila de eventos**, que te servirá para rastrear el orden de las tareas ejecutadas
+ * En este módulo vas a modificar tu pipeline para que guarde archivos reales en vez de solo imprimirlos.
+ * Esto simula el comportamiento de herramientas como Jekyll, Astro o Eleventy.
  *
  * 🎯 Objetivo:
- * 1. Transpilar archivos TypeScript a JavaScript usando `Deno.emit()`
- * 2. Inyectar los resultados como scripts inline en tu HTML
- * 3. Registrar cada paso en una pila de eventos para tener trazabilidad de lo que ocurre en el proceso
+ * Escribir en el sistema de archivos el HTML generado a partir de una plantilla `.liquid` y un objeto `contexto`.
  *
- * 📦 Estructura sugerida:
+ * ✅ Estructura sugerida:
  * ```
- * /scripts/
- *   global.ts
- *   ui.ts
- * /dist/
- *   index.html
- * /theme.html
- * main.ts
+ * Ejercicios_etapa_2/
+ * ├── plantilla_motor/
+ * │   └── mod.ts
+ * ├── ejercicio_17/
+ * │   ├── main.ts
+ * │   ├── template.liquid
+ * │   ├── data.ts
+ * │   └── dist/
+ * │       └── index.html       ← se genera automáticamente
  * ```
  *
- * ✅ Parte 1: Transpilación
- * 1. Crea una función llamada `transpilarTSADefaultJS(filePath: string): string`
- *    - Usa `Deno.emit(filePath)` para obtener el JS correspondiente
- *    - Devuelve el contenido como string
+ * ✅ Instrucciones:
+ * 1. Asegúrate de tener:
+ *    - Un archivo `template.liquid`
+ *    - Un archivo `data.ts` que exporte el objeto `contexto`
  *
- * ✅ Parte 2: Inyección
- * 2. Crea una función `inyectarScriptsEnHTML(html: string, scripts: string[], stackEventos: string[]): string`
- *    - Inserta los scripts como `<script>...</script>` justo antes del cierre de `</body>`
- *    - Por cada script inyectado, agrega una entrada en `stackEventos` con el mensaje: `"script inyectado: [nombre archivo]"`
- *    - Al final, agrega `"html con scripts completado"`
+ * 2. Crea o limpia una carpeta `dist/` en tu módulo
+ *    - Puedes usar `Deno.mkdir("dist", { recursive: true })`
+ *    - Puedes borrar el archivo anterior con `Deno.remove()` si deseas sobrescribirlo
  *
- * ✅ Parte 3: Pila de eventos
- * 3. Declara una pila como:
- * ```ts
- * const stackEventos: string[] = [];
- * ```
- *    - Esta pila se va llenando conforme ejecutas cada etapa de tu proceso
- *    - Puedes imprimirla en la consola o escribirla como comentario HTML:
- *    ```html
- *    <!-- stackEventos: ["ts compilado: global.ts", "script inyectado: global.js", ...] -->
+ * 3. Usa tu función `renderizarArchivoLiquid()` para generar el HTML como string
+ *
+ * 4. Guarda ese string como `dist/index.html` usando:
+ *    ```ts
+ *    await Deno.writeTextFile("dist/index.html", htmlGenerado);
  *    ```
  *
- * ✅ Ejemplo de uso:
- * ```ts
- * const htmlBase = await Deno.readTextFile('theme.html');
- * const contenido = generarContenido(); // contenido generado por tu pipeline
- * const htmlFinal = htmlBase.replace('{{ content_for_index }}', contenido);
- *
- * const tsFiles = ['scripts/global.ts', 'scripts/ui.ts'];
- * const scripts = await Promise.all(tsFiles.map(transpilarTSADefaultJS));
- * const finalConScripts = inyectarScriptsEnHTML(htmlFinal, scripts, stackEventos);
- *
- * await Deno.writeTextFile('dist/index.html', finalConScripts);
- * ```
+ * 5. Opcional: muestra un mensaje de confirmación en consola (`console.log("✅ Archivo generado")`)
  *
  * ✅ Resultado esperado:
- * - Cada archivo `.ts` en la carpeta `/scripts/` se convierte en JavaScript
- * - El JS se inyecta en tu HTML generado como script inline
- * - Una pila de eventos registra exactamente qué pasos se realizaron
+ * Un archivo `dist/index.html` con el HTML renderizado usando la plantilla y el contexto.
  *
- * Consejo:
- * - Puedes mostrar la pila de eventos como comentario dentro del HTML para depurar
- * - Si en el futuro quieres hacer esto con archivos `.js` externos, solo cambia el tipo de inyección
+ * Ejemplo:
+ * // template.liquid
+ * "<h1>{{ titulo }}</h1><p>{{ mensaje }}</p>"
  *
- * Este módulo cierra el ciclo de build moderno: fuente `.ts` → transformación → inyección en HTML → depuración con pila de eventos.
+ * // data.ts
+ * export const contexto = { titulo: "Bienvenido", mensaje: "Este sitio fue generado con JavaScript." }
+ *
+ * // dist/index.html (salida)
+ * <h1>Bienvenido</h1>
+ * <p>Este sitio fue generado con JavaScript.</p>
+ *
+ * ✅ Consejo:
+ * - Este módulo convierte tu motor de plantillas en una herramienta funcional de compilación estática
+ * - Si usas múltiples plantillas en el futuro, puedes repetir esta lógica y generar `producto.html`, `contacto.html`, etc.
  */

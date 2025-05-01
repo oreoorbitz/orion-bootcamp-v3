@@ -1,42 +1,57 @@
 /**
- * MÓDULO 7: LÓGICA CONDICIONAL EN PLANTILLAS
+ * MÓDULO 7: REEMPLAZO DE VARIABLES EN PLANTILLAS
  *
  * 🧠 Concepto clave:
- * Una plantilla no solo puede mostrar datos, también puede mostrar u ocultar secciones.
- * Con estructuras como `{% if variable %}`, se pueden incluir bloques condicionales que solo aparecen si se cumple una condición.
- * Esto es esencial para mostrar contenido personalizado según el contexto.
+ * En los motores de plantillas como Liquid, `{{ nombre }}` se reemplaza por el valor real de una variable del contexto.
+ * Esto permite generar contenido dinámico desde datos, como hacer que el título de una página cambie según el usuario.
+ *
+ * En el módulo anterior, ya clasificaste cada fragmento de una plantilla como:
+ * - texto plano
+ * - variable (`{{ ... }}`)
+ * - o directiva (`{% ... %}`)
+ *
+ * Ahora, vas a enfocarte **solamente en las variables**.
  *
  * Objetivo:
- * Detectar bloques condicionales `{% if ... %}` y `{% endif %}` y decidir si deben mostrarse o eliminarse según los datos.
+ * Reemplazar todos los tokens de tipo `variable` por los valores correspondientes en un objeto de contexto.
  *
- * Instrucciones:
- * 1. Crea una función `procesarCondicionales(tokens: string[], contexto: Record<string, any>): string[]`
- * 2. Evalúa las condiciones tipo `{% if variable %}` como `Boolean(contexto['variable'])`
- * 3. Si la condición es falsa, elimina todos los tokens entre `{% if ... %}` y `{% endif %}`
- * 4. No necesitas soportar condiciones anidadas por ahora
+ * ✅ Ejemplo de plantilla original:
+ * ```html
+ * Hola, {{ nombre }}. Bienvenido a {{ ciudad }}.
+ * ```
+ *
+ * Puedes reutilizar tu código del módulo 5 y 6 para:
+ * 1. Tokenizar esta cadena (`detectarTokensPlantilla`)
+ * 2. Clasificar los tokens (`clasificarTokensPlantilla`)
  *
  * Entrada:
  * tokens:
  * [
- *   "Hola ",
- *   "{% if admin %}",
- *   "Administrador ",
- *   "{% endif %}",
- *   "!"
+ *   { tipo: "texto", contenido: "Hola, " },
+ *   { tipo: "variable", contenido: "nombre" },
+ *   { tipo: "texto", contenido: ". Bienvenido a " },
+ *   { tipo: "variable", contenido: "ciudad" },
+ *   { tipo: "texto", contenido: "." }
  * ]
+ *
  * contexto:
  * {
- *   admin: true
+ *   nombre: "Carlos",
+ *   ciudad: "Madrid"
  * }
  *
  * Resultado esperado:
- * [
- *   "Hola ",
- *   "Administrador ",
- *   "!"
- * ]
+ * "Hola, Carlos. Bienvenido a Madrid."
+ *
+ * Instrucciones:
+ * 1. Crea una función `renderizarVariables(tokens: TokenPlantilla[], contexto: Record<string, any>): string`
+ * 2. Para cada token:
+ *    - Si el `tipo` es `"variable"`, busca la clave en `contexto`
+ *    - Si no existe, puedes devolver una cadena vacía (`""`) o un valor por defecto
+ *    - Si es tipo `"texto"` o `"directiva"`, conserva el texto tal como está
  *
  * Consejo:
- * - Usa un bucle e índices para marcar el inicio y fin de los bloques
- * - Este tipo de lógica condicional es común en todos los sistemas de plantillas
+ * - Usa `.map()` para transformar los tokens en strings
+ * - Recuerda que en esta etapa aún **no debes interpretar las directivas** (`{% %}`)
+ * - Concatenar los resultados con `.join('')` al final puede ayudarte a construir la cadena completa
  */
