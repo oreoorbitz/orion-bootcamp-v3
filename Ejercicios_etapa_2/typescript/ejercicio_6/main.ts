@@ -53,3 +53,52 @@
  * - Usa `.startsWith()` y `.endsWith()` para clasificar cada string
  * - Recorta los delimitadores (`{{ }}`, `{% %}`) usando `.slice()` o `.replace()` para extraer solo el contenido
  */
+
+const LIQUID_HTML = `"Hola, {{ nombre }}. {% if admin %}Eres administrador.{% endif %}"`
+const regex = /({{.*?}}|{%.*?%})/g
+const DIRECTIVE_START = '{%'
+const DIRECTIVE_END = '%}'
+const VARIABLE_START = '{{'
+const VARIABLE_END = '}}'
+
+interface TokenPlantilla {
+    tipo: 'texto' | 'variable' | 'directiva';
+    contenido: string;
+}
+
+const extrearTextoDeVariable = (token: string): string => {
+    const variable = token.slice(VARIABLE_START.length, -VARIABLE_END.length)
+    return variable
+}
+
+const detectarTokensPlantilla = (entrenda: string): string[] => {
+    const tokens = entrenda.split(regex)
+    return tokens
+}
+
+const clasificarTokensPlantilla = (tokens: string[]): TokenPlantilla[] => {
+    const result = tokens.map((token) => {
+        if(token.startsWith(VARIABLE_START) && token.endsWith(VARIABLE_END)) {
+           const contenido = extrearTextoDeVariable(token)
+            return {
+                tipo: 'variable',
+                contenido
+            }
+        } else if(token.startsWith(DIRECTIVE_START) && token.endsWith(DIRECTIVE_END)) {
+            const contenido = token.slice(DIRECTIVE_START.length, -DIRECTIVE_END.length)
+            return {
+                tipo: 'directiva',
+                contenido
+            }
+        }
+        return {
+            tipo: 'texto',
+            contenido: token
+        }
+    }) as TokenPlantilla[]
+    return result 
+}
+
+const tokens = detectarTokensPlantilla(LIQUID_HTML)
+const tokensClasificados = clasificarTokensPlantilla(tokens)
+console.log(tokensClasificados)
