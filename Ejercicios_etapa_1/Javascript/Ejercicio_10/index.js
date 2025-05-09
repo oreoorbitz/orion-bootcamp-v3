@@ -14,7 +14,7 @@ const LOG_PAQUETE_RECIBIDO = "📦 El destinatario recibió el paquete:";
 const ERROR_ENTREGA = "❌ Error en la entrega:";
 
 // Promesa que simula la llegada de un paquete.
-const paquete = new Promise((resolve, reject) => {
+const paquete = new Promise( (resolve, reject) => {
     const tiempoDeEntrega = Math.floor(Math.random() * 3000) + 1000;
     setTimeout(() => {
         const exitoso = Math.random() > 0.2; // 80% de probabilidad de éxito
