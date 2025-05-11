@@ -2,8 +2,11 @@
  * MÓDULO 8: LÓGICA CONDICIONAL EN PLANTILLAS
  *
  * 🧠 Concepto clave:
- * En motores como Liquid, las directivas controlan el flujo de una plantilla.
- * Una de las directivas más comunes es `{% if %}`, que permite mostrar contenido **solo si se cumple una condición**.
+ * Hasta el momento, hemos clasificado directivas, pero no las hemos implementado.
+ * En nuestro contexto, una **directiva** es una instrucción que indica cómo debe procesarse el contenido de la plantilla.
+ * En Liquid, las directivas son bloques de código que permiten controlar el flujo de la plantilla.
+ * Por ejemplo, puedes usar una directiva `for` para iterar sobre una lista de elementos, o una directiva `if` para mostrar contenido condicionalmente.
+ * En este módulo, aprenderás a interpretar una directiva `if`.
  *
  * En los módulos anteriores:
  * - Separaste la plantilla en tokens (`detectarTokensPlantilla`)

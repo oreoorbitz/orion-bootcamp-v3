@@ -15,7 +15,7 @@ export const paquete = new Promise((resolve, reject) => {
             reject(new Error("El paquete se perdió en tránsito"));
         }
     }, tiempoDeEntrega);
-});
+}); 
 
 /**
  * Función que representa al destinatario final recibiendo el paquete.
