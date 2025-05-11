@@ -113,3 +113,44 @@
  *
  * Este ejercicio simula **cómo un navegador construye el DOM real**: un proceso de lectura y anidación basado en apertura y cierre de etiquetas.
  */
+
+/**
+ * 🧩 Tarea opcional: Implementar `querySelector`
+ *
+ * En los navegadores reales, cualquier elemento puede usar `.querySelector()` para buscar elementos descendientes por su `id`, `class`, o nombre de etiqueta.
+ *
+ * En esta tarea opcional, puedes implementar un método `querySelector` en tus nodos de tipo `elemento`.
+
+ * ✅ Ejemplo de HTML de entrada:
+ * ```html
+ * <div id="principal">
+ *   <span class="rojo">uno</span>
+ *   <span>dos</span>
+ * </div>
+ * ```
+
+ * ✅ Ejemplo de llamada esperada:
+ * ```ts
+ * const nodo = construirArbol(tokens);
+ * const resultado = nodo.querySelector('.rojo');
+ * console.log(resultado); // el nodo <span class="rojo">
+ * ```
+
+ * 🎯 Requisitos mínimos del método:
+ * - Soportar `#id` para buscar por atributo `id`
+ * - Soportar `.class` para buscar por atributo `class`
+ * - Opcional: soportar nombres de etiqueta directamente (ej. `'span'`)
+
+ * 🔁 Recomendaciones de implementación:
+ * - Esta función **necesita usar recursividad** para buscar en todo el subárbol.
+ * - Puedes implementarla como método o como función externa.
+ * - Dentro del recorrido, si encuentras un nodo que coincide, devuélvelo de inmediato.
+
+ * 🧠 Si no conoces recursividad, busca estos términos:
+ * - "recorrer árbol con recursividad"
+ * - "recursive tree traversal"
+ * - En español: *recorrer estructura de árbol con funciones recursivas*
+
+ * Esta funcionalidad **no es obligatoria** y no se usará en los siguientes módulos.  
+ * Sin embargo, te ayuda a familiarizarte con cómo funciona internamente el DOM real.
+ */
