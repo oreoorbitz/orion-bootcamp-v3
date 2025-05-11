@@ -96,6 +96,38 @@
  * Si tu implementación actual ya hace el recorrido del arreglo, puedes mantenerla así, pero asegúrate de aplicar `procesarCondicionales()` **antes** de llamar a `renderizarVariables()`.
  *
  * Esta estructura modular será útil cuando agreguemos más directivas como `for`, `else`, etc.
+ *
+ * 📦 Opcional: clasificar tipos de directiva con tipos auxiliares
+ *
+ * Si deseas organizar mejor el tratamiento de directivas, puedes usar una propiedad adicional para especificar el subtipo:
+ *
+ * ```ts
+ * type TipoDirectiva = 'if' | 'endif' | 'for' | 'endfor'
+
+ * interface TokenPlantilla {
+ *   tipo: 'texto' | 'variable' | 'directiva';
+ *   contenido: string;
+ *   directiva?: TipoDirectiva;
+ * }
+ * ```
+ *
+ * O puedes crear una función que detecte el subtipo a partir del contenido:
+ *
+ * ```ts
+ * function clasificarDirectiva(token: TokenPlantilla): TipoDirectiva | null {
+ *   if (token.tipo !== 'directiva') return null;
+ *   if (token.contenido.startsWith('if')) return 'if';
+ *   if (token.contenido === 'endif') return 'endif';
+ *   return null;
+ * }
+ * ```
+ *
+ * Esto puede ayudarte a:
+ * - Evitar errores al interpretar directivas
+ * - Preparar tu código para otras directivas como `for`, `endfor`, `else`, etc.
+ * - Hacer tu flujo de control más legible y escalable
+ *
+ * No es obligatorio, pero si tu código empieza a crecer, puede ayudarte a mantenerlo ordenado.
  */
 
 
