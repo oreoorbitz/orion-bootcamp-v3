@@ -23,7 +23,7 @@
  * ```liquid
  * Hola, {{ nombre }}.
  * {% if admin %}
- * Bienvenido, administrador.
+ * Bienvenido, administrador.R
  * {% endif %}
  * ```
  *
@@ -146,12 +146,15 @@ interface Contexto {
 
 const contexto: Contexto = {
     nombre: 'Carlos',
-    admin: true
+    admin: false
 }
+
+type TipoDirectiva = 'if' | 'endif' | 'for' | 'endfor'
 
 interface TokenPlantilla {
     tipo: 'texto' | 'variable' | 'directiva';
     contenido: string;
+    directiva?: TipoDirectiva;
 }
 
 const extrearTextoDeVariable = (token: string): string => {
@@ -187,6 +190,12 @@ const clasificarTokensPlantilla = (tokens: string[]): TokenPlantilla[] => {
     return result
 }
 
+const procesarCondicionales = (tokens: TokenPlantilla[], contexto: Contexto): TokenPlantilla[] => {
+    const resultado: TokenPlantilla[] = []
+    
+    return resultado
+}
+
 const renderizarVariables = (tokens: TokenPlantilla[], contexto: Contexto): string => {
     const resultado = tokens.map((token) => {
         if (token.tipo == 'variable') {
@@ -195,13 +204,7 @@ const renderizarVariables = (tokens: TokenPlantilla[], contexto: Contexto): stri
                 return contextoVariable
             }
             return ''
-        } else if (token.tipo == 'directiva') {
-            console.log('Directiva:', token.contenido)
-            if(token.contenido.startsWith('if')) {
-                
-            }
-        }
-        else {
+        } else {
             return token.contenido
         }
     })
@@ -210,5 +213,6 @@ const renderizarVariables = (tokens: TokenPlantilla[], contexto: Contexto): stri
 
 const tokens = detectarTokensPlantilla(LIQUID_HTML)
 const tokensClasificados = clasificarTokensPlantilla(tokens)
-const tokensRenderizados = renderizarVariables(tokensClasificados, contexto)
-console.log(tokensRenderizados)
+const tokensFiltrados = procesarCondicionales(tokensClasificados, contexto)
+const resultado = renderizarVariables(tokensFiltrados, contexto)
+console.log(resultado)
