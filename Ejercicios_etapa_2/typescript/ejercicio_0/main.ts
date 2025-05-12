@@ -31,8 +31,14 @@
  * @example
  * edadEnDias(1) // 365
  */
- 
+
 // TODO: Escribir la función aquí
+
+function edadEnDias (anios: number) {
+return anios*365
+}
+
+console.log(edadEnDias(1))
 
 /* ============================
  * EJERCICIO 2: Generar un saludo
@@ -48,7 +54,11 @@
  */
 
 // TODO: Escribir la función aquí
+function cualEsTuNombre (primerNombre: string, apellido: string) {
+  return `Hola, ${primerNombre} ${apellido}!`
+}
 
+console.log(cualEsTuNombre("Paola", "Nava"))
 /* ============================
  * EJERCICIO 3: Múltiples funciones
  * ============================
@@ -65,6 +75,21 @@
  */
 
 // TODO: Escribir las funciones aquí
+function doble(x: number) {
+  return x*2
+}
+
+function triple(x: number) {
+  return x*3
+}
+
+function dobleMasTriple(x: number) {
+  return (doble(x) + triple(x) )
+}
+
+console.log(doble(2))
+console.log(triple(3))
+console.log(dobleMasTriple(2))
 
 /* ============================
  * EJERCICIO 4: Tipado y validaciones
@@ -92,8 +117,22 @@
  */
 
 // TODO: Escribir las funciones aquí
+function checarTipoSeguro (variable: string|number) {
+return `Es un ${typeof(variable)} con valor: ${variable}`
+}
+console.log(checarTipoSeguro(22))
+console.log(checarTipoSeguro("22"))
 
+function convertirANumero (variable: string) {
+ let conversion = Number(variable)
+  if (Number.isNaN(conversion))
+  return "No es un número válido"
+else
+return conversion
+}
 
+console.log(convertirANumero("222"))
+console.log(convertirANumero("t45"))
 /* ============================
  * EJERCICIO 5: Conversión de moneda
  * ============================
@@ -106,9 +145,26 @@
  * @example
  * convertirCentsAMoneda(1234, "USD") // "$12.34"
  */
+const monedas = {
+    USD: "$",
+    EUR: "€",
+    GBP: "£",
+}
 
 // TODO: Escribir la función aquí
+function convertirCentsAMoneda (centavos: number, codigoMoneda: string) {
+  if (centavos < 0) return ('Valor invalido');
 
+   if (!monedas[codigoMoneda]) return ("Codigo de moneda invalido")
+
+  const valorEntero = (centavos/100).toFixed(2);
+  const simboloMoneda = monedas[codigoMoneda]
+
+  return (`${simboloMoneda}${valorEntero}`)
+}
+
+console.log(convertirCentsAMoneda(2566, "USD" ))
+console.log(convertirCentsAMoneda(2566, "USd" ))
 
 /* ============================
  * EJERCICIO 6: Manipulación de arrays
@@ -136,7 +192,18 @@
  */
 
 // TODO: Escribir las funciones aquí
+function accederArray<T> (arr:T[], index: number)  {
+  return arr[index];
+}
 
+console.log(accederArray(['a', 'b', 'c'], 2))
+
+function manipulaArray (arr: (string|number)[], primerElemento: string|number , segundoElemento: string|number , tercerElemento: string|number ): string|number {
+  arr.push(primerElemento, segundoElemento, tercerElemento)
+   return arr[1];
+}
+
+console.log(manipulaArray(['a'], 1, 2, 3))
 
 /* ============================
  * EJERCICIO 7: Métodos personalizados
@@ -164,6 +231,27 @@
  */
 
 // TODO: Escribir las funciones aquí
+function miMapa<T, R>(arreglo: T[], fn: (item:T)=>R): R[] {
+  let resultados: R[] = [];
+  for(let i = 0; i<arreglo.length; i++){
+      resultados.push(fn(arreglo[i]))
+  }
+  return resultados
+}
+
+console.log(miMapa([1, 2, 3], x => x * 2))
+
+function miFilter<T>(arreglo:T[], fn: (item: T) => boolean): T[] {
+  let resultados:T[] = [];
+    for(let i = 0; i<arreglo.length; i++){
+      if (fn(arreglo[i]) === true) {
+        resultados.push(arreglo[i])
+    }
+  }
+  return resultados
+}
+
+console.log(miFilter([1, 2, 3, 4], x => x % 2 === 0))
 
 
 /* ============================
@@ -189,8 +277,38 @@
  */
 
 // TODO: Escribir las funciones/clases aquí
+function crearUsuarioConPrototipo (nombre: string, rol:string) {
+    function UsuarioProto(this: any, nombre:string, rol:string) {
+      this.nombre = nombre
+      this.rol = rol
+    }
+    UsuarioProto.prototype.saludar = function () {
+    return `Hola, soy ${this.nombre} y soy ${this.rol}.`
+  }
+
+  return new (UsuarioProto as any)(nombre, rol);
+}
+
+const usuarioProto = crearUsuarioConPrototipo("Luis", "admin");
+console.log(usuarioProto)
 
 
+class Usuario {
+  nombre: string;
+  rol:string;
+
+ constructor(nombre: string, rol:string) {
+  this.nombre = nombre;
+  this.rol = rol;
+ }
+
+ saludar(): string {
+  return `Hola, soy ${this.nombre} y soy ${this.rol}`;
+ }
+}
+
+const usuarioClase = new Usuario("Ana", "cliente")
+console.log(usuarioClase)
 /* ============================
  * EJERCICIO 9: Promesas y async/await
  * ============================
@@ -214,3 +332,68 @@
  */
 
 // TODO: Escribir las funciones aquí
+const CONTENIDO_LIBRO = "libro";
+const ESTADO_EN_TRANSITO = "en tránsito";
+const ERROR_PAQUETE_PERDIDO = "El paquete se perdió en tránsito";
+
+const LOG_BODEGA = "📍 En la bodega central: revisando el paquete...";
+const LOG_CAMINO = "🚚 En camino al centro de distribución...";
+const LOG_ENTREGA = "📬 Entregando al destinatario...";
+const LOG_FIN = "🔁 Fin del proceso logístico.";
+const LOG_PAQUETE_RECIBIDO = "📦 El destinatario recibió el paquete:";
+
+const ERROR_ENTREGA = "❌ Error en la entrega:";
+
+type Paquete = {
+  contenido: string;
+  estado: string;
+  tiempo: number;
+}
+
+const paquete: Promise<Paquete> = new Promise((resolve, reject) => {
+    const tiempoDeEntrega = Math.floor(Math.random() * 3000) + 1000;
+    setTimeout(() => {
+        const exitoso = Math.random() > 0.2; // 80% de probabilidad de éxito
+        if (exitoso) {
+            resolve(
+              {
+                contenido: CONTENIDO_LIBRO,
+                estado: ESTADO_EN_TRANSITO,
+                tiempo: tiempoDeEntrega
+              }
+            );
+        } else {
+            reject(new Error(ERROR_PAQUETE_PERDIDO));
+        }
+    }, tiempoDeEntrega);
+
+});
+
+const entregarAlDestinatario = (paquete: Paquete): void => {
+    paquete.estado = "entregado";
+    console.log(`${LOG_PAQUETE_RECIBIDO} ${CONTENIDO_LIBRO}. Estado: ${paquete.estado}`);
+};
+
+const procesarEnvioAsync = async (paquete: Promise<Paquete>): Promise<void> => {
+    // TODO: Implementa el proceso logístico usando async/await, try/catch/finally.
+  try {
+    const paqueteRecibido = await paquete;
+    paqueteRecibido.estado = "revisado";
+    console.log(`${LOG_BODEGA}, contenido: ${CONTENIDO_LIBRO}. Estado: ${paqueteRecibido.estado}`);
+
+    await new Promise(resolve => {
+      paqueteRecibido.estado = "centro de distribución";
+      console.log(`${LOG_CAMINO}, contenido: ${CONTENIDO_LIBRO}. Estado: ${ESTADO_EN_TRANSITO}`);
+      resolve(paqueteRecibido)
+    });
+
+    entregarAlDestinatario(paqueteRecibido);
+
+  } catch (error: any) {
+        console.error(`${ERROR_ENTREGA} ${error.message}`);
+    } finally {
+        console.log(LOG_FIN);
+    }
+};
+
+procesarEnvioAsync(paquete);
