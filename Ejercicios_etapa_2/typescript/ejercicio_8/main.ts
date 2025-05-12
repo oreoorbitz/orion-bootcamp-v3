@@ -129,3 +129,68 @@
  *
  * No es obligatorio, pero si tu código empieza a crecer, puede ayudarte a mantenerlo ordenado.
  */
+
+/**
+ * 🔁 Tarea opcional (no requerida para los próximos módulos):
+ *
+ * Si quieres acercarte más a la sintaxis real de Liquid, puedes implementar operadores lógicos simples:
+ *
+ * - Comparaciones con `==`  
+ *   Ejemplo: `{% if producto == 'camisa' %}`
+ *
+ * - Palabras clave `and` / `or`  
+ *   Ejemplo: `{% if admin and activo %}`
+ *
+ * ✅ Esto implicaría:
+ * - Analizar más de un fragmento en `contenido` del token tipo `if`
+ * - Evaluar la condición como una mini expresión lógica
+ *
+ * No necesitas un parser complejo, puedes empezar con divisiones y verificaciones simples:
+ * ```ts
+ * if (cond.includes('==')) {
+ *   const [clave, valor] = cond.split('==').map(x => x.trim())
+ *   return contexto[clave] === valor.replace(/['"]/g, '')
+ * }
+ * ```
+ *
+ * Este comportamiento no será usado en los próximos módulos,  
+ * pero si decides implementarlo, obtendrás más práctica con la lógica real de Shopify.
+ */
+
+/**
+ * 🧩 Tarea opcional adicional: Soporte para `{% else %}` y `{% elsif %}`
+ *
+ * En Liquid real puedes escribir:
+ * ```liquid
+ * {% if admin %}
+ *   Bienvenido, administrador
+ * {% elsif invitado %}
+ *   Bienvenido, invitado
+ * {% else %}
+ *   Acceso denegado
+ * {% endif %}
+ * ```
+ *
+ * Para esto deberías:
+ * 1. Detectar bloques `{% if %}`, `{% elsif %}`, `{% else %}`, `{% endif %}`
+ * 2. Agruparlos en una estructura lógica
+ * 3. Evaluar las condiciones en orden y retornar solo la rama activa
+ *
+ * Puedes hacer esto con un bucle que, una vez que encuentra un `if`,  
+ * recopila todos los tokens hasta el `endif`, separando las ramas por sus directivas.
+ *
+ * Sugerencia de estructura interna para analizar:
+ * ```ts
+ * {
+ *   tipo: 'condicional',
+ *   ramas: [
+ *     { tipo: 'if', condicion: 'admin', tokens: [...] },
+ *     { tipo: 'elsif', condicion: 'invitado', tokens: [...] },
+ *     { tipo: 'else', tokens: [...] }
+ *   ]
+ * }
+ * ```
+ *
+ * Esta implementación no es trivial, pero se alinea con cómo funciona realmente Liquid en Shopify.
+ * Si decides implementarlo, tendrás una base mucho más robusta para renderizado dinámico.
+ */
