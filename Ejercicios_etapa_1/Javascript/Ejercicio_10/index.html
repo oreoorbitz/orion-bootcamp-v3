@@ -6,29 +6,30 @@
     <title>Sitio</title>
 </head>
 <body>
+   <p id="mensaje" >
+
+   </p>
+   <p id="mensaje-importante" ></p>
     <script>
-        new Promise(function (resolve, reject) {
-          setTimeout(() => resolve(1), 1000);
-        })
-          .then(function (result) {
-            alert(result); // 1
+      const elementoMensaje = document.querySelector("#mensaje")
+      const elementoMensajeImp = document.querySelector("#mensaje-importante")
 
-            return new Promise((resolve, reject) => { // (*)
-              setTimeout(() => resolve(result * 2), 1000);
-            });
-          })
-          .then(function (result) { // (**)
 
-            alert(result); // 2
+     async function injectar() {
+        const stringJson = '{"mensaje": "hola eres gay?" }'
+        try {
+                  const objJson = await JSON.parse(stringJson);
+        elementoMensaje.innerText = objJson.mensaje
 
-            return new Promise((resolve, reject) => {
-              setTimeout(() => resolve(result * 2), 1000);
-            });
-          })
-          .then(function (result) {
+        } catch (error) {
+        elementoMensaje.innerText = "estoy feliz, me mie"
+        }
 
-            alert(result); // 4
-          });
+        elementoMensajeImp.innerText = "Yo también soy gayyy"
+
+
+      }
+      injectar()
     </script>
 </body>
 </html>

@@ -19,11 +19,18 @@ const paquete = new Promise( (resolve, reject) => {
     setTimeout(() => {
         const exitoso = Math.random() > 0.2; // 80% de probabilidad de éxito
         if (exitoso) {
-            resolve({ contenido: CONTENIDO_LIBRO, estado: ESTADO_EN_TRANSITO });
+            resolve(
+              {
+                contenido: CONTENIDO_LIBRO,
+                estado: ESTADO_EN_TRANSITO,
+                tiempo: tiempoDeEntrega
+              }
+            );
         } else {
             reject(new Error(ERROR_PAQUETE_PERDIDO));
         }
     }, tiempoDeEntrega);
+
 });
 
 /**
@@ -33,7 +40,7 @@ const paquete = new Promise( (resolve, reject) => {
  */
 const entregarAlDestinatario = (paquete) => {
     paquete.estado = "entregado";
-    console.log(`${LOG_PAQUETE_RECIBIDO} ${paquete.contenido}. Estado: ${paquete.estado}`);
+    console.log(`${LOG_PAQUETE_RECIBIDO} ${CONTENIDO_LIBRO}. Estado: ${paquete.estado}`);
 };
 
 /**
@@ -47,9 +54,29 @@ const entregarAlDestinatario = (paquete) => {
  *  - En caso de error, mostrar un mensaje de error.
  *  - Finalmente, mostrar el mensaje de fin del proceso logístico.
  */
-const procesarEnvio = () => {
+const procesarEnvio = (paquete) => {
     // TODO: Implementa el proceso logístico usando .then(), .catch() y .finally().
-};
+  paquete
+  .then(paqueteRecibido => {
+    paqueteRecibido.estado = "Revisado en bodega";
+    console.log(`${LOG_BODEGA}, contenido: ${CONTENIDO_LIBRO}. Estado: ${paqueteRecibido.estado} tiempo: ${paquete.tiempoDeEntrega}`);
+
+    return new Promise(resolve => {
+      paqueteRecibido.estado = "Centro de distribución";
+      console.log(`${LOG_CAMINO}, contenido: ${CONTENIDO_LIBRO}. Estado: ${ESTADO_EN_TRANSITO} tiempo: ${paquete.tiempoDeEntrega}`);
+      resolve(paqueteRecibido);
+    });
+  })
+  .then(paqueteDistribuido => {
+    entregarAlDestinatario(paqueteDistribuido)
+  })
+  .catch(error => {
+    console.log(`${ERROR_ENTREGA}, contenido: ${CONTENIDO_LIBRO}. Estado: ${error.message} tiempo: ${paquete.tiempoDeEntrega}`)
+  })
+  .finally(() => {
+    console.log(`${LOG_FIN}`);
+  });
+}
 
 /**
  * procesarEnvioAsync
@@ -61,6 +88,26 @@ const procesarEnvio = () => {
  *  - En el bloque catch, captura el error e imprime un mensaje de error.
  *  - En el bloque finally, imprime el mensaje de fin del proceso logístico.
  */
-const procesarEnvioAsync = async () => {
+const procesarEnvioAsync = async (paquete) => {
     // TODO: Implementa el proceso logístico usando async/await, try/catch/finally.
+  try {
+    const paqueteRecibido = await paquete;
+    paqueteRecibido.estado = "revisado";
+    console.log(`${LOG_BODEGA}, contenido: ${CONTENIDO_LIBRO}. Estado: ${paqueteRecibido.estado}`);
+
+    await new Promise(resolve => {
+      paqueteRecibido.estado = "centro de distribución";
+      console.log(`${LOG_CAMINO}, contenido: ${CONTENIDO_LIBRO}. Estado: ${ESTADO_EN_TRANSITO}`);
+      resolve(paqueteRecibido)
+    });
+
+    entregarAlDestinatario(paqueteRecibido);
+
+  } catch (error) {
+        console.error(`${ERROR_ENTREGA} ${error.message}`);
+    } finally {
+        console.log(LOG_FIN);
+    }
 };
+
+procesarEnvioAsync(paquete);
