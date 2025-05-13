@@ -4,7 +4,7 @@
  * 🧠 Concepto clave:
  * HTML es el lenguaje que usan los navegadores para construir páginas web. Antes de que un navegador (o nuestro programa)
  * pueda procesar un HTML, primero necesita separar el texto en "piezas significativas". A este proceso se le llama *tokenización*.
- * 
+ *
  * Por ejemplo, el navegador necesita saber qué parte de un HTML es una etiqueta, y qué parte es solo texto.
  * Este es el primer paso para poder interpretar o transformar contenido HTML en JavaScript.
  *
@@ -32,3 +32,11 @@
  * - Usa expresiones regulares (`.match`, `.split`) para separar texto y etiquetas.
  * - Este módulo es el primer paso para que tu programa entienda HTML como si fuera un navegador.
  */
+function tokenizarHTML (html: string): string[] {
+  const regex: RegExp = /<\/?[^>]+>|[^<>]+/g
+  return html.match(regex) ?? []
+}
+
+const entrada: string = "<div>Hello <span>World</span></div>";
+const resultado: string[] = tokenizarHTML(entrada);
+console.log(resultado);
