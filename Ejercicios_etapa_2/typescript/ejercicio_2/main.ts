@@ -46,3 +46,22 @@
  * Consejo:
  * - Este paso es equivalente a que el navegador reconozca qué etiquetas están empezando, terminando o actuando solas.
  */
+function clasificarTokens(tokens: string[]): any[] {
+  const regexApertura: RegExp = /^<([a-zA-Z0-9]+)>$/;
+  const regexCierre: RegExp = /^<\/([a-zA-Z0-9]+)>$/;
+
+   return tokens.map(token => {
+        if (regexApertura.test(token)) {
+            return { tipo: 'apertura', nombre: token.match(regexApertura)?.[1] ?? null, contenido: null };
+        }
+        if (regexCierre.test(token)) {
+            return { tipo: 'cierre', nombre: token.match(regexCierre)?.[1] ?? null, contenido: null };
+        }
+
+        return { tipo: 'texto', nombre: null, contenido: token };
+    });
+}
+
+const entrada: string[] = ["<div>", "Hello ", "<span>", "World", "</span>", "</div>"];
+const resultado = clasificarTokens(entrada);
+console.log(resultado);
