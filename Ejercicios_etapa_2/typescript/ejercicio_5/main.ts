@@ -38,3 +38,10 @@
  * - Usa `.split()` con expresiones regulares o `.match()` con `/({{.*?}}|{%.*?%})/g`
  * - No interpretes aún el significado de los bloques — solo identifícalos.
  */
+function detectarTokensPlantilla(entrada: string): string[] {
+  const regex: RegExp = /({{.*?}}|{%.*?%})/g;
+  return entrada.split(regex)
+}
+
+const entrada: string = "Hola, {{ nombre }}. {% if admin %}Eres administrador.{% endif %}";
+console.log(detectarTokensPlantilla(entrada))

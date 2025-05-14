@@ -16,7 +16,7 @@
  * - `renderizarVariables()` tomó un arreglo de tokens y los transformó en texto final,
  *   reemplazando `{{ variable }}` por valores reales del contexto
  *
- * Pero hay un detalle: `renderizarVariables()` probablemente recorre **todo** el arreglo de tokens.  
+ * Pero hay un detalle: `renderizarVariables()` probablemente recorre **todo** el arreglo de tokens.
  * Ahora vamos a introducir una etapa intermedia, donde se filtran los tokens antes de renderizar.
  *
  * ✅ Ejemplo de plantilla original:
@@ -96,6 +96,88 @@
  * Si tu implementación actual ya hace el recorrido del arreglo, puedes mantenerla así, pero asegúrate de aplicar `procesarCondicionales()` **antes** de llamar a `renderizarVariables()`.
  *
  * Esta estructura modular será útil cuando agreguemos más directivas como `for`, `else`, etc.
+*/
+type TipoTokenPlantilla = 'texto' | 'variable' | 'directiva'
+
+interface TokenPlantilla {
+ tipo: TipoTokenPlantilla;
+ contenido: string;
+}
+
+enum TipoDirectiva {
+  If = 'if',
+  Endif = 'endif',
+  For = 'for',
+  EndFor = 'endfor'
+}
+
+
+function procesarCondicionales(tokens: TokenPlantilla[], contexto: Record<string, any>): TokenPlantilla[] {
+ let resultado: TokenPlantilla[] = [];
+ let i = 0;
+
+ while (i< tokens.length) {
+  let token = tokens[i]
+  if (token.tipo === 'directiva' && token.contenido.startsWith('if')) {
+    //Extraer el nombre de la variable
+    let partes = token.contenido.split(/\s+/) // también se puede usar como .split("if ") esto eliminiaría esta parte
+    let nombreVariable = partes[1] || "";
+
+    //Buscar índice de cierre endif
+    let j = i + 1;
+    //En programación usamos j después de i
+    while (j < tokens.length) {
+      if (tokens[j].tipo === 'directiva' && tokens[j].contenido === 'endif') {
+        break
+      }
+      j += 1;
+    }
+    // validando que se encontró un{% endif %}
+    if (j >= tokens.length) {
+      throw new Error("Error de sintaxis: {% if %} sin {% endif %}");
+    }
+
+    let condicion = contexto[nombreVariable] ?? false;
+    if (condicion) {
+      for (let k = i + 1; k < j; k++ ) {
+        resultado.push({...tokens[k] });
+      }
+
+    }
+
+      i = j; //saltar al endif
+    } else {
+      resultado.push(token);
+    }
+
+    i+= 1;
+ }
+
+  return resultado
+ }
+
+ const tokens: TokenPlantilla[] = [
+  { tipo: "texto", contenido: "Hola, " },
+  { tipo: "variable", contenido: "nombre" },
+  { tipo: "texto", contenido: "." },
+  { tipo: "directiva", contenido: "if admin" },
+  { tipo: "texto", contenido: "Bienvenido, administrador." },
+  { tipo: "directiva", contenido: "endif" }
+ ]
+
+const contexto = {
+  admin: false // Cambia a false para probar el caso contrario
+};
+
+const tokensFiltrados = procesarCondicionales(tokens, contexto);
+
+
+console.log(tokensFiltrados);
+
+
+
+
+/*
  *
  * 📦 Opcional: clasificar tipos de directiva con tipos auxiliares
  *
@@ -135,10 +217,10 @@
  *
  * Si quieres acercarte más a la sintaxis real de Liquid, puedes implementar operadores lógicos simples:
  *
- * - Comparaciones con `==`  
+ * - Comparaciones con `==`
  *   Ejemplo: `{% if producto == 'camisa' %}`
  *
- * - Palabras clave `and` / `or`  
+ * - Palabras clave `and` / `or`
  *   Ejemplo: `{% if admin and activo %}`
  *
  * ✅ Esto implicaría:
@@ -153,7 +235,7 @@
  * }
  * ```
  *
- * Este comportamiento no será usado en los próximos módulos,  
+ * Este comportamiento no será usado en los próximos módulos,
  * pero si decides implementarlo, obtendrás más práctica con la lógica real de Shopify.
  */
 
@@ -176,7 +258,7 @@
  * 2. Agruparlos en una estructura lógica
  * 3. Evaluar las condiciones en orden y retornar solo la rama activa
  *
- * Puedes hacer esto con un bucle que, una vez que encuentra un `if`,  
+ * Puedes hacer esto con un bucle que, una vez que encuentra un `if`,
  * recopila todos los tokens hasta el `endif`, separando las ramas por sus directivas.
  *
  * Sugerencia de estructura interna para analizar:
