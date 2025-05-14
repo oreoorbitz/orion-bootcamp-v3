@@ -17,7 +17,7 @@
  * ```liquid
  * Lista: 
  * {% for fruta in frutas %}
- *   {% if fruta != 'uva' %}
+ *   {% if fruta %}
  *     {{ fruta }} 
  *   {% endif %}
  * {% endfor %}
