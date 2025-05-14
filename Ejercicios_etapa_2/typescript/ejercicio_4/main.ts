@@ -108,7 +108,7 @@
  *
  * Consejo:
  * - No tienes que volver a tokenizar el HTML aquí. ¡El arreglo de tokens ya viene preparado del módulo anterior!
- * - Usa pseudocódigo si sientes que te pierdes:  
+ * - Usa pseudocódigo si sientes que te pierdes:
  *   "Si apertura → crear hijo → moverse abajo... Si cierre → volver arriba..."
  *
  * Este ejercicio simula **cómo un navegador construye el DOM real**: un proceso de lectura y anidación basado en apertura y cierre de etiquetas.
@@ -151,6 +151,119 @@
  * - "recursive tree traversal"
  * - En español: *recorrer estructura de árbol con funciones recursivas*
 
- * Esta funcionalidad **no es obligatoria** y no se usará en los siguientes módulos.  
+ * Esta funcionalidad **no es obligatoria** y no se usará en los siguientes módulos.
  * Sin embargo, te ayuda a familiarizarte con cómo funciona internamente el DOM real.
  */
+
+enum TipoToken {
+ Apertura = "apertura",
+ Cierre = "cierre",
+ Autocierre = "autocierre",
+ Texto = "texto"
+};
+
+interface Token {
+ tipo: TipoToken | null;
+ nombre: string | null;
+ contenido: string | null;
+ atributos: Record<string, string> | null;
+};
+
+interface NodoElemento {
+ tipo: "elemento";
+ nombre: string;
+ atributos: Record<string, string>;
+ hijos: Nodo[];
+};
+
+interface NodoTexto {
+ tipo: "texto";
+ contenido: string;
+};
+
+type Nodo = NodoElemento | NodoTexto;
+
+function construirArbol(tokens: Token[]): Nodo {
+    const stack: NodoElemento[] = []; // Pila para seguir la jerarquía
+    let root: NodoElemento | null = null; // Nodo raíz
+
+    tokens.forEach(token => {
+        if (token.tipo === TipoToken.Apertura) {
+            const nodo: NodoElemento = {
+                tipo: "elemento",
+                nombre: token.nombre!,
+                atributos: token.atributos ?? {},
+                hijos: []
+            };
+
+            if (stack.length > 0) {
+                stack[stack.length - 1].hijos.push(nodo); // Agregar como hijo al nodo actual
+            } else {
+                root = nodo; // Establecer el nodo raíz
+            }
+
+            stack.push(nodo); // Agregar el nodo a la pila
+
+        } else if (token.tipo === TipoToken.Cierre) {
+            stack.pop(); // Cerrar nodo y volver al padre
+
+        } else if (token.tipo === TipoToken.Texto) {
+            const nodo: NodoTexto = {
+                tipo: "texto",
+                contenido: token.contenido!
+            };
+
+            if (stack.length > 0) {
+                stack[stack.length - 1].hijos.push(nodo);
+            }
+        }
+    });
+
+    return root!;
+}
+
+
+
+
+function querySelector(nodo: NodoElemento, selector: string): NodoElemento | null {
+    if (selector.startsWith("#") && nodo.atributos.id === selector.slice(1)) {
+        return nodo;
+    }
+    if (selector.startsWith(".") && nodo.atributos.class === selector.slice(1)) {
+        return nodo;
+    }
+    if (selector === nodo.nombre) {
+        return nodo;
+    }
+
+    for (const hijo of nodo.hijos) {
+        if (hijo.tipo === "elemento") {
+            const resultado = querySelector(hijo, selector);
+            if (resultado) return resultado;
+        }
+    }
+
+    return null;
+}
+
+
+const tokens: Token[] = [
+    { tipo: TipoToken.Apertura, nombre: "div", contenido: null, atributos: { id: "contenedor" } },
+    { tipo: TipoToken.Texto, nombre: null, contenido: "Bienvenidos a mi sitio", atributos: null },
+    { tipo: TipoToken.Apertura, nombre: "section", contenido: null, atributos: { class: "principal" } },
+    { tipo: TipoToken.Apertura, nombre: "article", contenido: null, atributos: { class: "destacado" } },
+    { tipo: TipoToken.Texto, nombre: null, contenido: "Últimas noticias", atributos: null },
+    { tipo: TipoToken.Cierre, nombre: "article", contenido: null, atributos: null },
+    { tipo: TipoToken.Cierre, nombre: "section", contenido: null, atributos: null },
+    { tipo: TipoToken.Cierre, nombre: "div", contenido: null, atributos: null }
+];
+
+const arbol = construirArbol(tokens);
+console.log(JSON.stringify(arbol, null, 2)); // Para ver la estructura en la consola
+
+// Pruebas con `querySelector`
+console.log("Buscando #contenedor:", querySelector(arbol, "#contenedor"));
+console.log("Buscando .principal:", querySelector(arbol, ".principal"));
+console.log("Buscando .destacado:", querySelector(arbol, ".destacado"));
+console.log("Buscando section:", querySelector(arbol, "section"));
+console.log("Buscando article:", querySelector(arbol, "article"));
