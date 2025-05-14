@@ -1,64 +1,48 @@
-// 🧪 MiniEjemplo 4: Corrigiendo predicciones incorrectas de código JavaScript
+// 🧪 Mini ejemplo 3: Usar doble cursor para extraer contenido entre dos marcadores
 
-// Tenemos un bloque de texto con predicciones de código en Markdown.
-// Algunas predicciones son incorrectas. Tu tarea es:
-// 1. Encontrar los bloques de código de una sola línea con ```js ...```
-// 2. Identificar el resultado que el texto dice que produce ese código
-// 3. Evaluar el código real usando `eval()`
-// 4. Reemplazar la predicción con el resultado correcto
+const datos = ['a', 'b', 'inicio', 'x', 'y', 'z', 'fin', 'c'];
+const resultado = [];
 
-// ✅ Qué es `eval()`:
-// Eval toma un string como entrada y lo ejecuta como código JavaScript.
-// Ejemplo: eval("2 + 2") devuelve 4.
-
-// ❗ No uses `eval()` con datos no confiables (como usuarios externos).
-// En este caso es seguro porque tú controlas el texto.
-
-// 📦 Texto de entrada:
-const texto = `
-Aquí hay dos fragmentos de código evaluados:
-
-\`\`\`js 2 > 4\`\`\` → el resultado es: \`true\` ❌ (esto es falso)
-
-\`\`\`js 1 + 1 === 2\`\`\` → el resultado es: \`true\` ✅ (esto es correcto)
-`
-
-// 🎯 Objetivo final:
-// Corregir la predicción en el primer caso. El resultado debe quedar así:
-// \`\`\`js 2 > 4\`\`\` → el resultado es: \`false\`
-
-// ✅ Solución sugerida:
-const corregirTexto = (entrada: string): string => {
-  // Buscar todos los bloques de código como ```js ...```
-  const regex = /```js (.*?)``` → el resultado es: `(.+?)`/g
-  let resultado = entrada
-
-  for (const match of entrada.matchAll(regex)) {
-    const codigo = match[1].trim()
-    const valorActual = match[2].trim()
-
-    // Evaluamos el código real
-    let valorEvaluado
-    try {
-      valorEvaluado = eval(codigo)
-    } catch {
-      valorEvaluado = '⚠️ error de evaluación'
+for (let i = 0; i < datos.length; i++) {
+  if (datos[i] === 'inicio') {
+    // 1️⃣ Encuentra el final con otro cursor
+    let j = i + 1;
+    while (j < datos.length && datos[j] !== 'fin') {
+      j++;
     }
 
-    // Reemplazamos el valor incorrecto
-    resultado = resultado.replace(
-      `\`\`\`js ${codigo}\`\`\` → el resultado es: \`${valorActual}\``,
-      `\`\`\`js ${codigo}\`\`\` → el resultado es: \`${valorEvaluado}\``
-    )
-  }
+    // 2️⃣ Extrae el contenido entre 'inicio' y 'fin' usando un tercer cursor k
+    for (let k = i + 1; k < j; k++) {
+      resultado.push(datos[k]);
+    }
 
-  return resultado
+    // 3️⃣ Salta hasta después de 'fin'
+    i = j; // El próximo i++ continuará después de 'fin'
+  } else {
+    resultado.push(datos[i]);
+  }
 }
 
-// 🧪 Prueba
-console.log(corregirTexto(texto))
+console.log(resultado); // ["a", "b", "x", "y", "z", "c"]
 
-// 📌 Tu tarea:
-// - Cambia el texto para agregar más predicciones incorrectas
-// - Asegúrate de que `corregirTexto()` las corrija
-// - No cambies el texto manualmente — confía en tu código
+// 🛠️ Tarea opcional: reemplaza el bucle `for` con `.slice(i + 1, j)`
+// Resultado esperado:
+const datosDos = ['a', 'b', 'inicio', 'x', 'y', 'z', 'fin', 'c'];
+const resultadoDos = [];
+
+for (let i = 0; i < datosDos.length; i++) {
+  if (datosDos[i] === 'inicio') {
+    let j = i + 1;
+    while (j < datosDos.length && datosDos[j] !== 'fin') {
+      j++;
+    }
+
+    const segmento = datosDos.slice(i + 1, j);
+    resultadoDos.push(...segmento);
+    i = j;
+  } else {
+    resultadoDos.push(datosDos[i]);
+  }
+}
+
+console.log(resultadoDos); // ["a", "b", "x", "y", "z", "c"]
