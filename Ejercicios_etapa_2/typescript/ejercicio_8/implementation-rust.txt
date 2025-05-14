@@ -1,0 +1,67 @@
+#[derive(Debug, Clone)]
+enum TipoDirectiva {
+    If,
+    EndIf,
+    For,
+    EndFor,
+}
+
+#[derive(Debug, Clone)]
+enum TipoToken {
+    Texto,
+    Variable,
+    Directiva,
+}
+
+#[derive(Debug, Clone)]
+struct TokenPlantilla {
+    tipo: TipoToken,
+    contenido: String,
+    directiva: Option<TipoDirectiva>,
+}
+
+use std::collections::HashMap;
+
+fn procesar_condicionales(
+    tokens: Vec<TokenPlantilla>,
+    contexto: HashMap<String, bool>,
+) -> Vec<TokenPlantilla> {
+    let mut resultado = Vec::new();
+    let mut i = 0;
+
+    while i < tokens.len() {
+        let token = &tokens[i];
+
+        if token.tipo == TipoToken::Directiva && token.contenido.starts_with("if") {
+            // Extraer el nombre de la variable (por ejemplo: "if admin")
+            let partes: Vec<&str> = token.contenido.split_whitespace().collect();
+            let nombre_variable = partes.get(1).unwrap_or(&"");
+
+            // Buscar índice de cierre endif
+            let mut j = i + 1;
+            // En programacion, usamos j despues de i( de index) porque j es la proxima letra en el alphabeto, y nosotros programadores somos muy inteligentes.
+            while j < tokens.len() {
+                if tokens[j].tipo == TipoToken::Directiva && tokens[j].contenido == "endif" {
+                    break;
+                }
+                j += 1;
+            }
+
+            let condicion = contexto.get(*nombre_variable).copied().unwrap_or(false);
+
+            if condicion {
+                for k in (i + 1)..j {
+                    resultado.push(tokens[k].clone());
+                }
+            }
+
+            i = j; // saltar al endif
+        } else {
+            resultado.push(token.clone());
+        }
+
+        i += 1;
+    }
+
+    resultado
+}
