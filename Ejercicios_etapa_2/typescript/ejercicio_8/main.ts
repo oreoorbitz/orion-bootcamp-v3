@@ -214,12 +214,25 @@ const contexto: Contexto = {
     admin: false
 }
 
-type TipoDirectiva = 'if' | 'endif' | 'for' | 'endfor'
+type TipoDirectiva = 'if' | 'elsif' | 'else' | 'endif' | 'for' | 'endfor'
 
-interface TokenPlantilla {
-    tipo: 'texto' | 'variable' | 'directiva';
-    contenido: string;
-    directiva?: TipoDirectiva;
+type TokenPlantilla = TokenTexto | TokenVariable | TokenDirectiva
+
+interface TokenTexto {
+  tipo: 'texto'
+  contenido: string
+}
+
+interface TokenVariable {
+  tipo: 'variable'
+  contenido: string
+}
+
+interface TokenDirectiva {
+  tipo: 'directiva'
+  contenido: string
+  directiva: TipoDirectiva
+  expresion?: string
 }
 
 const extrearTextoDeVariable = (token: string): string => {
@@ -255,10 +268,44 @@ const clasificarTokensPlantilla = (tokens: string[]): TokenPlantilla[] => {
     return result
 }
 
+const classifcarDirectiva = (token: TokenPlantilla): TokenDirectiva | TokenTexto  => {
+    if (token.tipo !== 'directiva') return token as TokenTexto
+
+    const contenido = token.contenido.trim()
+  
+    if (contenido.startsWith('if ')) {
+      return { ...token, directiva: 'if', expresion: contenido.slice(3).trim() } 
+    }
+  
+    if (contenido.startsWith('elsif ')) {
+      return { ...token, directiva: 'elsif', expresion: contenido.slice(6).trim() }
+    }
+  
+    if (contenido === 'else') return { ...token, directiva: 'else' }
+    if (contenido === 'endif') return { ...token, directiva: 'endif' }
+  
+    return token
+}
+
 const procesarCondicionales = (tokens: TokenPlantilla[], contexto: Contexto): TokenPlantilla[] => {
     const resultado: TokenPlantilla[] = []
+
+    for(let i = 0; i < tokens.length; i++) {
+        const token = tokens[i]
+        const tokenClasificado = classifcarDirectiva(token)
+
+        if(tokenClasificado.tipo === 'directiva' && tokenClasificado.directiva === 'if' ) {
+            let j = i + 1
+            while(j < tokens.length && !(tokens[j].tipo === 'directiva' && tokens[j].contenido !== 'endif')) {
+                j++
+            }
+
+            const bloqueInterno = tokens.slice(i + 1, j)
+
+        }
+    }
     
-    return resultado
+    return tokens
 }
 
 const renderizarVariables = (tokens: TokenPlantilla[], contexto: Contexto): string => {
