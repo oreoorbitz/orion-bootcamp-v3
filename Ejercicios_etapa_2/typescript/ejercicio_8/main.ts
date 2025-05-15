@@ -276,3 +276,106 @@ console.log(tokensFiltrados);
  * Esta implementación no es trivial, pero se alinea con cómo funciona realmente Liquid en Shopify.
  * Si decides implementarlo, tendrás una base mucho más robusta para renderizado dinámico.
  */
+// Paso 1. Clasificación de tipos de directiva:Agregamos un campo directiva opcional dentro de TokenPlantilla y una función clasificarDirectiva().
+type TipoTokenPlantilla1 = 'texto' | 'variable' | 'directiva';
+type TipoDirectiva1 = 'if' | 'endif' | 'elsif' | 'else' | 'for' | 'endfor';
+
+interface TokenPlantilla1 {
+    tipo: TipoTokenPlantilla1;
+    contenido: string;
+    directiva?: TipoDirectiva1;
+}
+
+function clasificarDirectiva(token: TokenPlantilla1): TipoDirectiva1 | null {
+    if (token.tipo !== 'directiva') return null;
+    if (token.contenido.startsWith('if')) return 'if';
+    if (token.contenido.startsWith('elsif')) return 'elsif';
+    if (token.contenido === 'else') return 'else';
+    if (token.contenido === 'endif') return 'endif';
+    return null;
+}
+
+//Paso 2. Evaluar expresiones simples (==, and, or). Esta función analiza si una condición tiene comparaciones (==) o lógica (and, or).
+function evaluarCondicion(expresion: string, contexto: Record<string, any>): boolean {
+    // Manejo de comparaciones (`==`)
+    if (expresion.includes('==')) {
+        const [clave, valorEsperado] = expresion.split('==').map(texto => texto.trim());
+        return contexto[clave] === valorEsperado.replace(/['"]/g, '');
+    }
+
+    // Manejo de operadores `and` y `or`
+    if (expresion.includes('and')) {
+        return expresion.split('and').every(variable => contexto[variable.trim()] === true);
+    }
+
+    if (expresion.includes('or')) {
+        return expresion.split('or').some(variable => contexto[variable.trim()] === true);
+    }
+
+    // Condición simple sin operadores
+    return contexto[expresion.trim()] ?? false;
+}
+
+
+//Paso 3. Manejo de {% else %} y {% elsif %}. Ahora ajustamos procesarCondicionales() para manejar múltiples ramas de if, elsif y else.
+function procesarCondicionales1(tokens: TokenPlantilla1[], contexto: Record<string, any>): TokenPlantilla1[] {
+    let resultado: TokenPlantilla1[] = [];
+    let i = 0;
+
+    while (i < tokens.length) {
+        let token = tokens[i];
+
+        if (token.tipo === 'directiva' && token.contenido.startsWith('if')) {
+            let partes = token.contenido.split(/\s+/);
+            let condicion = partes.slice(1).join(' '); // Extraer toda la condición
+            let evaluarIf = evaluarCondicion(condicion, contexto);
+
+            let j = i + 1, estadoActual = evaluarIf, bloqueActivo: TokenPlantilla1[] = [];
+
+            while (j < tokens.length) {
+                let siguiente = tokens[j];
+
+                if (siguiente.tipo === 'directiva') {
+                    if (siguiente.contenido.startsWith('elsif')) {
+                        if (!estadoActual) {
+                            let partesElsif = siguiente.contenido.split(/\s+/);
+                            estadoActual = evaluarCondicion(partesElsif.slice(1).join(' '), contexto);
+                        }
+                    } else if (siguiente.contenido === 'else') {
+                        estadoActual = !estadoActual; // Activar else solo si ninguna condición anterior fue verdadera
+                    } else if (siguiente.contenido === 'endif') {
+                        break;
+                    }
+                } else if (estadoActual) {
+                    bloqueActivo.push(siguiente);
+                }
+                j++;
+            }
+
+            resultado.push(...bloqueActivo);
+            i = j;
+        } else {
+            resultado.push(token);
+        }
+
+        i++;
+    }
+
+    return resultado;
+}
+
+const tokenss: TokenPlantilla1[] = [
+    { tipo: "texto", contenido: "Hola, ", directiva: undefined },
+    { tipo: "directiva", contenido: "if admin", directiva: "if" },
+    { tipo: "texto", contenido: "Bienvenido, administrador.", directiva: undefined },
+    { tipo: "directiva", contenido: "elsif invitado", directiva: "elsif" },
+    { tipo: "texto", contenido: "Bienvenido, invitado.", directiva: undefined },
+    { tipo: "directiva", contenido: "else", directiva: "else" },
+    { tipo: "texto", contenido: "Acceso denegado.", directiva: undefined },
+    { tipo: "directiva", contenido: "endif", directiva: "endif" }
+];
+
+const contextoo = { admin: false, invitado: true };
+
+const tokensFiltradoss = procesarCondicionales1(tokenss, contextoo);
+console.log(tokensFiltradoss);
