@@ -159,7 +159,7 @@ function procesarBucles(tokens: TokenPlantilla[], contexto: Record<string, any>)
                     token.tipo === "variable" && token.contenido === nombreItem
                         ? { ...token, contenido: valor }
                         : token
-                ).filter(token => token.contenido.trim() !== "");
+                ).filter(token => token.contenido.trim());
 
                 resultado.push(...tokensFinales);
             }
@@ -181,7 +181,7 @@ function procesarBucles(tokens: TokenPlantilla[], contexto: Record<string, any>)
 const tokens: TokenPlantilla[] = [
   { tipo: "texto", contenido: "Lista: " },
   { tipo: "directiva", contenido: "for fruta in frutas" },
-  { tipo: "directiva", contenido: "if fruta != 'uva'" },
+  { tipo: "directiva", contenido: "if fruta" },
   { tipo: "variable", contenido: "fruta" },
   { tipo: "texto", contenido: " " },
   { tipo: "directiva", contenido: "endif" },
@@ -189,7 +189,7 @@ const tokens: TokenPlantilla[] = [
 ]
 
 const contexto = {
-    frutas: ["manzana","plátano","uva"]
+    frutas: ["manzana","plátano","uva","melon","sandia","mango"]
 };
 
 console.log(procesarBucles(tokens, contexto));
