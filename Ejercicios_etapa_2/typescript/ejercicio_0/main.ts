@@ -1,5 +1,4 @@
 // @ts-check
-
 /**
  * MÓDULO DE REPASO: EJERCICIOS EN TYPESCRIPT
  *
@@ -33,6 +32,9 @@
  */
  
 // TODO: Escribir la función aquí
+function edadEnDias (años: number): number {
+    return años * 365;
+}
 
 /* ============================
  * EJERCICIO 2: Generar un saludo
@@ -48,6 +50,9 @@
  */
 
 // TODO: Escribir la función aquí
+function cualEsTuNombre (primerNombre: string, apellido: string): string {
+    return `Hola, ${primerNombre} ${apellido}!`;
+}
 
 /* ============================
  * EJERCICIO 3: Múltiples funciones
@@ -65,6 +70,18 @@
  */
 
 // TODO: Escribir las funciones aquí
+
+function doble (number: number): number {
+    return number * 2;
+}
+
+function triple (number: number): number {
+    return number * 3;
+}
+
+function dobleMasTriple (number: number): number {
+    return doble(number) + triple(number);
+}
 
 /* ============================
  * EJERCICIO 4: Tipado y validaciones
@@ -93,7 +110,25 @@
 
 // TODO: Escribir las funciones aquí
 
+function checarTipoSeguro(determinar: string | number): string | number | undefined {
+    if(typeof determinar === 'string'){
+        return `Es un string con valor: ${determinar}`;
+    } else if (typeof determinar === 'number') {
+        return `Es un numero con valor: ${determinar}`;
+    }
+}
 
+function convertirANumero (valorAConvertir: string): number | string {
+    if(typeof valorAConvertir === 'string'){
+        const valorConvertido = Number(valorAConvertir);
+        if(Number.isNaN(valorConvertido)){
+            return "No es un número válido";
+        }
+        return valorConvertido;
+    } else {
+        return "No es un número válido";
+    }
+}
 /* ============================
  * EJERCICIO 5: Conversión de moneda
  * ============================
@@ -108,7 +143,14 @@
  */
 
 // TODO: Escribir la función aquí
+function convertirCentsAMoneda(centavos: number, moneda: string): string {
+    const conversion = centavos / 100;
+    if(moneda === 'USD' || moneda === 'EUR' || moneda === 'GBP'){
+        return `$${conversion}`;
+    }
 
+    return 'Moneda no encontrada';
+}
 
 /* ============================
  * EJERCICIO 6: Manipulación de arrays
@@ -137,6 +179,23 @@
 
 // TODO: Escribir las funciones aquí
 
+const numeros = [1, 2, 3, 4, 5, 6, 7];
+
+function accederArray(array: number[], index: number): number {
+    return array[index];
+}
+
+function manipulaArray(array: number[], elementoAAgregar: string | number): string | number {
+    const nuevoArray = [...array, elementoAAgregar];
+    return nuevoArray[2];
+}
+
+function sumarElementos(array: number[]): number {
+    const suma = array.reduce((acum, valor) => {
+        return acum + valor;
+    }, 0);
+    return suma;
+}
 
 /* ============================
  * EJERCICIO 7: Métodos personalizados
@@ -165,6 +224,22 @@
 
 // TODO: Escribir las funciones aquí
 
+const miArray = [1, 2, 3, 4, 5, 6, 7];
+
+function miMapa(array: number[]): number[]{
+    return array.map(num => num * 2);
+}
+
+function miFilter(array: number[]): number[]{
+    return array.filter(num => num % 2 === 0);
+}
+
+function miReduce(array: number[]): number{
+    const resta = array.reduce((acum, valor) => {
+        return acum * valor;
+    }, 1);
+    return resta;
+}
 
 /* ============================
  * EJERCICIO 8: Programación orientada a objetos

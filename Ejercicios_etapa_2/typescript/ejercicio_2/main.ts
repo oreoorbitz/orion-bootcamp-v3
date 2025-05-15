@@ -46,3 +46,16 @@
  * Consejo:
  * - Este paso es equivalente a que el navegador reconozca qué etiquetas están empezando, terminando o actuando solas.
  */
+
+const entrada = [
+    "<div>",
+    "Hello ",
+    "<span>",
+    "World",
+    "</span>",
+    "</div>"
+]
+
+function clasificarTokens(tokens: string[]): any[] {
+    
+}
