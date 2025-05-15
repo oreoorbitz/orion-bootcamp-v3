@@ -38,6 +38,7 @@
  * [
  *   { tipo: "texto", contenido: "ANAZNAM" },
  *   { tipo: "texto", contenido: "ONATÁLP" }
+ *   { tipo: "texto", contenido: "AVU" }
  * ]
  * ```
  *
@@ -109,6 +110,26 @@ let valor = contexto[nombreVariable];
     return valor;
 }
 
+// Prueba con filtros fruta
+
+let nombreVariable1: string = "frutas"
+let filtros = ["upcase", "reverse"]
+
+let filtrosRegistrados: {} = {
+  upcase: (x) => x.toUpperCase(),
+  reverse: (x) => x.split('').reverse().join('')
+}
+
+//console.log(aplicarFiltros(nombreVariable1, filtros, contexto, filtrosRegistrados)); // "ONATÁLP"
+
+
+// Prueba con filtros nombre
+let nombreVariable2: string = "nombre"
+let contexto2: {} = { nombre: "Paola" };
+
+//console.log(aplicarFiltros(nombreVariable2, filtros, contexto2, filtrosRegistrados))
+
+
 function renderizarVariables(tokens: TokenPlantilla[], contexto: Record<string, any>): string {
 return tokens.map(token => {
         if (token.tipo === 'variable') {
@@ -121,30 +142,15 @@ return tokens.map(token => {
     }).join('');
 }
 
-
-let token: {} = { tipo: "variable", contenido: "fruta | upcase | reverse" };
-let context: {} = { fruta: "plátano" };
-let filtrosRegistrado: {} = {
-  upcase: (x) => x.toUpperCase(),
-  reverse: (x) => x.split('').reverse().join('')
+let token = [{ tipo: "variable", contenido: "fruta | upcase | reverse" }]
+let contexto = {
+  fruta: "plátano"
 }
 
+console.log(renderizarVariables(token, contexto))
 
-const contexto = { fruta: "plátano", nombre: "Paola" };
 
-const filtrosRegistrados = {
-    upcase: (x: string) => x.toUpperCase(),
-    reverse: (x: string) => x.split('').reverse().join(''),
-    agregarSigno: (x: string) => x + "!"
-};
 
-// 🔹 Prueba con filtros en "fruta"
-console.log(aplicarFiltros("fruta", ["upcase", "reverse"], contexto, filtrosRegistrados)); // "ONATÁLP"
-
-// 🔹 Prueba con filtros en "nombre"
-console.log(aplicarFiltros("nombre", ["reverse", "agregarSigno"], contexto, filtrosRegistrados)); // "aloaP!"
-
-// 🔹 Prueba sin
 
 
 
