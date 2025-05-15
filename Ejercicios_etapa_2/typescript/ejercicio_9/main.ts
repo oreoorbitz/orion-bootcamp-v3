@@ -15,10 +15,10 @@
  *
  * ✅ Ejemplo de plantilla original:
  * ```liquid
- * Lista: 
+ * Lista:
  * {% for fruta in frutas %}
  *   {% if fruta %}
- *     {{ fruta }} 
+ *     {{ fruta }}
  *   {% endif %}
  * {% endfor %}
  * ```
@@ -28,7 +28,7 @@
  * [
  *   { tipo: "texto", contenido: "Lista: " },
  *   { tipo: "directiva", contenido: "for fruta in frutas" },
- *   { tipo: "directiva", contenido: "if fruta != 'uva'" },
+ *   { tipo: "directiva", contenido: "if fruta" },
  *   { tipo: "variable", contenido: "fruta" },
  *   { tipo: "texto", contenido: " " },
  *   { tipo: "directiva", contenido: "endif" },
