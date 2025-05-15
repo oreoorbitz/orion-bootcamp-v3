@@ -33,7 +33,7 @@
  * ]
  * ```
  *
- * ✅ Resultado esperado (si frutas = ["manzana", "plátano", "uva"]):
+ * ✅ Resultado esperado (si frutas: ["manzana", "plátano", "uva"]):
  * ```ts
  * [
  *   { tipo: "texto", contenido: "ANAZNAM" },
@@ -93,63 +93,72 @@ interface TokenPlantilla {
     contenido: string;
     directiva?: TipoDirectiva;
 }
+function aplicarFiltros(nombreVariable: string, filtros: string[], contexto: Record<string, any>, filtrosRegistrados: Record<string, Function>): string | string[] {
+    let valor = contexto[nombreVariable];
 
-function aplicarFiltros(nombreVariable: string, filtros: string[], contexto: Record<string, any>, filtrosRegistrados: Record<string, Function>): string {
-let valor = contexto[nombreVariable];
-
-// Aplicar cada filtro en orden
-    for (let filtro of filtros) {
-        let filtroLimpio = filtro.trim();
-        if (!filtrosRegistrados[filtroLimpio]) {
-            throw new Error(`Error: El filtro '${filtroLimpio}' no está definido.`);
-        }
-
-        valor = filtrosRegistrados[filtroLimpio](valor);
+    if (valor === undefined) {
+        throw new Error(`Error: La variable '${nombreVariable}' no está definida en el contexto.`);
     }
 
-    return valor;
+    if (Array.isArray(valor)) {
+        return valor.map(elemento => {
+            let resultado = elemento;
+            for (let filtro of filtros) {
+                let filtroLimpio = filtro.trim();
+                if (!filtrosRegistrados[filtroLimpio]) {
+                    throw new Error(`Error: El filtro '${filtroLimpio}' no está definido.`);
+                }
+                resultado = filtrosRegistrados[filtroLimpio](resultado);
+            }
+            return resultado;
+        });
+    } else {
+        for (let filtro of filtros) {
+            let filtroLimpio = filtro.trim();
+            if (!filtrosRegistrados[filtroLimpio]) {
+                throw new Error(`Error: El filtro '${filtroLimpio}' no está definido.`);
+            }
+            valor = filtrosRegistrados[filtroLimpio](valor);
+        }
+        return valor;
+    }
 }
 
-// Prueba con filtros fruta
 
-let nombreVariable1: string = "frutas"
-let filtros = ["upcase", "reverse"]
+
+function renderizarVariables(tokens: TokenPlantilla[], contexto: Record<string, any>): string {
+    return tokens.map(token => {
+        if (token.tipo === 'variable') {
+            let partes = token.contenido.split('|').map(part => part.trim()); // Separar filtros
+            let nombreVariable = partes[0];
+            let filtros = partes.slice(1); // Extraer filtros
+
+            let resultado = aplicarFiltros(nombreVariable, filtros, contexto, filtrosRegistrados);
+
+            // Asegurar que el resultado es un array y separar correctamente cada transformación
+            return Array.isArray(resultado) ? resultado.map(el => `${el}`).join('\n') : resultado;
+        }
+        return token.contenido;
+    }).join('\n'); // Unir tokens con saltos de línea
+}
+
+
+let tokens: TokenPlantilla[] = [
+    { tipo: 'variable', contenido: 'frutas|upcase|reverse' }, // Aplica el filtro `upcase`
+    { tipo: 'variable', contenido: 'frutas|reverse' }, // Aplica el filtro `reverse`
+
+];
+let filtros = ["upcase","reverse"]
+let contexto = { frutas: ['pera', 'manzana', 'uva'] };
 
 let filtrosRegistrados: {} = {
   upcase: (x) => x.toUpperCase(),
   reverse: (x) => x.split('').reverse().join('')
 }
 
-//console.log(aplicarFiltros(nombreVariable1, filtros, contexto, filtrosRegistrados)); // "ONATÁLP"
+console.log(aplicarFiltros('frutas',filtros,contexto,filtrosRegistrados,))
 
-
-// Prueba con filtros nombre
-let nombreVariable2: string = "nombre"
-let contexto2: {} = { nombre: "Paola" };
-
-//console.log(aplicarFiltros(nombreVariable2, filtros, contexto2, filtrosRegistrados))
-
-
-function renderizarVariables(tokens: TokenPlantilla[], contexto: Record<string, any>): string {
-return tokens.map(token => {
-        if (token.tipo === 'variable') {
-            let partes = token.contenido.split('|').map(part => part.trim()); // Separar filtros
-            let nombreVariable = partes[0];
-            let filtros = partes.slice(1); // Extraer filtros
-            return aplicarFiltros(nombreVariable, filtros, contexto, filtrosRegistrados);
-        }
-        return token.contenido;
-    }).join('');
-}
-
-let token = [{ tipo: "variable", contenido: "fruta | upcase | reverse" }]
-let contexto = {
-  fruta: "plátano"
-}
-
-console.log(renderizarVariables(token, contexto))
-
-
+console.log(renderizarVariables(tokens,contexto))
 
 
 
@@ -204,3 +213,74 @@ console.log(renderizarVariables(token, contexto))
  * Esto no se usará en módulos futuros,
  * pero te ayudará a familiarizarte con cómo Shopify y Liquid manejan funciones con argumentos.
  */
+
+function parseFiltro(crudo: string): [string, string[]] {
+    let [nombre, ...args] = crudo.split(':').map(part => part.trim());
+
+    if (args.length > 0) {
+        args = args.join(':').split(',').map(arg => arg.trim().replace(/^['"]|['"]$/g, ''));
+    }
+
+    return [nombre, args];
+}
+
+function aplicarFiltrosParametros(nombreVariable: string, filtros: string[], contexto: Record<string, any>, filtrosRegistrados: Record<string, Function>): string | string[] {
+    let valor = contexto[nombreVariable];
+
+    if (valor === undefined) {
+        throw new Error(`Error: La variable '${nombreVariable}' no está definida en el contexto.`);
+    }
+
+    if (Array.isArray(valor)) {
+        return valor.map(elemento => {
+            let resultado = elemento;
+            for (let filtro of filtros) {
+                let [nombreFiltro, args] = parseFiltro(filtro);
+                if (!filtrosRegistrados[nombreFiltro]) {
+                    throw new Error(`Error: El filtro '${nombreFiltro}' no está definido.`);
+                }
+                resultado = filtrosRegistrados[nombreFiltro](resultado, ...args);
+            }
+            return resultado;
+        });
+    } else {
+        for (let filtro of filtros) {
+            let [nombreFiltro, args] = parseFiltro(filtro);
+            if (!filtrosRegistrados[nombreFiltro]) {
+                throw new Error(`Error: El filtro '${nombreFiltro}' no está definido.`);
+            }
+            valor = filtrosRegistrados[nombreFiltro](valor, ...args);
+        }
+        return valor;
+    }
+}
+
+function renderizarVariables1(tokens: TokenPlantilla[], contexto: Record<string, any>): string {
+    return tokens.map(token => {
+        if (token.tipo === 'variable') {
+            let partes = token.contenido.split('|').map(part => part.trim());
+            let nombreVariable = partes[0];
+            let filtros = partes.slice(1);
+
+            let resultado = aplicarFiltrosParametros(nombreVariable, filtros, contexto, nuevosfiltrosRegistrados);
+
+            return Array.isArray(resultado) ? resultado.join('\n') : resultado;
+        }
+        return token.contenido;
+    }).join('\n');
+}
+
+let nuevosfiltrosRegistrados: Record<string, Function> = {
+    replace: (input: string, from: string, to: string) => input.split(from).join(to),
+    upcase: (input: string) => input.toUpperCase(),
+    times: (input: number, factor: number) => input * parseFloat(factor)
+};
+
+let contextonuevo= { nombre: "carlos", precio: 100 };
+
+let tokensnuevos: TokenPlantilla[] = [
+    { tipo: 'variable', contenido: "nombre | replace: 'a', '*' | upcase" },
+    { tipo: 'variable', contenido: "precio | times: 1.16 " }
+];
+
+console.log(renderizarVariables1(tokensnuevos, contextonuevo));
