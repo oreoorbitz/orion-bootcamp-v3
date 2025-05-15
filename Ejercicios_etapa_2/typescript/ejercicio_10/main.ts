@@ -84,3 +84,53 @@
  * - Puedes lanzar un error si el filtro no está definido
  * - Reutiliza el motor completo: primero bucles, luego condiciones, luego filtros → orden importa
  */
+
+/**
+ * 🧪 Tarea opcional: Soporte para filtros con parámetros
+ *
+ * Hasta ahora, tus filtros no aceptan parámetros. Pero en Liquid real, muchos filtros permiten pasar argumentos.
+ *
+ * Ejemplo:
+ *   - `{{ nombre | replace: "a", "*" }}` → reemplaza todas las "a" por "*"
+ *   - `{{ precio | times: 1.16 }}` → multiplica el valor por 1.16 (por ejemplo, para IVA)
+ *
+ * ✅ Sintaxis esperada:
+ * - Los argumentos del filtro se separan por comas: `filtro: arg1, arg2`
+ * - Los filtros siguen separados por `|`
+ *
+ * ✅ Ejemplo de token:
+ * ```ts
+ * { tipo: "variable", contenido: "nombre | replace: 'a', '*' | upcase" }
+ * ```
+ *
+ * ✅ Resultado esperado si nombre = "carlos":
+ * ```ts
+ * "CRLOS"
+ * ```
+ *
+ * ✅ Filtro de ejemplo que puedes registrar:
+ * ```ts
+ * {
+ *   replace: (input: string, from: string, to: string) => input.split(from).join(to),
+ *   upcase: (input: string) => input.toUpperCase()
+ * }
+ * ```
+ *
+ * ✅ Sugerencia de implementación:
+ * - En `renderizarVariables()`, al detectar `|`, divide cada segmento
+ * - Si el filtro contiene `:`, separa el nombre y los argumentos
+ * - Divide los argumentos por `,`, elimina comillas, y pásalos al filtro como parámetros
+ *
+ * ✅ Ejemplo de parsing:
+ * ```ts
+ * // De "replace: 'a', '*'" → ['replace', "'a'", "'*'"]
+ * ```
+ *
+ * Puedes escribir una función auxiliar:
+ * ```ts
+ * function parseFiltro(crudo: string): [nombre: string, argumentos: string[]]
+ * ```
+ *
+ * Esto no se usará en módulos futuros,  
+ * pero te ayudará a familiarizarte con cómo Shopify y Liquid manejan funciones con argumentos.
+ */
