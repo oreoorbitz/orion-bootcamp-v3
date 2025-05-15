@@ -16,7 +16,7 @@
  * ✅ Ejemplo de plantilla completa (con loop, condición y filtros combinados):
  * ```liquid
  * {% for fruta in frutas %}
- *   {% if fruta != 'uva' %}
+ *   {% if fruta %}
  *     {{ fruta | upcase | reverse }}
  *   {% endif %}
  * {% endfor %}
@@ -26,7 +26,7 @@
  * ```ts
  * [
  *   { tipo: "directiva", contenido: "for fruta in frutas" },
- *   { tipo: "directiva", contenido: "if fruta != 'uva'" },
+ *   { tipo: "directiva", contenido: "if fruta" },
  *   { tipo: "variable", contenido: "fruta | upcase | reverse" },
  *   { tipo: "directiva", contenido: "endif" },
  *   { tipo: "directiva", contenido: "endfor" }
