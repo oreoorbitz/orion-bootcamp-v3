@@ -82,3 +82,26 @@
  * - Puedes lanzar un error si el filtro no está definido
  * - Reutiliza el motor completo: primero bucles, luego condiciones, luego filtros → orden importa
  */
+type TipoTokenPlantilla = 'texto' | 'variable' | 'directiva';
+type TipoDirectiva = 'if' | 'endif' | 'elsif' | 'else' | 'for' | 'endfor';
+
+interface TokenPlantilla {
+    tipo: TipoTokenPlantilla;
+    contenido: string;
+    directiva?: TipoDirectiva;
+}
+
+function aplicarFiltros(nombreVariable: string, filtros: string[], contexto: Record<string, any>, filtrosRegistrados: Record<string, Function>): string {
+
+}
+
+
+function renderizarVariables(tokens: TokenPlantilla[], contexto: Record<string, any>): string {
+return tokens.map( token => {
+  if (token.tipo === 'variable') {
+        return contexto[token.contenido] ?? '';
+  }
+
+  return token.contenido;
+    }).join(''); // Unir todo en una sola cadena
+}
