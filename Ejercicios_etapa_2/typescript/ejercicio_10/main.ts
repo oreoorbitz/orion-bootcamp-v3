@@ -49,7 +49,7 @@
  *    - Busca el valor en el contexto
  *    - Aplica cada filtro desde `filtrosRegistrados` en orden
  *    nota: el objeto de 'filtrosRegistrados' esta escrito mas abajo en las instruciones
- * 
+ *
  *
  * 2. Extiende tu función `renderizarVariables()` para:
  *    - Detectar si el contenido del token `variable` contiene `|`
@@ -84,7 +84,6 @@
  * - Puedes lanzar un error si el filtro no está definido
  * - Reutiliza el motor completo: primero bucles, luego condiciones, luego filtros → orden importa
  */
-<<<<<<< HEAD
 type TipoTokenPlantilla = 'texto' | 'variable' | 'directiva';
 type TipoDirectiva = 'if' | 'endif' | 'elsif' | 'else' | 'for' | 'endfor';
 
@@ -95,20 +94,60 @@ interface TokenPlantilla {
 }
 
 function aplicarFiltros(nombreVariable: string, filtros: string[], contexto: Record<string, any>, filtrosRegistrados: Record<string, Function>): string {
+let valor = contexto[nombreVariable];
 
+// Aplicar cada filtro en orden
+    for (let filtro of filtros) {
+        let filtroLimpio = filtro.trim();
+        if (!filtrosRegistrados[filtroLimpio]) {
+            throw new Error(`Error: El filtro '${filtroLimpio}' no está definido.`);
+        }
+
+        valor = filtrosRegistrados[filtroLimpio](valor);
+    }
+
+    return valor;
 }
-
 
 function renderizarVariables(tokens: TokenPlantilla[], contexto: Record<string, any>): string {
-return tokens.map( token => {
-  if (token.tipo === 'variable') {
-        return contexto[token.contenido] ?? '';
-  }
-
-  return token.contenido;
-    }).join(''); // Unir todo en una sola cadena
+return tokens.map(token => {
+        if (token.tipo === 'variable') {
+            let partes = token.contenido.split('|').map(part => part.trim()); // Separar filtros
+            let nombreVariable = partes[0];
+            let filtros = partes.slice(1); // Extraer filtros
+            return aplicarFiltros(nombreVariable, filtros, contexto, filtrosRegistrados);
+        }
+        return token.contenido;
+    }).join('');
 }
-=======
+
+
+let token: {} = { tipo: "variable", contenido: "fruta | upcase | reverse" };
+let context: {} = { fruta: "plátano" };
+let filtrosRegistrado: {} = {
+  upcase: (x) => x.toUpperCase(),
+  reverse: (x) => x.split('').reverse().join('')
+}
+
+
+const contexto = { fruta: "plátano", nombre: "Paola" };
+
+const filtrosRegistrados = {
+    upcase: (x: string) => x.toUpperCase(),
+    reverse: (x: string) => x.split('').reverse().join(''),
+    agregarSigno: (x: string) => x + "!"
+};
+
+// 🔹 Prueba con filtros en "fruta"
+console.log(aplicarFiltros("fruta", ["upcase", "reverse"], contexto, filtrosRegistrados)); // "ONATÁLP"
+
+// 🔹 Prueba con filtros en "nombre"
+console.log(aplicarFiltros("nombre", ["reverse", "agregarSigno"], contexto, filtrosRegistrados)); // "aloaP!"
+
+// 🔹 Prueba sin
+
+
+
 
 /**
  * 🧪 Tarea opcional: Soporte para filtros con parámetros
@@ -156,7 +195,6 @@ return tokens.map( token => {
  * function parseFiltro(crudo: string): [nombre: string, argumentos: string[]]
  * ```
  *
- * Esto no se usará en módulos futuros,  
+ * Esto no se usará en módulos futuros,
  * pero te ayudará a familiarizarte con cómo Shopify y Liquid manejan funciones con argumentos.
  */
->>>>>>> main
