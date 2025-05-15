@@ -88,7 +88,8 @@ interface TokenPlantilla {
 }
 
 function aplicarFiltros(nombreVariable: string, filtros: string[], contexto: Record<string, any>, filtrosRegistrados: Record<string, Function>): string | string[] {
-    let valor = contexto[nombreVariable];
+  console.log('holaprimero', contexto)
+  let valor = contexto[nombreVariable];
 
     if (valor === undefined) {
         throw new Error(`Error: La variable '${nombreVariable}' no está definida en el contexto.`);
@@ -126,7 +127,7 @@ function renderizarVariables(tokens: TokenPlantilla[], contexto: Record<string, 
             let partes = token.contenido.split('|').map(part => part.trim()); // Separar filtros
             let nombreVariable = partes[0];
             let filtros = partes.slice(1); // Extraer filtros
-
+          console.log('holasegundo', nombreVariable, contexto)
             let resultado = aplicarFiltros(nombreVariable, filtros, contexto, filtrosRegistrados);
 
             // Asegurar que el resultado es un array y separar correctamente cada transformación
@@ -184,6 +185,7 @@ let filtrosRegistrados: {} = {
 }
 
 // Primero, procesamos las asignaciones para actualizar el contexto
+console.log('hola',contexto)
 let tokensProcesados = procesarAsignaciones(tokens, contexto);
 
 // Luego, usamos renderizarVariables() para convertir los tokens en contenido final
