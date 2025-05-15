@@ -48,13 +48,15 @@
  * 1. Crea una función `aplicarFiltros(nombreVariable: string, filtros: string[], contexto: Record<string, any>, filtrosRegistrados: Record<string, Function>): string`
  *    - Busca el valor en el contexto
  *    - Aplica cada filtro desde `filtrosRegistrados` en orden
+ *    nota: el objeto de 'filtrosRegistrados' esta escrito mas abajo en las instruciones
+ * 
  *
  * 2. Extiende tu función `renderizarVariables()` para:
  *    - Detectar si el contenido del token `variable` contiene `|`
  *    - Separar el nombre de variable y los filtros con `.split('|')`
  *    - Aplicar `aplicarFiltros(...)` en lugar de acceder directamente al contexto
  *
- * Entrada de ejemplo (solo el token):
+ * Para probar tu funcion, utiliza:
  * ```ts
  * { tipo: "variable", contenido: "fruta | upcase | reverse" }
  * ```
