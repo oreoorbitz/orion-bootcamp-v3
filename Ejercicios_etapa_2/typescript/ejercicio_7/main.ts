@@ -62,27 +62,74 @@ interface TokenPlantilla {
  contenido: string;
 }
 
-function renderizarVariables(tokens: TokenPlantilla[], contexto: Record<string, any>): string {
-return tokens.map( token => {
-  if (token.tipo === 'variable') {
-        return contexto[token.contenido] ?? '';
-  }
+function detectarTokensPlantilla(entrada: string): string[] {
+    const regex = /({{.*?}}|{%.*?%})/g;
+    let resultado: string[] = [];
+    let ultimoIndice = 0;
 
-  return token.contenido;
-    }).join(''); // Unir todo en una sola cadena
+    // Usamos `matchAll()` para obtener todas las coincidencias y sus posiciones en la cadena
+    for (const match of entrada.matchAll(regex)) {
+        const token = match[0]; // Token detectado
+        const inicioToken = match.index!; // Posición en la cadena
+
+        // Agregar el texto entre el último índice y la posición actual del token
+        if (inicioToken > ultimoIndice) {
+            resultado.push(entrada.substring(ultimoIndice, inicioToken));
+        }
+
+        // Agregar el token
+        resultado.push(token);
+        ultimoIndice = inicioToken + token.length; // Actualizar el índice de seguimiento
+    }
+
+    // Agregar el resto del texto después del último token
+    if (ultimoIndice < entrada.length) {
+        resultado.push(entrada.substring(ultimoIndice));
+    }
+
+    return resultado;
 }
 
-const tokens: TokenPlantilla[] = [
-    { tipo: "texto", contenido: "Hola, " },
-    { tipo: "variable", contenido: "nombre" },
-    { tipo: "texto", contenido: ". Bienvenido a " },
-    { tipo: "variable", contenido: "ciudad" },
-    { tipo: "texto", contenido: "." }
-];
+//Prueba con la entrada
+let entradaInicial = "Hola, {{ nombre }}. Bienvenido a {{ ciudad }}";
+let entradaTokenizada = (detectarTokensPlantilla(entradaInicial));
+
+
+
+function clasificarTokensPlantilla(tokens: string[]): TokenPlantilla[] {
+  return tokens.map(token => {
+    if (token.startsWith("{{") && token.endsWith("}}")) {
+      return { tipo: "variable", contenido: token.slice(2, -2).trim() };
+    }
+    if (token.startsWith("{%") && token.endsWith("%}")) {
+      return { tipo: "directiva", contenido: token.slice(2, -2).trim() };
+    }
+
+    return { tipo: "texto", contenido: token.trim() };
+  });
+}
+
+// esta es la equivalente a tokens, imprimir si es necesario saber que es cada cosa
+let entradaClasificada = clasificarTokensPlantilla(entradaTokenizada);
+
+function renderizarVariables(tokens: TokenPlantilla[], contexto: Record<string, any>): string {
+    return tokens.map((token, index) => {
+        if (token.tipo === 'variable') {
+            return contexto[token.contenido] ?? '';
+        }
+
+        // Si el token actual es texto y el siguiente es una variable, añadimos espacio al final
+        if (token.tipo === "texto" && tokens[index + 1]?.tipo === "variable") {
+            return token.contenido + " ";
+        }
+
+        return token.contenido;
+    }).join('');
+}
 
 const contexto = {
     nombre: "Paola",
     ciudad: "México"
 };
-
-console.log(renderizarVariables(tokens, contexto))
+let entradaRenderizada = renderizarVariables(entradaClasificada, contexto);
+console.log(entradaRenderizada);

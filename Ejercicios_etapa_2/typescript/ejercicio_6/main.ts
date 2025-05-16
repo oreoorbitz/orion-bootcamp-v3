@@ -61,29 +61,52 @@ interface TokenPlantilla {
  contenido: string;
 }
 
-function clasificarTokensPlantilla(tokens: string[]): TokenPlantilla[] {
- const regexVariable: RegExp = /{{.*?}}/g;
- const regexDirectiva: RegExp = /{%.*?%}/g;
+function detectarTokensPlantilla(entrada: string): string[] {
+    const regex = /({{.*?}}|{%.*?%})/g;
+    let resultado: string[] = [];
+    let ultimoIndice = 0;
 
+    // Usamos `matchAll()` para obtener todas las coincidencias y sus posiciones en la cadena
+    for (const match of entrada.matchAll(regex)) {
+        const token = match[0]; // Token detectado
+        const inicioToken = match.index!; // Posición en la cadena
 
- return tokens.map(token => {
-  if (regexVariable.test(token)) {
-    return {tipo: 'variable', contenido: token.replace(/({{|}})/g,'').trim()};
-  }
-  if (regexDirectiva.test(token)) {
-    return {tipo: 'directiva', contenido: token.replace(/({%|%})/g,'').trim()};
-  }
+        // Agregar el texto entre el último índice y la posición actual del token
+        if (inicioToken > ultimoIndice) {
+            resultado.push(entrada.substring(ultimoIndice, inicioToken));
+        }
 
-  return {tipo: 'texto', contenido: token.trim()}
- });
+        // Agregar el token
+        resultado.push(token);
+        ultimoIndice = inicioToken + token.length; // Actualizar el índice de seguimiento
+    }
+
+    // Agregar el resto del texto después del último token
+    if (ultimoIndice < entrada.length) {
+        resultado.push(entrada.substring(ultimoIndice));
+    }
+
+    return resultado;
 }
-const entrada: string[] =  [
-"Hola, ",
-"{{ nombre }}",
-". ",
-"{% if admin %}",
-"Eres administrador.",
-"{% endif %}"
-]
 
-console.log(clasificarTokensPlantilla(entrada));
+//Prueba con la entrada
+let entradaInicial = "Hola, {{ nombre }}. {% if admin %}Eres administrador.{% endif %}";
+let entradaTokenizada = (detectarTokensPlantilla(entradaInicial));
+
+
+
+function clasificarTokensPlantilla(tokens: string[]): TokenPlantilla[] {
+  return tokens.map(token => {
+    if (token.startsWith("{{") && token.endsWith("}}")) {
+      return { tipo: "variable", contenido: token.slice(2, -2).trim() };
+    }
+    if (token.startsWith("{%") && token.endsWith("%}")) {
+      return { tipo: "directiva", contenido: token.slice(2, -2).trim() };
+    }
+
+    return { tipo: "texto", contenido: token.trim() };
+  });
+}
+
+let entradaClasificada = clasificarTokensPlantilla(entradaTokenizada);
+console.log(entradaClasificada);

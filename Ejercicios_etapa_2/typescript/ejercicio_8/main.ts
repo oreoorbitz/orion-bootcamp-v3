@@ -97,7 +97,10 @@
  *
  * Esta estructura modular será útil cuando agreguemos más directivas como `for`, `else`, etc.
 */
-type TipoTokenPlantilla = 'texto' | 'variable' | 'directiva'
+
+//Este código funciona perfectamente, lo bloqueo en comentarios para poder hacer la implementación debajo
+
+/* type TipoTokenPlantilla = 'texto' | 'variable' | 'directiva'
 
 interface TokenPlantilla {
  tipo: TipoTokenPlantilla;
@@ -112,67 +115,131 @@ enum TipoDirectiva {
 }
 
 
+function detectarTokensPlantilla(entrada: string): string[] {
+    const regex = /({{.*?}}|{%.*?%})/g;
+    let resultado: string[] = [];
+    let ultimoIndice = 0;
+
+    // Usamos `matchAll()` para obtener todas las coincidencias y sus posiciones en la cadena
+    for (const match of entrada.matchAll(regex)) {
+        const token = match[0]; // Token detectado
+        const inicioToken = match.index!; // Posición en la cadena
+
+        // Agregar el texto entre el último índice y la posición actual del token
+        if (inicioToken > ultimoIndice) {
+            resultado.push(entrada.substring(ultimoIndice, inicioToken));
+        }
+
+        // Agregar el token
+        resultado.push(token);
+        ultimoIndice = inicioToken + token.length; // Actualizar el índice de seguimiento
+    }
+
+    // Agregar el resto del texto después del último token
+    if (ultimoIndice < entrada.length) {
+        resultado.push(entrada.substring(ultimoIndice));
+    }
+
+    return resultado;
+}
+
+//Prueba con la entrada
+let entradaInicial = "Hola, {{ nombre }}.{% if admin %} Bienvenido, administrador.{% endif %}";
+let entradaTokenizada = (detectarTokensPlantilla(entradaInicial));
+
+
+
+function clasificarTokensPlantilla(tokens: string[]): TokenPlantilla[] {
+  return tokens.map(token => {
+    if (token.startsWith("{{") && token.endsWith("}}")) {
+      return { tipo: "variable", contenido: token.slice(2, -2).trim() };
+    }
+    if (token.startsWith("{%") && token.endsWith("%}")) {
+      return { tipo: "directiva", contenido: token.slice(2, -2).trim() };
+    }
+
+    return { tipo: "texto", contenido: token.trim() };
+  });
+}
+
+// esta es la equivalente a tokens, imprimir si es necesario saber que es cada cosa
+let entradaClasificada = clasificarTokensPlantilla(entradaTokenizada);
+
+//Según las instrucciones procesar condicionales es una etapa intermedia y debe realizarse antes de renderizar las variables
 function procesarCondicionales(tokens: TokenPlantilla[], contexto: Record<string, any>): TokenPlantilla[] {
- let resultado: TokenPlantilla[] = [];
- let i = 0;
+    let resultado: TokenPlantilla[] = [];
+    let i = 0;
 
- while (i< tokens.length) {
-  let token = tokens[i]
-  if (token.tipo === 'directiva' && token.contenido.startsWith('if')) {
-    //Extraer el nombre de la variable
-    let partes = token.contenido.split(/\s+/) // también se puede usar como .split("if ") esto eliminiaría esta parte
-    let nombreVariable = partes[1] || "";
+    while (i < tokens.length) {
+        let token = tokens[i];
 
-    //Buscar índice de cierre endif
-    let j = i + 1;
-    //En programación usamos j después de i
-    while (j < tokens.length) {
-      if (tokens[j].tipo === 'directiva' && tokens[j].contenido === 'endif') {
-        break
-      }
-      j += 1;
+        if (token.tipo === 'directiva' && token.contenido.startsWith('if')) {
+            let partes = token.contenido.split(/\s+/);
+            let nombreVariable = partes[1] || "";
+
+            // Buscar índice de cierre {% endif %}
+            let j = i + 1;
+            while (j < tokens.length) {
+                if (tokens[j].tipo === 'directiva' && tokens[j].contenido === 'endif') {
+                    break;
+                }
+                j += 1;
+            }
+
+            // Validar que {% endif %} existe
+            if (j >= tokens.length) {
+                throw new Error("Error de sintaxis: {% if %} sin {% endif %}");
+            }
+
+            let condicion = contexto[nombreVariable] ?? false;
+
+            // Si la condición es verdadera, agregamos solo el contenido dentro del if
+            if (condicion) {
+                for (let k = i + 1; k < j; k++) {
+                    resultado.push({ ...tokens[k] });
+                }
+            }
+
+            // Saltamos directamente al token después de {% endif %}
+            i = j;
+        } else if (token.tipo !== 'directiva') {
+            // Solo agregamos texto y variables, eliminamos directivas sueltas
+            resultado.push(token);
+        }
+
+        i += 1;
     }
-    // validando que se encontró un{% endif %}
-    if (j >= tokens.length) {
-      throw new Error("Error de sintaxis: {% if %} sin {% endif %}");
-    }
 
-    let condicion = contexto[nombreVariable] ?? false;
-    if (condicion) {
-      for (let k = i + 1; k < j; k++ ) {
-        resultado.push({...tokens[k] });
-      }
+    return resultado;
+}
 
-    }
-
-      i = j; //saltar al endif
-    } else {
-      resultado.push(token);
-    }
-
-    i+= 1;
- }
-
-  return resultado
- }
-
- const tokens: TokenPlantilla[] = [
-  { tipo: "texto", contenido: "Hola, " },
-  { tipo: "variable", contenido: "nombre" },
-  { tipo: "texto", contenido: "." },
-  { tipo: "directiva", contenido: "if admin" },
-  { tipo: "texto", contenido: "Bienvenido, administrador." },
-  { tipo: "directiva", contenido: "endif" }
- ]
-
-const contexto = {
-  admin: false // Cambia a false para probar el caso contrario
+let contexto = {
+ nombre: "Carlos",
+ admin: true
 };
 
-const tokensFiltrados = procesarCondicionales(tokens, contexto);
+let entradaProcesada = procesarCondicionales(entradaClasificada,contexto);
 
 
-console.log(tokensFiltrados);
+function renderizarVariables(tokens: TokenPlantilla[], contexto: Record<string, any>): string {
+    return tokens.map((token, index) => {
+        if (token.tipo === 'variable') {
+            return contexto[token.contenido] ?? '';
+        }
+
+        // Si el token actual es texto y el siguiente es una variable, añadimos espacio al final
+        if (token.tipo === "texto" && tokens[index + 1]?.tipo === "variable") {
+            return token.contenido + " ";
+        }
+
+        return token.contenido;
+    }).join('');
+}
+
+let entradaRenderizada = renderizarVariables(entradaProcesada, contexto);
+console.log(entradaRenderizada); */
+
+
 
 
 
@@ -276,85 +343,138 @@ console.log(tokensFiltrados);
  * Esta implementación no es trivial, pero se alinea con cómo funciona realmente Liquid en Shopify.
  * Si decides implementarlo, tendrás una base mucho más robusta para renderizado dinámico.
  */
-// Paso 1. Clasificación de tipos de directiva:Agregamos un campo directiva opcional dentro de TokenPlantilla y una función clasificarDirectiva().
-type TipoTokenPlantilla1 = 'texto' | 'variable' | 'directiva';
-type TipoDirectiva1 = 'if' | 'endif' | 'elsif' | 'else' | 'for' | 'endfor';
 
-interface TokenPlantilla1 {
-    tipo: TipoTokenPlantilla1;
-    contenido: string;
-    directiva?: TipoDirectiva1;
+// Clasificar tipos de directiva
+type TipoDirectiva = 'if' | 'endif' | 'for' | 'endfor' | 'else' | 'elsif';
+
+interface TokenPlantilla {
+  tipo: 'texto' | 'variable' | 'directiva';
+  contenido: string;
+  directiva?: TipoDirectiva; // Nueva propiedad (opcional -> ?)
 }
 
-function clasificarDirectiva(token: TokenPlantilla1): TipoDirectiva1 | null {
-    if (token.tipo !== 'directiva') return null;
-    if (token.contenido.startsWith('if')) return 'if';
-    if (token.contenido.startsWith('elsif')) return 'elsif';
-    if (token.contenido === 'else') return 'else';
-    if (token.contenido === 'endif') return 'endif';
-    return null;
+enum TipoDirectiva {
+  If = 'if',
+  Endif = 'endif',
+  For = 'for',
+  EndFor = 'endfor'
 }
 
-//Paso 2. Evaluar expresiones simples (==, and, or). Esta función analiza si una condición tiene comparaciones (==) o lógica (and, or).
-function evaluarCondicion(expresion: string, contexto: Record<string, any>): boolean {
-    // Manejo de comparaciones (`==`)
-    if (expresion.includes('==')) {
-        const [clave, valorEsperado] = expresion.split('==').map(texto => texto.trim());
-        return contexto[clave] === valorEsperado.replace(/['"]/g, '');
+function detectarTokensPlantilla(entrada: string): string[] {
+    const regex = /({{.*?}}|{%.*?%})/g;
+    let resultado: string[] = [];
+    let ultimoIndice = 0;
+
+    // Usamos `matchAll()` para obtener todas las coincidencias y sus posiciones en la cadena
+    for (const match of entrada.matchAll(regex)) {
+        const token = match[0]; // Token detectado
+        const inicioToken = match.index!; // Posición en la cadena
+
+        // Agregar el texto entre el último índice y la posición actual del token
+        if (inicioToken > ultimoIndice) {
+            resultado.push(entrada.substring(ultimoIndice, inicioToken));
+        }
+
+        // Agregar el token
+        resultado.push(token);
+        ultimoIndice = inicioToken + token.length; // Actualizar el índice de seguimiento
     }
 
-    // Manejo de operadores `and` y `or`
-    if (expresion.includes('and')) {
-        return expresion.split('and').every(variable => contexto[variable.trim()] === true);
+    // Agregar el resto del texto después del último token
+    if (ultimoIndice < entrada.length) {
+        resultado.push(entrada.substring(ultimoIndice));
     }
 
-    if (expresion.includes('or')) {
-        return expresion.split('or').some(variable => contexto[variable.trim()] === true);
-    }
-
-    // Condición simple sin operadores
-    return contexto[expresion.trim()] ?? false;
+    return resultado;
 }
 
+//Prueba con la entrada
+let entradaInicial = "Hola, {{ nombre }}.{% if admin %} Bienvenido, administrador.{% endif %}";
+let entradaTokenizada = (detectarTokensPlantilla(entradaInicial));
 
-//Paso 3. Manejo de {% else %} y {% elsif %}. Ahora ajustamos procesarCondicionales() para manejar múltiples ramas de if, elsif y else.
-function procesarCondicionales1(tokens: TokenPlantilla1[], contexto: Record<string, any>): TokenPlantilla1[] {
-    let resultado: TokenPlantilla1[] = [];
+//Actualización de Clasificar Tokens para que funcione adecuadamente
+//Primero la clasificación de directivas que se usa en la actualización de clasificar tokens <3
+function clasificarDirectiva(contenido: string): TipoDirectiva | null {
+  if (contenido.startsWith("if")) return "if";
+  if (contenido === "endif") return "endif";
+  if (contenido.startsWith("elsif")) return "elsif";
+  if (contenido === "else") return "else";
+  if (contenido.startsWith("for")) return "for";
+  if (contenido === "endfor") return "endfor";
+  return null;
+}
+
+function clasificarTokensPlantilla(tokens: string[]): TokenPlantilla[] {
+  return tokens.map(token => {
+    if (token.startsWith("{{") && token.endsWith("}}")) {
+      return { tipo: "variable", contenido: token.slice(2, -2).trim() };
+    }
+    if (token.startsWith("{%") && token.endsWith("%}")) {
+      let contenido = token.slice(2, -2).trim();
+      return {
+        tipo: "directiva",
+        contenido,
+        directiva: clasificarDirectiva(contenido)
+      };
+    }
+
+    return { tipo: "texto", contenido: token.trim() };
+  });
+}
+
+// esta es la equivalente a tokens, imprimir si es necesario saber que es cada cosa
+let entradaClasificada = clasificarTokensPlantilla(entradaTokenizada);
+
+//Según las instrucciones procesar condicionales es una etapa intermedia y debe realizarse antes de renderizar las variables
+function procesarCondicionales(tokens: TokenPlantilla[], contexto: Record<string, any>): TokenPlantilla[] {
+    let resultado: TokenPlantilla[] = [];
     let i = 0;
 
     while (i < tokens.length) {
         let token = tokens[i];
 
-        if (token.tipo === 'directiva' && token.contenido.startsWith('if')) {
+        if (token.tipo === 'directiva' && token.directiva === 'if') {
             let partes = token.contenido.split(/\s+/);
-            let condicion = partes.slice(1).join(' '); // Extraer toda la condición
-            let evaluarIf = evaluarCondicion(condicion, contexto);
+            let nombreVariable = partes[1] || "";
 
-            let j = i + 1, estadoActual = evaluarIf, bloqueActivo: TokenPlantilla1[] = [];
+            let j = i + 1;
+            let bloqueActual: TokenPlantilla[] = [];
+            let mostrarBloque = contexto[nombreVariable] ?? false;
+            let procesandoElse = false;
 
             while (j < tokens.length) {
-                let siguiente = tokens[j];
+                let siguienteToken = tokens[j];
 
-                if (siguiente.tipo === 'directiva') {
-                    if (siguiente.contenido.startsWith('elsif')) {
-                        if (!estadoActual) {
-                            let partesElsif = siguiente.contenido.split(/\s+/);
-                            estadoActual = evaluarCondicion(partesElsif.slice(1).join(' '), contexto);
-                        }
-                    } else if (siguiente.contenido === 'else') {
-                        estadoActual = !estadoActual; // Activar else solo si ninguna condición anterior fue verdadera
-                    } else if (siguiente.contenido === 'endif') {
-                        break;
-                    }
-                } else if (estadoActual) {
-                    bloqueActivo.push(siguiente);
+                if (siguienteToken.tipo === 'directiva' && siguienteToken.directiva === 'endif') {
+                    break;
                 }
+                if (siguienteToken.tipo === 'directiva' && siguienteToken.directiva === 'elsif') {
+                    if (!mostrarBloque) {
+                        let partesElsif = siguienteToken.contenido.split(/\s+/);
+                        let nombreVariableElsif = partesElsif[1] || "";
+                        mostrarBloque = contexto[nombreVariableElsif] ?? false;
+                    }
+                    bloqueActual = [];
+                }
+                if (siguienteToken.tipo === 'directiva' && siguienteToken.directiva === 'else') {
+                    if (!mostrarBloque) {
+                        procesandoElse = true;
+                    }
+                    bloqueActual = [];
+                }
+                if (!siguienteToken.directiva) {
+                    bloqueActual.push({ ...siguienteToken });
+                }
+
                 j++;
             }
 
-            resultado.push(...bloqueActivo);
+            if (mostrarBloque || procesandoElse) {
+                resultado.push(...bloqueActual);
+            }
+
             i = j;
-        } else {
+        } else if (token.tipo !== 'directiva') {
             resultado.push(token);
         }
 
@@ -364,18 +484,28 @@ function procesarCondicionales1(tokens: TokenPlantilla1[], contexto: Record<stri
     return resultado;
 }
 
-const tokenss: TokenPlantilla1[] = [
-    { tipo: "texto", contenido: "Hola, ", directiva: undefined },
-    { tipo: "directiva", contenido: "if admin", directiva: "if" },
-    { tipo: "texto", contenido: "Bienvenido, administrador.", directiva: undefined },
-    { tipo: "directiva", contenido: "elsif invitado", directiva: "elsif" },
-    { tipo: "texto", contenido: "Bienvenido, invitado.", directiva: undefined },
-    { tipo: "directiva", contenido: "else", directiva: "else" },
-    { tipo: "texto", contenido: "Acceso denegado.", directiva: undefined },
-    { tipo: "directiva", contenido: "endif", directiva: "endif" }
-];
+let contexto = {
+ nombre: "Carlos",
+ admin: true
+};
 
-const contextoo = { admin: false, invitado: true };
+let entradaProcesada = procesarCondicionales(entradaClasificada,contexto);
+console.log(entradaProcesada) // Este es el resultado esperado, un paso antes de renderizar; pero se agrega la función con fines de probar que sirve
 
-const tokensFiltradoss = procesarCondicionales1(tokenss, contextoo);
-console.log(tokensFiltradoss);
+function renderizarVariables(tokens: TokenPlantilla[], contexto: Record<string, any>): string {
+    return tokens.map((token, index) => {
+        if (token.tipo === 'variable') {
+            return contexto[token.contenido] ?? '';
+        }
+
+        // Si el token actual es texto y el siguiente es una variable, añadimos espacio al final
+        if (token.tipo === "texto" && tokens[index + 1]?.tipo === "variable") {
+            return token.contenido + " ";
+        }
+
+        return token.contenido;
+    }).join('');
+}
+
+let entradaRenderizada = renderizarVariables(entradaProcesada, contexto);
+console.log(entradaRenderizada);
