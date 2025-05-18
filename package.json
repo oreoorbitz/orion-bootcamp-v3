@@ -16,12 +16,18 @@
     "prueba_7": "vitest Ejercicios_etapa_1/Javascript/Ejercicio_7/prueba.test.js",
     "prueba_8": "vitest Ejercicios_etapa_1/Javascript/Ejercicio_8/prueba.test.js",
     "prueba_9": "vitest Ejercicios_etapa_1/Javascript/Ejercicio_9/prueba.test.js"
-
   },
   "author": "Orion Holmes",
   "license": "ISC",
   "dependencies": {
     "cardinal": "^2.1.1",
+    "express": "^5.1.0",
+    "liquidjs": "^10.21.1",
+    "sequelize": "^6.37.7",
+    "sqlite3": "^5.1.7",
     "vitest": "^3.0.9"
+  },
+  "devDependencies": {
+    "tailwindcss": "^4.1.7"
   }
 }
