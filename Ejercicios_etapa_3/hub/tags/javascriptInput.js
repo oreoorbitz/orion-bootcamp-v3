@@ -22,8 +22,10 @@ export default function register(engine) {
       const targetId = exerciseIds[exerciseIds.length - 1] || 'html-output-missing'
 
       emitter.write(`
-        <textarea data-html-for="${targetId}" data-type="js" class="input-block">${scriptContent}</textarea>
-        <button data-html-submit="${targetId}" class="bg-brand-teal text-white px-4 py-2 mt-2">Run</button>
+        <section class="flex flex-col items-center max-w-[1000px] mx-auto mt-6 space-y-4">
+          <textarea data-html-for="${targetId}" data-type="js" class="input-block w-full bg-black">${scriptContent}</textarea>
+          <button data-html-submit="${targetId}" class="bg-brand-teal text-white px-4 py-2 rounded hover:bg-accent transition">Run</button>
+        </section>
       `)
     }
   });

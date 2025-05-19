@@ -9,13 +9,23 @@ document.addEventListener("DOMContentLoaded", () => {
   
       if (button && htmlInput) {
         button.addEventListener('click', () => {
+          console.log('test0r')
+          // Inject HTML
           container.innerHTML = htmlInput.value;
   
           try {
             if (jsInput) {
-              const script = document.createElement('script');
-              script.textContent = jsInput.value;
-              container.appendChild(script);
+              // Find the injected <script> placeholder
+              const placeholder = container.querySelector('script[data-injected]');
+              if (placeholder) {
+                placeholder.textContent = jsInput.value;
+  
+                // Execute the JS via a new script tag (runtime evaluation)
+                const runtimeScript = document.createElement('script');
+                runtimeScript.textContent = jsInput.value;
+                document.body.appendChild(runtimeScript);
+                document.body.removeChild(runtimeScript);
+              }
             }
           } catch (e) {
             container.innerHTML += `<div class="text-red-600 text-sm mt-2">⚠️ ${e.message}</div>`;
