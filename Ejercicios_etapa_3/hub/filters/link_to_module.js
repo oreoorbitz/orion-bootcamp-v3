@@ -1,12 +1,10 @@
 export default function register(engine) {
-    engine.registerFilter('link_to_module', (modulePath) => {
+    engine.registerFilter('link_to_module', (modulePath, linkText = null) => {
       if (!modulePath || typeof modulePath !== 'string') return '';
-      
-      // Extract root folder name (e.g., general, shopify, dawn-theme)
+  
       const parts = modulePath.split('/');
       const root = parts[0].toLowerCase();
   
-      // Map to correct output folder prefix
       const prefixMap = {
         general: '1_general',
         shopify: '2_Shopify',
@@ -17,7 +15,10 @@ export default function register(engine) {
       if (!folder) return '';
   
       const rest = parts.slice(1).join('/');
-      return `/${folder}/${rest}/index.html`;
+      const href = `/${folder}/${rest}/index.html`;
+      const text = linkText || modulePath;
+  
+      return `<a href="${href}" hx-get="${href}" hx-target="main" hx-push-url="true" class="text-brand-teal underline">${text}</a>`;
     });
   }
   

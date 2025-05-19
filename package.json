@@ -23,6 +23,7 @@
   "license": "ISC",
   "dependencies": {
     "cardinal": "^2.1.1",
+    "chokidar": "^4.0.3",
     "connect-livereload": "^0.6.1",
     "express": "^5.1.0",
     "liquidjs": "^10.21.1",
