@@ -46,35 +46,23 @@
  * Consejo:
  * - Este paso es equivalente a que el navegador reconozca qué etiquetas están empezando, terminando o actuando solas.
  */
-function clasificarTokens(tokens: string[]): any[] {
-  const regexApertura: RegExp = /^<([a-zA-Z0-9]+)>$/;
-  const regexCierre: RegExp = /^<\/([a-zA-Z0-9]+)>$/;
-
-   return tokens.map(token => {
-        if (regexApertura.test(token)) {
-            return { tipo: 'apertura', nombre: token.match(regexApertura)?.[1] ?? null, contenido: null };
-        }
-        if (regexCierre.test(token)) {
-            return { tipo: 'cierre', nombre: token.match(regexCierre)?.[1] ?? null, contenido: null };
-        }
-
-        return { tipo: 'texto', nombre: null, contenido: token };
-    });
-}
-
-const entrada: string[] = ["<div>", "Hello ", "<span>", "World", "</span>", "</div>"];
-const resultado = clasificarTokens(entrada);
-console.log(resultado);
-
-// Enum para definir los tipos de tokens
 enum TokenType {
     Apertura = "apertura",
     Cierre = "cierre",
     Texto = "texto"
 }
 
+const entrada: string = "<div>Hello <span>World</span></div>";
+
+function tokenizarHTML (html: string): string[] {
+  const regex: RegExp = /<\/?[^>]+>|[^<>]+/g
+  return html.match(regex) ?? []
+}
+let htmlTokenizado: string[] = tokenizarHTML(entrada);
+console.log('1.Resultado de Tokenizar el HTML', htmlTokenizado);
+
 // Función para clasificar los tokens con el enum
-function clasificarTokensEnm(tokens: string[]): { tipo: TokenType, nombre: string | null, contenido: string | null }[] {
+function clasificarTokens(tokens: string[]): { tipo: TokenType, nombre: string | null, contenido: string | null }[] {
     const regexApertura: RegExp = /^<([a-zA-Z0-9]+)>$/; // Detecta etiquetas de apertura
     const regexCierre: RegExp = /^<\/([a-zA-Z0-9]+)>$/; // Detecta etiquetas de cierre
 
@@ -90,7 +78,5 @@ function clasificarTokensEnm(tokens: string[]): { tipo: TokenType, nombre: strin
     });
 }
 
-// Ejemplo de uso
-const entrada2: string[] = ["<div>", "Hello ", "<span>", "World", "</span>", "</div>"];
-const resultado2 = clasificarTokensEnm(entrada2);
-console.log(resultado2);
+let htmlClasificado = clasificarTokens(htmlTokenizado);
+console.log('2.Resultado de clasificar Tokens',htmlClasificado);

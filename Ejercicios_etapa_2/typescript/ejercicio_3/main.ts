@@ -30,101 +30,91 @@
  * - Busca solo dentro del contenido de la etiqueta (no el texto externo)
  * - Este paso te ayudará a construir funciones como `getElementById` o `getElementsByClassName` más adelante.
  */
-function clasificarTokens(tokens: string[]): any[] {
-  const regexApertura: RegExp = /^<([a-zA-Z0-9]+)(\s[^>]+)?>$/; // Detecta etiquetas de apertura con atributos
-  const regexCierre: RegExp = /^<\/([a-zA-Z0-9]+)>$/; // Detecta etiquetas de cierre
-  const regexAutocierre: RegExp = /^<([a-zA-Z0-9]+)(\s[^>]+)?\s*\/>$/; // Detecta etiquetas de autocierre
-  const regexAtributos: RegExp = /([a-zA-Z0-9-]+)="([^"]+)"/g; // Captura los atributos dentro de una etiqueta
-
-    return tokens.map(token => {
-        if (regexApertura.test(token)) {
-            const match = token.match(regexApertura);
-            const atributos: Record<string, string> = {};
-
-            if (match && match[2]) {
-                // Extraer atributos de la etiqueta
-                [...match[2].matchAll(regexAtributos)].forEach(attr => {
-                    atributos[attr[1]] = attr[2]; // Guarda los atributos en un objeto
-                });
-            }
-
-            return { tipo: 'apertura', nombre: match?.[1] ?? null, contenido: null, atributos };
-        }
-        if (regexCierre.test(token)) {
-            return { tipo: 'cierre', nombre: token.match(regexCierre)?.[1] ?? null, contenido: null, atributos:{} };
-        }
-        if (regexAutocierre.test(token)) {
-            const match = token.match(regexAutocierre);
-            const atributos: Record<string, string> = {};
-
-            if (match && match[2]) {
-                [...match[2].matchAll(regexAtributos)].forEach(attr => {
-                    atributos[attr[1]] = attr[2];
-                });
-            }
-
-            return { tipo: 'autocierre', nombre: match?.[1] ?? null, contenido: null, atributos };
-        }
-
-        return { tipo: 'texto', nombre: null, contenido: token, atributos: {} };
-    });
-}
-
-// Ejemplo de uso
-const entrada: string[] = ["<div class=\"box\" id=\"main\">", "Hello ", "<span>", "World", "</span>", "</div>"];
-const resultado = clasificarTokens(entrada);
-console.log(resultado);
-
-
 
 enum TokenType {
     Apertura = "apertura",
     Cierre = "cierre",
-    Autocierre = "autocierre",
     Texto = "texto"
 }
 
-// Función para clasificar los tokens con el enum
-function clasificarTokensEnm(tokens: string[]): { tipo: TokenType, nombre: string | null, contenido: string | null, atributos: Record<string, string> }[] {
-    const regexApertura: RegExp = /^<([a-zA-Z0-9]+)(\s[^>]+)?>$/; // Detecta etiquetas de apertura con atributos
-    const regexCierre: RegExp = /^<\/([a-zA-Z0-9]+)>$/; // Detecta etiquetas de cierre
-    const regexAutocierre: RegExp = /^<([a-zA-Z0-9]+)(\s[^>]+)?\s*\/>$/; // Detecta etiquetas de autocierre
-    const regexAtributos: RegExp = /([a-zA-Z0-9-]+)="([^"]+)"/g; // Captura atributos dentro de una etiqueta
+const entrada: string = "<div class=\"box\" id=\"main\">Hello<span> World</span></div>";
 
-    return tokens.map(token => {
-        if (regexApertura.test(token)) {
-            const match = token.match(regexApertura);
-            const atributos: Record<string, string> = {};
-
-            if (match && match[2]) {
-                [...match[2].matchAll(regexAtributos)].forEach(attr => {
-                    atributos[attr[1]] = attr[2]; // Guarda los atributos en un objeto
-                });
-            }
-
-            return { tipo: TokenType.Apertura, nombre: match?.[1] ?? null, contenido: null, atributos };
-        }
-        if (regexCierre.test(token)) {
-            return { tipo: TokenType.Cierre, nombre: token.match(regexCierre)?.[1] ?? null, contenido: null, atributos: {} };
-        }
-        if (regexAutocierre.test(token)) {
-            const match = token.match(regexAutocierre);
-            const atributos: Record<string, string> = {};
-
-            if (match && match[2]) {
-                [...match[2].matchAll(regexAtributos)].forEach(attr => {
-                    atributos[attr[1]] = attr[2];
-                });
-            }
-
-            return { tipo: TokenType.Autocierre, nombre: match?.[1] ?? null, contenido: null, atributos };
-        }
-
-        return { tipo: TokenType.Texto, nombre: null, contenido: token, atributos: {} };
-    });
+function tokenizarHTML(html: string): string[] {
+  // Esta expresión regular captura tanto etiquetas (abiertas, cerradas o autocierre)
+  // como el contenido de texto entre ellas.
+  const regex: RegExp = /<\/?[^>]+>|[^<>]+/g;
+  // Se extraen los tokens y se filtran aquellos que sean vacíos (solo espacios, saltos de línea, etc.)
+  return (html.match(regex) ?? [])
+    .map(token => token.trim())
+    .filter(token => token !== "");
 }
 
-// Ejemplo de uso
-const entrada2: string[] = ["<div class=\"box\" id=\"main\">", "Hello ", "<span>", "World", "</span>", "</div>"];
-const resultado2 = clasificarTokensEnm(entrada2);
-console.log(resultado2);
+let htmlTokenizado = tokenizarHTML(entrada);
+console.log('1.DOM html tokenizado', htmlTokenizado);
+
+//Clasificando los tokens para construir el árbol
+
+function clasificarTokens(tokens: string[]): Token[] {
+  // Estas expresiones distinguen entre etiquetas de apertura, cierre y autocierre.
+  const regexApertura: RegExp = /^<([a-zA-Z0-9]+)(\s+[^>]+)?>$/;
+  const regexCierre: RegExp = /^<\/([a-zA-Z0-9]+)>$/;
+  const regexAutocierre: RegExp = /^<([a-zA-Z0-9]+)(\s+[^>]+)?\s*\/>$/;
+
+  // Para capturar atributos se permite que las comillas sean dobles o simples.
+  const regexAtributos: RegExp = /([a-zA-Z0-9-]+)=["']([^"']+)["']/g;
+
+  return tokens.map(token => {
+    if (regexApertura.test(token)) {
+      const match = token.match(regexApertura);
+      const atributos: Record<string, string> = {};
+      if (match && match[2]) {
+        for (const attr of match[2].matchAll(regexAtributos)) {
+          atributos[attr[1]] = attr[2];
+        }
+      }
+      return {
+        tipo: TokenType.Apertura,
+        nombre: match?.[1] ?? null,
+        contenido: null,
+        atributos: Object.keys(atributos).length ? atributos : null
+      };
+    }
+
+    if (regexCierre.test(token)) {
+      const match = token.match(regexCierre);
+      return {
+        tipo: TokenType.Cierre,
+        nombre: match?.[1] ?? null,
+        contenido: null,
+        atributos: {}
+      };
+    }
+
+    if (regexAutocierre.test(token)) {
+      const match = token.match(regexAutocierre);
+      const atributos: Record<string, string> = {};
+      if (match && match[2]) {
+        for (const attr of match[2].matchAll(regexAtributos)) {
+          atributos[attr[1]] = attr[2];
+        }
+      }
+      return {
+        tipo: TokenType.Autocierre,
+        nombre: match?.[1] ?? null,
+        contenido: null,
+        atributos: Object.keys(atributos).length ? atributos : null
+      };
+    }
+
+    // Si no coincide con ningún patrón de etiqueta, se trata como texto.
+    return {
+      tipo: TokenType.Texto,
+      nombre: null,
+      contenido: token,
+      atributos: {}
+    };
+  });
+}
+
+let htmlClasificado = clasificarTokens(htmlTokenizado);
+console.log('2.DOM html clasificado', htmlClasificado);

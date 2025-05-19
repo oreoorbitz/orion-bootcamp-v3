@@ -155,76 +155,216 @@
  * Sin embargo, te ayuda a familiarizarte con cómo funciona internamente el DOM real.
  */
 
-enum TipoToken {
- Apertura = "apertura",
- Cierre = "cierre",
- Autocierre = "autocierre",
- Texto = "texto"
-};
+
+
+enum TokenType {
+  Apertura = "apertura",
+  Cierre = "cierre",
+  Autocierre = "autocierre",
+  Texto = "texto"
+}
 
 interface Token {
- tipo: TipoToken | null;
- nombre: string | null;
- contenido: string | null;
- atributos: Record<string, string> | null;
+  tipo: TokenType;
+  nombre: string | null;
+  contenido: string | null;
+  atributos: Record<string, string> | null;
 };
 
 interface NodoElemento {
- tipo: "elemento";
- nombre: string;
- atributos: Record<string, string>;
- hijos: Nodo[];
+  tipo: "elemento";
+  nombre: string;
+  atributos: Record<string, string>;
+  hijos: Nodo[];
 };
 
 interface NodoTexto {
- tipo: "texto";
- contenido: string;
+  tipo: "texto";
+  contenido: string;
 };
 
 type Nodo = NodoElemento | NodoTexto;
 
-function construirArbol(tokens: Token[]): Nodo {
-    const stack: NodoElemento[] = []; // Pila para seguir la jerarquía
-    let root: NodoElemento | null = null; // Nodo raíz
 
-    tokens.forEach(token => {
-        if (token.tipo === TipoToken.Apertura) {
-            const nodo: NodoElemento = {
-                tipo: "elemento",
-                nombre: token.nombre!,
-                atributos: token.atributos ?? {},
-                hijos: []
-            };
+let entrada = `html
+  <div id="principal">
+    <span class="rojo">uno</span>
+    <span>dos</span>
+  </div>
+  `;
 
-            if (stack.length > 0) {
-                stack[stack.length - 1].hijos.push(nodo); // Agregar como hijo al nodo actual
-            } else {
-                root = nodo; // Establecer el nodo raíz
-            }
-
-            stack.push(nodo); // Agregar el nodo a la pila
-
-        } else if (token.tipo === TipoToken.Cierre) {
-            stack.pop(); // Cerrar nodo y volver al padre
-
-        } else if (token.tipo === TipoToken.Texto) {
-            const nodo: NodoTexto = {
-                tipo: "texto",
-                contenido: token.contenido!
-            };
-
-            if (stack.length > 0) {
-                stack[stack.length - 1].hijos.push(nodo);
-            }
-        }
-    });
-
-    return root!;
+function tokenizarHTML(html: string): string[] {
+  // Esta expresión regular captura tanto etiquetas (abiertas, cerradas o autocierre)
+  // como el contenido de texto entre ellas.
+  const regex: RegExp = /<\/?[^>]+>|[^<>]+/g;
+  // Se extraen los tokens y se filtran aquellos que sean vacíos (solo espacios, saltos de línea, etc.)
+  return (html.match(regex) ?? [])
+    .map(token => token.trim())
+    .filter(token => token !== "");
 }
 
+let htmlTokenizado = tokenizarHTML(entrada);
+console.log('1.DOM html tokenizado', htmlTokenizado);
 
+//Clasificando los tokens para construir el árbol
 
+function clasificarTokens(tokens: string[]): Token[] {
+  // Estas expresiones distinguen entre etiquetas de apertura, cierre y autocierre.
+  const regexApertura: RegExp = /^<([a-zA-Z0-9]+)(\s+[^>]+)?>$/;
+  const regexCierre: RegExp = /^<\/([a-zA-Z0-9]+)>$/;
+  const regexAutocierre: RegExp = /^<([a-zA-Z0-9]+)(\s+[^>]+)?\s*\/>$/;
 
+  // Para capturar atributos se permite que las comillas sean dobles o simples.
+  const regexAtributos: RegExp = /([a-zA-Z0-9-]+)=["']([^"']+)["']/g;
+
+  return tokens.map(token => {
+    if (regexApertura.test(token)) {
+      const match = token.match(regexApertura);
+      const atributos: Record<string, string> = {};
+      if (match && match[2]) {
+        for (const attr of match[2].matchAll(regexAtributos)) {
+          atributos[attr[1]] = attr[2];
+        }
+      }
+      return {
+        tipo: TokenType.Apertura,
+        nombre: match?.[1] ?? null,
+        contenido: null,
+        atributos: Object.keys(atributos).length ? atributos : null
+      };
+    }
+
+    if (regexCierre.test(token)) {
+      const match = token.match(regexCierre);
+      return {
+        tipo: TokenType.Cierre,
+        nombre: match?.[1] ?? null,
+        contenido: null,
+        atributos: {}
+      };
+    }
+
+    if (regexAutocierre.test(token)) {
+      const match = token.match(regexAutocierre);
+      const atributos: Record<string, string> = {};
+      if (match && match[2]) {
+        for (const attr of match[2].matchAll(regexAtributos)) {
+          atributos[attr[1]] = attr[2];
+        }
+      }
+      return {
+        tipo: TokenType.Autocierre,
+        nombre: match?.[1] ?? null,
+        contenido: null,
+        atributos: Object.keys(atributos).length ? atributos : null
+      };
+    }
+
+    // Si no coincide con ningún patrón de etiqueta, se trata como texto.
+    return {
+      tipo: TokenType.Texto,
+      nombre: null,
+      contenido: token,
+      atributos: {}
+    };
+  });
+}
+
+let htmlClasificado = clasificarTokens(htmlTokenizado);
+console.log('2.DOM html clasificado', htmlClasificado);
+
+//Ahora construyendo el árbol
+function construirArbol(tokens: Token[]): Nodo {
+  const stack: NodoElemento[] = []; // Pila para mantener la jerarquía
+  let root: NodoElemento | null = null;
+
+  tokens.forEach(token => {
+    if (token.tipo === TokenType.Apertura) {
+      // Crear un nodo de elemento con sus atributos y una lista vacía de hijos
+      const nodo: NodoElemento = {
+        tipo: "elemento",
+        nombre: token.nombre!,
+        atributos: token.atributos ?? {},
+        hijos: []
+      };
+
+      if (stack.length > 0) {
+        // Se agrega como hijo al nodo que está en la cima de la pila
+        stack[stack.length - 1].hijos.push(nodo);
+      } else {
+        // Si la pila está vacía, este es el nodo raíz
+        root = nodo;
+      }
+
+      stack.push(nodo);
+
+    } else if (token.tipo === TokenType.Autocierre) {
+      // Los nodos de autocierre se agregan sin necesidad de empujar en la pila
+      const nodo: NodoElemento = {
+        tipo: "elemento",
+        nombre: token.nombre!,
+        atributos: token.atributos ?? {},
+        hijos: []
+      };
+
+      if (stack.length > 0) {
+        stack[stack.length - 1].hijos.push(nodo);
+      } else {
+        // Si se encuentra un autocierre sin que haya un padre, se establece como raíz
+        root = nodo;
+      }
+
+    } else if (token.tipo === TokenType.Cierre) {
+      if (stack.length === 0) {
+        throw new Error(`Se encontró una etiqueta de cierre </${token.nombre}> sin su correspondiente apertura.`);
+      }
+      const nodoCerrado = stack.pop();
+      // Opcional: Verifica que la etiqueta de cierre coincida con la de apertura.
+      if (nodoCerrado && nodoCerrado.nombre !== token.nombre) {
+        throw new Error(`Error de sintaxis: etiqueta de cierre </${token.nombre}> no coincide con la etiqueta abierta <${nodoCerrado.nombre}>.`);
+      }
+
+    } else if (token.tipo === TokenType.Texto) {
+      // Crear un nodo de texto
+      const nodoTexto: NodoTexto = {
+        tipo: "texto",
+        contenido: token.contenido!
+      };
+
+      if (stack.length > 0) {
+        stack[stack.length - 1].hijos.push(nodoTexto);
+      } else {
+        // Si no hay ningún contenedor, envolvemos el texto en un nodo raíz por defecto.
+        if (!root) {
+          root = {
+            tipo: "elemento",
+            nombre: "body",
+            atributos: {},
+            hijos: [nodoTexto]
+          };
+        } else {
+          root.hijos.push(nodoTexto);
+        }
+      }
+    }
+  });
+
+  // Si aún hay elementos en la pila, significa que faltó cerrar algunas etiquetas.
+  if (stack.length > 0) {
+    const nombresAbiertos = stack.map(nodo => nodo.nombre).join(", ");
+    throw new Error(`Error: No se cerraron las siguientes etiquetas: ${nombresAbiertos}`);
+  }
+
+  if (!root) {
+    throw new Error("Error: No se pudo construir el árbol DOM.");
+  }
+  return root;
+}
+
+let arbolConstruido = construirArbol(htmlClasificado);
+console.log('3.DOM arbol construido', arbolConstruido)
+
+//Implementación del queryselector para buscar cosas en el árbol construido c: (OPCIONAL)
 function querySelector(nodo: NodoElemento, selector: string): NodoElemento | null {
     if (selector.startsWith("#") && nodo.atributos.id === selector.slice(1)) {
         return nodo;
@@ -247,23 +387,11 @@ function querySelector(nodo: NodoElemento, selector: string): NodoElemento | nul
 }
 
 
-const tokens: Token[] = [
-    { tipo: TipoToken.Apertura, nombre: "div", contenido: null, atributos: { id: "contenedor" } },
-    { tipo: TipoToken.Texto, nombre: null, contenido: "Bienvenidos a mi sitio", atributos: null },
-    { tipo: TipoToken.Apertura, nombre: "section", contenido: null, atributos: { class: "principal" } },
-    { tipo: TipoToken.Apertura, nombre: "article", contenido: null, atributos: { class: "destacado" } },
-    { tipo: TipoToken.Texto, nombre: null, contenido: "Últimas noticias", atributos: null },
-    { tipo: TipoToken.Cierre, nombre: "article", contenido: null, atributos: null },
-    { tipo: TipoToken.Cierre, nombre: "section", contenido: null, atributos: null },
-    { tipo: TipoToken.Cierre, nombre: "div", contenido: null, atributos: null }
-];
-
-const arbol = construirArbol(tokens);
-console.log(JSON.stringify(arbol, null, 2)); // Para ver la estructura en la consola
+console.log(JSON.stringify(arbolConstruido, null, 2)); // Para ver la estructura en la consola
 
 // Pruebas con `querySelector`
-console.log("Buscando #contenedor:", querySelector(arbol, "#contenedor"));
-console.log("Buscando .principal:", querySelector(arbol, ".principal"));
-console.log("Buscando .destacado:", querySelector(arbol, ".destacado"));
-console.log("Buscando section:", querySelector(arbol, "section"));
-console.log("Buscando article:", querySelector(arbol, "article"));
+console.log("Buscando #contenedor:", querySelector(arbolConstruido, "#contenedor"));
+console.log("Buscando .principal:", querySelector(arbolConstruido, ".principal"));
+console.log("Buscando .destacado:", querySelector(arbolConstruido, ".destacado"));
+console.log("Buscando section:", querySelector(arbolConstruido, "section"));
+console.log("Buscando article:", querySelector(arbolConstruido, "article"));

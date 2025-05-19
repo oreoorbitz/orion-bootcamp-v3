@@ -32,11 +32,17 @@
  * - Usa expresiones regulares (`.match`, `.split`) para separar texto y etiquetas.
  * - Este módulo es el primer paso para que tu programa entienda HTML como si fuera un navegador.
  */
-function tokenizarHTML (html: string): string[] {
-  const regex: RegExp = /<\/?[^>]+>|[^<>]+/g
-  return html.match(regex) ?? []
+
+let entrada = "<div>Hello <span>World</span></div>";
+function tokenizarHTML(html: string): string[] {
+  // Esta expresión regular captura tanto etiquetas (abiertas, cerradas o autocierre)
+  // como el contenido de texto entre ellas.
+  const regex: RegExp = /<\/?[^>]+>|[^<>]+/g;
+  // Se extraen los tokens y se filtran aquellos que sean vacíos (solo espacios, saltos de línea, etc.)
+  return (html.match(regex) ?? [])
+    .map(token => token.trim())
+    .filter(token => token !== "");
 }
 
-const entrada: string = "<div>Hello <span>World</span></div>";
-const resultado: string[] = tokenizarHTML(entrada);
-console.log(resultado);
+let htmlTokenizado = tokenizarHTML(entrada)
+console.log(htmlTokenizado);
