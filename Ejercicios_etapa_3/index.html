@@ -1,14 +1,25 @@
+
 <!doctype html>
     <html lang="en">
       <head>
         <meta charset="UTF-8">
-        <title>{{ page_title | default: 'Untitled Page' }}</title>
+        <title>Welcome to the Course</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link href="./assets/tailwind.css" rel="stylesheet">
       </head>
       <body class="font-sans bg-brand-dark text-brand-light">
         <main class="p-4">
-          {% block %}{% endblock %}
+          
+<h1 class="header-xl">Start Your Journey</h1>
+
+<p class="text-lg text-muted mb-6">
+  Welcome to the interactive coding course. Select a module to begin:
+</p>
+
+<ul class="space-y-4">
+    <li><a href="/1_general/accordion/index.html" class="text-brand-teal underline">Module 1: General → FAQ</a></li>
+  </ul>
+
 
             <script defer src="https://cdn.jsdelivr.net/npm/liquidjs/dist/liquid.browser.min.js"></script>
             <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>

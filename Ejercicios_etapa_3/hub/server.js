@@ -10,9 +10,17 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const port = 3000;
 
-// Setup live reload
+const generalOutputPath = path.resolve(__dirname, './../1_general');
+const assetsOutputPath = path.resolve(__dirname, './../assets');
+const rootIndexPath = path.resolve(__dirname, './../index.html');
+
+// Live reload watcher
 const liveReloadServer = livereload.createServer();
-liveReloadServer.watch(path.join(__dirname, 'dist'));
+liveReloadServer.watch([
+  generalOutputPath,
+  assetsOutputPath,
+  rootIndexPath
+]);
 
 liveReloadServer.server.once('connection', () => {
   setTimeout(() => {
@@ -22,13 +30,11 @@ liveReloadServer.server.once('connection', () => {
 
 app.use(connectLivereload());
 
-// Serve static assets
-app.use('/assets', express.static(path.join(__dirname, 'assets')));
-app.use(express.static(path.join(__dirname, 'dist')));
+app.use('/assets', express.static(assetsOutputPath));
+app.use('/1_general', express.static(generalOutputPath));
 
-// Redirect root to index.html explicitly
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+  res.sendFile(rootIndexPath);
 });
 
 app.listen(port, () => {
