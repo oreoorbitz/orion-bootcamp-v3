@@ -37,6 +37,7 @@ const watchPaths = [
   path.join(__dirname, 'sections'),
   path.join(__dirname, 'snippets'),
   path.join(__dirname, 'modules'),
+  path.join(__dirname, 'javascript')
 ];
 
 chokidar.watch(watchPaths, {
@@ -44,7 +45,7 @@ chokidar.watch(watchPaths, {
   ignoreInitial: true,
   usePolling: true
 }).on('all', (event, filePath) => {
-  if (filePath.endsWith('.liquid')) {
+  if (filePath.endsWith('.liquid') || filePath.endsWith('.js')) {
     console.log(`🔄 Change detected in ${filePath}, rebuilding...`);
     exec('node Ejercicios_etapa_3/hub/build.js', (err, stdout, stderr) => {
       if (err) {

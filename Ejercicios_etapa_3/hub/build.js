@@ -1,4 +1,6 @@
 import registerLinkToModule from './filters/link_to_module.js';
+import registerHtmlOutput from './tags/htmlOutput.js';
+import registerJavascriptInput from './tags/javascriptInput.js';
 import { Liquid } from 'liquidjs';
 import fs from 'fs/promises';
 import path from 'path';
@@ -8,6 +10,25 @@ import glob from 'glob';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const copyJavaScriptFiles = async () => {
+  const sourceDir = path.join(__dirname, 'javascript');
+  const targetDir = path.resolve(__dirname, '../assets');
+
+  try {
+    const files = await fs.readdir(sourceDir);
+    for (const file of files) {
+      if (!file.endsWith('.js')) continue;
+
+      const srcPath = path.join(sourceDir, file);
+      const destPath = path.join(targetDir, file);
+      await fs.copyFile(srcPath, destPath);
+      console.log(`📦 Copied JS: ${file}`);
+    }
+  } catch (err) {
+    console.warn('⚠️ No JavaScript files to copy or source folder missing.');
+  }
+};
 
 const engine = new Liquid({
   root: [
@@ -21,6 +42,8 @@ const engine = new Liquid({
 
 // Register filters
 registerLinkToModule(engine);
+registerHtmlOutput(engine);
+registerJavascriptInput(engine);
 
 const buildTailwind = () => {
   return new Promise((resolve, reject) => {
@@ -70,6 +93,7 @@ const run = async () => {
   await buildTailwind();
   await buildModulePages();
   await buildRootIndex();
+  await copyJavaScriptFiles();
 };
 
 run().catch(console.error);
