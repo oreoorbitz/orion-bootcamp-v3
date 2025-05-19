@@ -1,7 +1,3 @@
-{% assign page_title = "Welcome Page" %}
-{% layout "layout.liquid" %}
-
-
 {# header-xl: text-3xl md:text-4xl lg:text-5xl font-bold text-brand-light mb-6 #}
 {# header-lg: text-2xl md:text-3xl lg:text-4xl font-semibold text-brand-light mb-5 #}
 {# header-md: text-xl md:text-2xl font-semibold text-muted mb-4 #}
@@ -20,13 +16,3 @@
 
 {# input-line: w-full bg-white text-brand-dark border border-muted rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent #}
 {# input-block: w-full h-32 bg-white text-brand-dark border border-muted rounded px-3 py-2 text-sm font-mono resize-none focus:outline-none focus:ring-2 focus:ring-accent #}
-
-{# section: py-12 md:py-16 lg:py-20 px-4 md:px-6 lg:px-8 space-y-8 #}
-
-
-{% block %}
-    <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold text-brand-light mb-6">Welcome to the Bootcamp!</h1>
-    <h2 class="text-lg md:text-xl font-medium text-muted mb-3" >This is example subtext</h2>
-
-
-{% endblock %}

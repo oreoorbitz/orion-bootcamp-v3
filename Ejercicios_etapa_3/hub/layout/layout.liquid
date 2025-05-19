@@ -1,14 +1,24 @@
 <!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <title>{{ page_title | default: 'Untitled Page' }}</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="/assets/tailwind.css" rel="stylesheet">
-  </head>
-  <body class="font-sans text-gray-900 bg-gray-100">
-    <main class="p-4">
-      {{ content }}
-    </main>
-  </body>
-</html>
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <title>{{ page_title | default: 'Untitled Page' }}</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="./tailwind.css" rel="stylesheet">
+      </head>
+      <body class="font-sans bg-brand-dark text-brand-light">
+        <main class="p-4">
+          {% block %}{% endblock %}
+
+            <script defer src="https://cdn.jsdelivr.net/npm/liquidjs/dist/liquid.browser.min.js"></script>
+            <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+            <script defer src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+            <script defer src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-javascript.min.js"></script>
+            <script defer src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-markup-templating.min.js"></script>
+            <script defer src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-liquid.min.js"></script>
+
+        </main>
+      </body>
+    </html>
+    
