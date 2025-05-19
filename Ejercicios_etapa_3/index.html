@@ -20,19 +20,42 @@
     <li><a href="/1_general/accordion/index.html" hx-get="/1_general/accordion/index.html" hx-target="main" hx-push-url="true" class="text-brand-teal underline">Module 1: General → Accordion</a></li>
 </ul>
 
+<section>
+
+<div data-html-output id="html-output-gppjd8y"><div data-html-render>
+<button class="" >Click Me</button>
+</div><script data-injected></script></div>
 
 
+        <section class="flex flex-col items-center max-w-[1000px] mx-auto mt-6 space-y-4">
+          <pre contenteditable="true"
+               data-html-for="html-output-gppjd8y"
+               data-type="js"
+               class="language-js input-block font-mono text-sm bg-code-block text-brand-light rounded p-4 w-full min-h-[8rem]"
+               spellcheck="false">document.querySelector('button').addEventListener('click', () => alert('clicked!'))</pre>
+          <button data-html-submit="html-output-gppjd8y" class="bg-brand-teal text-white px-4 py-2 rounded hover:bg-accent transition">Run</button>
+        </section>
+      
+</section>
 
-            <script defer src="https://unpkg.com/htmx.org@1.9.6"></script>
-            <script defer src="https://cdn.jsdelivr.net/npm/liquidjs/dist/liquid.browser.min.js"></script>
-            <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
-            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
-            <script defer src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
-            <script defer src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-javascript.min.js"></script>
-            <script defer src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-markup-templating.min.js"></script>
-            <script defer src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-liquid.min.js"></script>
+
 
         </main>
+
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+          
+        <!-- Prism scripts: no defer -->
+        <script defer src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+        <script defer src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-javascript.min.js"></script>
+        
+        <!-- Prism Live: no defer -->
+        <script defer src="https://unpkg.com/prism-live@1.2/prism-live.min.js"></script>
+         
+        <!-- Other scripts: keep defer -->
+        <script defer src="https://unpkg.com/htmx.org@1.9.6"></script>
+        <script defer src="https://cdn.jsdelivr.net/npm/liquidjs/dist/liquid.browser.min.js"></script>
+        <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
+        <script src="./assets/code-exercises.js" defer></script>
       </body>
     </html>
     

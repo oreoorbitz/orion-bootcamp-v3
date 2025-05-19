@@ -1,6 +1,8 @@
 import registerLinkToModule from './filters/link_to_module.js';
 import registerHtmlOutput from './tags/htmlOutput.js';
 import registerJavascriptInput from './tags/javascriptInput.js';
+import registerHtmlInput from './tags/htmlInput.js';
+
 import { Liquid } from 'liquidjs';
 import fs from 'fs/promises';
 import path from 'path';
@@ -44,6 +46,7 @@ const engine = new Liquid({
 registerLinkToModule(engine);
 registerHtmlOutput(engine);
 registerJavascriptInput(engine);
+registerHtmlInput(engine);
 
 const buildTailwind = () => {
   return new Promise((resolve, reject) => {

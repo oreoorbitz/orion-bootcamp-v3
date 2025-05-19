@@ -1,9 +1,16 @@
-{% htmlOutput %}
-  <button class="" >Click Me</button>
-{% endhtmlOutput %}
+{% assign page_title = "Welcome to the Course" %}
+{% layout "layout.liquid" %}
 
-{% javascriptInput %}
-  <script>
-    document.querySelector('button').addEventListener('click', () => alert('clicked!'))
-  </script>
-{% endjavascriptInput %}
+  {% block %}
+
+  {% htmlOutput %}
+    <button class="" >Click Me</button>
+  {% endhtmlOutput %}
+
+  {% javascriptInput %}
+    <script>
+      document.querySelector('button').addEventListener('click', () => alert('clicked!'))
+    </script>
+  {% endjavascriptInput %}
+
+{% endblock %}

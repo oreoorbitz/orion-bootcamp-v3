@@ -17,7 +17,9 @@ export default function register(engine) {
         context.environments.exercise_ids.push(id)
   
         emitter.write(`<div data-html-output id="${id}">`)
+        emitter.write(`<div data-html-render>`)
         yield this.liquid.renderer.renderTemplates(this.tpls, context, emitter)
+        emitter.write(`</div>`)
         emitter.write(`<script data-injected></script>`)
         emitter.write(`</div>`)
       }
