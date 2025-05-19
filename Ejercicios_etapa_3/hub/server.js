@@ -22,9 +22,14 @@ liveReloadServer.server.once('connection', () => {
 
 app.use(connectLivereload());
 
-// Serve static files from /dist and /assets
+// Serve static assets
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 app.use(express.static(path.join(__dirname, 'dist')));
+
+// Redirect root to index.html explicitly
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
 
 app.listen(port, () => {
   console.log(`Dev server running at http://localhost:${port}`);
