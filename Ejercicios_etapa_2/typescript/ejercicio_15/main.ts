@@ -22,7 +22,7 @@
  *    - Usa `export` para cada función o tipo
  *    - Puedes dividir por secciones si lo deseas (parsing, rendering, liquid, etc.)
  *
- * 3. En cada carpeta de módulo (`ejercicio_{{n}}`), importa desde ahí:
+ * 3. En cada carpeta de los próximos módulos (`ejercicio_{{n}}`), importa desde ahí:
  *    ```ts
  *    import { renderizarArchivoLiquid } from "../plantilla_motor/mod.ts";
  *    ```
@@ -39,7 +39,7 @@
  *
  * ✅ Resultado esperado:
  * - Un archivo `mod.ts` con todo tu sistema de rendering.
- * - Los siguientes ejercicios ya no necesitan copiar funciones previas.
+ * - Los siguientes ejercicios ya no necesitaran copiar funciones previas porque ya se estará usando el motor creado en la carpeta.
  * - Posiblemente un pequeño `main_test.ts` o `demo.ts` para verificar que sigue funcionando.
  *
  * Consejo:

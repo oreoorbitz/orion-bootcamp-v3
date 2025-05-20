@@ -1,0 +1,30 @@
+<!doctype html>
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <title>{{ page_title | default: 'Untitled Page' }}</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="./assets/tailwind.css" rel="stylesheet">
+      </head>
+      <body class="font-sans bg-brand-dark text-brand-light">
+        <main class="p-4">
+          {% block %}{% endblock %}
+        </main>
+
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+          
+        <!-- Prism scripts: no defer -->
+        <script defer src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+        <script defer src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-javascript.min.js"></script>
+        
+        <!-- Prism Live: no defer -->
+        <script defer src="https://unpkg.com/prism-live@1.2/prism-live.min.js"></script>
+         
+        <!-- Other scripts: keep defer -->
+        <script defer src="https://unpkg.com/htmx.org@1.9.6"></script>
+        <script defer src="https://cdn.jsdelivr.net/npm/liquidjs/dist/liquid.browser.min.js"></script>
+        <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
+        <script src="./assets/code-exercises.js" defer></script>
+      </body>
+    </html>
+    

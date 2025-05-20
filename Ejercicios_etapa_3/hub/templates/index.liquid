@@ -1,0 +1,29 @@
+{% assign page_title = "Welcome to the Course" %}
+{% layout "layout.liquid" %}
+
+{% block %}
+<h1 class="header-xl">Start Your Journey</h1>
+
+<p class="text-lg text-muted mb-6">
+  Welcome to the interactive coding course. Select a module to begin:
+</p>
+
+<ul class="space-y-4">
+    <li>{{ 'general/accordion' | link_to_module: 'Module 1: General → Accordion' }}</li>
+</ul>
+
+<section>
+
+{% htmlOutput %}
+<button class="" >Click Me</button>
+{% endhtmlOutput %}
+
+{% javascriptInput %}
+<script>
+  document.querySelector('button').addEventListener('click', () => alert('clicked!'))
+</script>
+{% endjavascriptInput %}
+</section>
+
+
+{% endblock %}

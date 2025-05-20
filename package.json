@@ -5,6 +5,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "dev": "node Ejercicios_etapa_3/hub/server.js",
+    "build": "node Ejercicios_etapa_3/hub/build.js",
     "test": "vitest",
     "prueba_1": "vitest Ejercicios_etapa_1/Javascript/Ejercicio_1/prueba.test.js",
     "prueba_2": "vitest Ejercicios_etapa_1/Javascript/Ejercicio_2/prueba.test.js",
@@ -16,12 +18,22 @@
     "prueba_7": "vitest Ejercicios_etapa_1/Javascript/Ejercicio_7/prueba.test.js",
     "prueba_8": "vitest Ejercicios_etapa_1/Javascript/Ejercicio_8/prueba.test.js",
     "prueba_9": "vitest Ejercicios_etapa_1/Javascript/Ejercicio_9/prueba.test.js"
-
   },
   "author": "Orion Holmes",
   "license": "ISC",
   "dependencies": {
     "cardinal": "^2.1.1",
+    "chokidar": "^4.0.3",
+    "connect-livereload": "^0.6.1",
+    "express": "^5.1.0",
+    "liquidjs": "^10.21.1",
+    "livereload": "^0.9.3",
+    "sequelize": "^6.37.7",
+    "sqlite3": "^5.1.7",
     "vitest": "^3.0.9"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.7",
+    "tailwindcss": "^4.1.7"
   }
 }
