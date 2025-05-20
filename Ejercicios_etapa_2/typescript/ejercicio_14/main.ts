@@ -82,3 +82,48 @@
  * - Esta función se convertirá en el punto de entrada principal de tu sistema
  * - Verifica cada paso con `console.log()` si algo no se transforma como esperas
  */
+
+
+// Asegúrate de iniciar Deno con permisos para leer archivos (por ejemplo, --allow-read)
+
+// main.ts
+
+// Importa las funciones del motor Liquid y del parser HTML
+import { liquidEngine } from "./liquidEngine.ts";
+import { htmlParser, renderDOM } from "./htmlParser.ts";
+
+async function main() {
+  // Define el contexto que necesites para tu plantilla Liquid
+  const contexto = {
+    frutas: ["manzana", "plátano", "uva"],
+    // Otras variables que utilices en la plantilla
+  };
+
+  try {
+    // Ajusta la ruta al archivo, ya que se encuentra en la carpeta "plantillas"
+    const rutaCompleta = "./plantillas/bienvenida.liquid";
+    // Lee la plantilla desde disco
+    const contenidoLiquid: string = await Deno.readTextFile(rutaCompleta);
+    console.log("Contenido de bienvenida.liquid antes de procesar LiquidEngine:\n", contenidoLiquid);
+
+    // Procesa la plantilla con tu motor Liquid
+    const htmlRenderizado: string = liquidEngine(contenidoLiquid, contexto);
+
+
+    // Parsea el HTML renderizado para construir el árbol DOM
+    const arbolDOM = htmlParser(htmlRenderizado);
+
+    // Renderiza el árbol DOM a una cadena HTML final
+    const htmlFinal: string = renderDOM(arbolDOM);
+
+    // Imprime el resultado final para verificar el flujo completo
+    console.log("HTML Final Renderizado:\n", htmlFinal);
+  } catch (error) {
+    console.error("Error durante el procesamiento:", error);
+  }
+}
+
+// Si este archivo es el módulo principal, se ejecuta la función main
+if (import.meta.main) {
+  main();
+}

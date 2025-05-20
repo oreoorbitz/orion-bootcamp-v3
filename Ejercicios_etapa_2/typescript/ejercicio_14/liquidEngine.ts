@@ -1,58 +1,3 @@
-/**
- * MÓDULO 13: MANEJO DE ERRORES EN EL MOTOR DE PLANTILLAS
- *
- * 🧠 Concepto clave:
- * Mientras que HTML real es bastante tolerante con errores (por ejemplo, etiquetas mal cerradas),
- * los motores de plantillas como Liquid deben ser *estrictos* para que el desarrollador reciba retroalimentación clara.
- *
- * A medida que tu sistema crece, es crucial que puedas detectar errores comunes:
- * - Variables que no existen
- * - Filtros desconocidos
- * - Sintaxis mal formada en `{% if %}`, `{% for %}`, etc.
- * - Valores no válidos al hacer asignaciones
- *
- * Objetivo:
- * Agregar validaciones a tu pipeline de plantillas para manejar errores con mensajes informativos,
- * sin romper el programa de manera silenciosa.
- *
- * Instrucciones:
- * 1. Revisa cada una de tus funciones principales del motor de plantillas:
- *    - `procesarAsignaciones`
- *    - `procesarCondicionales`
- *    - `procesarBucles`
- *    - `renderizarVariables`
- *    - `aplicarFiltros`
- * 2. Agrega validaciones defensivas:
- *    - Si una variable no está en el `contexto`, lanza un error o registra una advertencia
- *    - Si un filtro no existe en `filtrosRegistrados`, lanza un error
- *    - Si `{% if %}` no tiene un `{% endif %}` correspondiente, lanza un error de sintaxis
- *    - Si `{% for ... in ... %}` tiene una lista no definida, muestra advertencia
- *    - Si se intenta `assign` sin `=`, o con un valor inválido, detén la ejecución
- *
- * Consejo:
- * - Usa `throw new Error(...)` para errores críticos
- * - Puedes crear una función auxiliar `validarSintaxis()` para verificar tokens antes de procesarlos
- * - Puedes registrar advertencias con `console.warn(...)` sin detener el flujo si el error no es grave
- *
- * Opcional:
- * - Crea un modo `estricto` (por ejemplo con una bandera `modoEstrictamenteTipado: true`) que detenga todo si hay errores
- * - Permite continuar silenciosamente si el modo estricto está desactivado
- *
- * Ejemplo:
- * ```ts
- * // Si este token no tiene cierre correspondiente
- * ["{% if usuario %}", "Contenido", "{{ nombre }}"]
- * // Deberías lanzar un error:
- * throw new Error("Bloque {% if %} sin cierre {% endif %}")
- * ```
- *
- * Resultado esperado:
- * Tu motor debe fallar claramente ante errores lógicos o de sintaxis,
- * ayudando a depurar plantillas de forma más profesional.
- *
- * Este módulo marca el paso de "juguete funcional" a "herramienta real para desarrolladores".
- */
-
 type TipoDirectiva = 'if' | 'endif' | 'for' | 'endfor' | 'else' | 'elsif';
 
 interface TokenPlantilla {
@@ -75,7 +20,7 @@ let entradaInicial = `
   </section>
   `;
 let contexto = {
-   frutas:['pera','platano','mango']
+   frutas: ["manzana", "plátano", "uva"]
 };
 
 let filtrosRegistrados: {} = {
@@ -111,9 +56,6 @@ function detectarTokensPlantilla(entrada: string): string[] {
     return resultado;
 }
 
-let entradaTokenizada = (detectarTokensPlantilla(entradaInicial));
-console.log('1.Resultado de detectarTokens:',entradaTokenizada);
-
 
 //Actualización de Clasificar Tokens para que funcione adecuadamente
 //Primero la clasificación de directivas que se usa en la actualización de clasificar tokens <3
@@ -143,11 +85,8 @@ function clasificarTokensPlantilla(tokens: string[]): TokenPlantilla[] {
 
     return { tipo: "texto", contenido: token.trim() };
   });
-}
+} // La salida de esta es la equivalente a tokens, imprimir si es necesario saber que es cada cosa
 
-// esta es la equivalente a tokens, imprimir si es necesario saber que es cada cosa
-let entradaClasificada = clasificarTokensPlantilla(entradaTokenizada);
-console.log('2.Resultado de clasificar:',entradaClasificada)
 
 function procesarAsignaciones(tokens: TokenPlantilla[], contexto: Record<string, any>): TokenPlantilla[] {
     let resultado: TokenPlantilla[] = [];
@@ -164,7 +103,7 @@ function procesarAsignaciones(tokens: TokenPlantilla[], contexto: Record<string,
             } else if (!isNaN(Number(valorRaw))) {
                 contexto[nombreVariable] = Number(valorRaw); // Convertimos a número si es válido
             } else {
-                //Nueva corrección: Si el valor es otra variable, pero no existe en el contexto, lo mantenemos intacto.
+                //  Nueva corrección: Si el valor es otra variable, pero no existe en el contexto, lo mantenemos intacto.
                 contexto[nombreVariable] = contexto.hasOwnProperty(valorRaw) ? contexto[valorRaw] : valorRaw;
             }
 
@@ -177,10 +116,6 @@ function procesarAsignaciones(tokens: TokenPlantilla[], contexto: Record<string,
     return resultado;
 }
 
-
-
-let entradaProcesadaAsignacion = procesarAsignaciones(entradaClasificada,contexto);
-console.log('3.Resultados de procesar asginaciones',entradaProcesadaAsignacion);
 
 //Según las instrucciones procesar condicionales es una etapa intermedia y debe realizarse antes de renderizar las variables
 //Se han realizado múltiples cambios usar siempre la versión del archivo anterior, no de los archivos de los primeros ejercicios
@@ -255,8 +190,6 @@ function procesarCondicionales(tokens: TokenPlantilla[], contexto: Record<string
     return resultado;
 }
 
-let entradaProcesada = procesarCondicionales(entradaProcesadaAsignacion,contexto);
-console.log('4.Resultado de procesar condicionales:',entradaProcesada);
 
 function procesarBucles(tokens: TokenPlantilla[], contexto: Record<string, any>): TokenPlantilla[] {
   let resultado: TokenPlantilla[] = [];
@@ -333,9 +266,6 @@ function procesarBucles(tokens: TokenPlantilla[], contexto: Record<string, any>)
 }
 
 
-let buclesProcesados = procesarBucles(entradaProcesada,contexto);
-console.log('5.Resultado de procesar bucles',buclesProcesados)
-
 function aplicarFiltros(nombreVariable: string, filtros: string[], contexto: Record<string, any>, filtrosRegistrados: Record<string, Function>): string | string[] {
 
   let valor = contexto[nombreVariable] ?? nombreVariable; // Si no está en el contexto, usar el valor como texto
@@ -404,207 +334,27 @@ function renderizarVariables(tokens: TokenPlantilla[], contexto: Record<string, 
     }).join('');
 }
 
-let entradaRenderizada = renderizarVariables(buclesProcesados, contexto, filtrosRegistrados);
-console.log('6. Resultado de Renderizar variables',entradaRenderizada)
 
-//Motor DOM verificando que todo funciona en conjunto:
-enum TokenType {
-  Apertura = "apertura",
-  Cierre = "cierre",
-  Autocierre = "autocierre",
-  Texto = "texto"
+export function liquidEngine(entradaInicial: string, contexto: Record<string, any>): string {
+  console.log("Entrada inicial en liquidEngine:\n", entradaInicial);
+
+  const entradaTokenizada = detectarTokensPlantilla(entradaInicial);
+  console.log("Tokens de Liquid:\n", entradaTokenizada);
+
+  const entradaClasificada = clasificarTokensPlantilla(entradaTokenizada);
+  console.log("Tokens clasificados:\n", entradaClasificada);
+
+  const entradaProcesadaAsignacion = procesarAsignaciones(entradaClasificada, contexto);
+  console.log("Después de procesar asignaciones:\n", entradaProcesadaAsignacion);
+
+  const entradaProcesada = procesarCondicionales(entradaProcesadaAsignacion, contexto);
+  console.log("Después de procesar condicionales:\n", entradaProcesada);
+
+  const buclesProcesados = procesarBucles(entradaProcesada, contexto);
+  console.log("Después de procesar bucles:\n", buclesProcesados);
+
+  const entradaRenderizada = renderizarVariables(buclesProcesados, contexto, filtrosRegistrados);
+  console.log("Resultado final de Liquid:\n", entradaRenderizada);
+
+  return entradaRenderizada;
 }
-
-interface Token {
-  tipo: TokenType;
-  nombre: string | null;
-  contenido: string | null;
-  atributos: Record<string, string> | null;
-};
-
-interface NodoElemento {
-  tipo: "elemento";
-  nombre: string;
-  atributos: Record<string, string>;
-  hijos: Nodo[];
-};
-
-interface NodoTexto {
-  tipo: "texto";
-  contenido: string;
-};
-
-type Nodo = NodoElemento | NodoTexto;
-
-function tokenizarHTML(html: string): string[] {
-  // Esta expresión regular captura tanto etiquetas (abiertas, cerradas o autocierre)
-  // como el contenido de texto entre ellas.
-  const regex: RegExp = /<\/?[^>]+>|[^<>]+/g;
-  // Se extraen los tokens y se filtran aquellos que sean vacíos (solo espacios, saltos de línea, etc.)
-  return (html.match(regex) ?? [])
-    .map(token => token.trim())
-    .filter(token => token !== "");
-}
-
-let htmlTokenizado = tokenizarHTML(entradaRenderizada);
-console.log('1.DOM html tokenizado', htmlTokenizado);
-
-//Clasificando los tokens para construir el árbol
-
-function clasificarTokens(tokens: string[]): Token[] {
-  // Estas expresiones distinguen entre etiquetas de apertura, cierre y autocierre.
-  const regexApertura: RegExp = /^<([a-zA-Z0-9]+)(\s+[^>]+)?>$/;
-  const regexCierre: RegExp = /^<\/([a-zA-Z0-9]+)>$/;
-  const regexAutocierre: RegExp = /^<([a-zA-Z0-9]+)(\s+[^>]+)?\s*\/>$/;
-
-  // Para capturar atributos se permite que las comillas sean dobles o simples.
-  const regexAtributos: RegExp = /([a-zA-Z0-9-]+)=["']([^"']+)["']/g;
-
-  return tokens.map(token => {
-    if (regexApertura.test(token)) {
-      const match = token.match(regexApertura);
-      const atributos: Record<string, string> = {};
-      if (match && match[2]) {
-        for (const attr of match[2].matchAll(regexAtributos)) {
-          atributos[attr[1]] = attr[2];
-        }
-      }
-      return {
-        tipo: TokenType.Apertura,
-        nombre: match?.[1] ?? null,
-        contenido: null,
-        atributos: Object.keys(atributos).length ? atributos : null
-      };
-    }
-
-    if (regexCierre.test(token)) {
-      const match = token.match(regexCierre);
-      return {
-        tipo: TokenType.Cierre,
-        nombre: match?.[1] ?? null,
-        contenido: null,
-        atributos: {}
-      };
-    }
-
-    if (regexAutocierre.test(token)) {
-      const match = token.match(regexAutocierre);
-      const atributos: Record<string, string> = {};
-      if (match && match[2]) {
-        for (const attr of match[2].matchAll(regexAtributos)) {
-          atributos[attr[1]] = attr[2];
-        }
-      }
-      return {
-        tipo: TokenType.Autocierre,
-        nombre: match?.[1] ?? null,
-        contenido: null,
-        atributos: Object.keys(atributos).length ? atributos : null
-      };
-    }
-
-    // Si no coincide con ningún patrón de etiqueta, se trata como texto.
-    return {
-      tipo: TokenType.Texto,
-      nombre: null,
-      contenido: token,
-      atributos: {}
-    };
-  });
-}
-
-let htmlClasificado = clasificarTokens(htmlTokenizado);
-console.log('2.DOM html clasificado', htmlClasificado);
-
-//Ahora construyendo el árbol
-function construirArbol(tokens: Token[]): Nodo {
-  const stack: NodoElemento[] = []; // Pila para mantener la jerarquía
-  let root: NodoElemento | null = null;
-
-  tokens.forEach(token => {
-    if (token.tipo === TokenType.Apertura) {
-      // Crear un nodo de elemento con sus atributos y una lista vacía de hijos
-      const nodo: NodoElemento = {
-        tipo: "elemento",
-        nombre: token.nombre!,
-        atributos: token.atributos ?? {},
-        hijos: []
-      };
-
-      if (stack.length > 0) {
-        // Se agrega como hijo al nodo que está en la cima de la pila
-        stack[stack.length - 1].hijos.push(nodo);
-      } else {
-        // Si la pila está vacía, este es el nodo raíz
-        root = nodo;
-      }
-
-      stack.push(nodo);
-
-    } else if (token.tipo === TokenType.Autocierre) {
-      // Los nodos de autocierre se agregan sin necesidad de empujar en la pila
-      const nodo: NodoElemento = {
-        tipo: "elemento",
-        nombre: token.nombre!,
-        atributos: token.atributos ?? {},
-        hijos: []
-      };
-
-      if (stack.length > 0) {
-        stack[stack.length - 1].hijos.push(nodo);
-      } else {
-        // Si se encuentra un autocierre sin que haya un padre, se establece como raíz
-        root = nodo;
-      }
-
-    } else if (token.tipo === TokenType.Cierre) {
-      if (stack.length === 0) {
-        throw new Error(`Se encontró una etiqueta de cierre </${token.nombre}> sin su correspondiente apertura.`);
-      }
-      const nodoCerrado = stack.pop();
-      // Opcional: Verifica que la etiqueta de cierre coincida con la de apertura.
-      if (nodoCerrado && nodoCerrado.nombre !== token.nombre) {
-        throw new Error(`Error de sintaxis: etiqueta de cierre </${token.nombre}> no coincide con la etiqueta abierta <${nodoCerrado.nombre}>.`);
-      }
-
-    } else if (token.tipo === TokenType.Texto) {
-      // Crear un nodo de texto
-      const nodoTexto: NodoTexto = {
-        tipo: "texto",
-        contenido: token.contenido!
-      };
-
-      if (stack.length > 0) {
-        stack[stack.length - 1].hijos.push(nodoTexto);
-      } else {
-        // Si no hay ningún contenedor, envolvemos el texto en un nodo raíz por defecto.
-        if (!root) {
-          root = {
-            tipo: "elemento",
-            nombre: "body",
-            atributos: {},
-            hijos: [nodoTexto]
-          };
-        } else {
-          root.hijos.push(nodoTexto);
-        }
-      }
-    }
-  });
-
-  // Si aún hay elementos en la pila, significa que faltó cerrar algunas etiquetas.
-  if (stack.length > 0) {
-    const nombresAbiertos = stack.map(nodo => nodo.nombre).join(", ");
-    throw new Error(`Error: No se cerraron las siguientes etiquetas: ${nombresAbiertos}`);
-  }
-
-  if (!root) {
-    throw new Error("Error: No se pudo construir el árbol DOM.");
-  }
-  return root;
-}
-
-let arbolConstruido = construirArbol(htmlClasificado);
-console.log('3.DOM arbol construido', arbolConstruido)
-//Para ver el contenido completo del árbol usar:
-//console.log(JSON.stringify(arbolConstruido, null, 2));

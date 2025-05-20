@@ -1,0 +1,10 @@
+<section>
+   <h1>{{ titulo | upcase }}</h1>
+   <ul>
+     {% for fruta in frutas %}
+       {% if fruta %}
+         <li>{{ fruta | upcase }}</li>
+       {% endif %}
+     {% endfor %}
+   </ul>
+ </section>

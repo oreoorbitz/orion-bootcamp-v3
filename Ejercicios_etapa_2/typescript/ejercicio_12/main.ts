@@ -205,7 +205,7 @@ function procesarAsignaciones(tokens: TokenPlantilla[], contexto: Record<string,
             } else if (!isNaN(Number(valorRaw))) {
                 contexto[nombreVariable] = Number(valorRaw); // Convertimos a número si es válido
             } else {
-                // 🔥 Nueva corrección: Si el valor es otra variable, pero no existe en el contexto, lo mantenemos intacto.
+                //  Nueva corrección: Si el valor es otra variable, pero no existe en el contexto, lo mantenemos intacto.
                 contexto[nombreVariable] = contexto.hasOwnProperty(valorRaw) ? contexto[valorRaw] : valorRaw;
             }
 
@@ -445,12 +445,8 @@ function renderizarVariables(tokens: TokenPlantilla[], contexto: Record<string, 
     }).join('');
 }
 
-
-
-
 let entradaRenderizada = renderizarVariables(buclesProcesados, contexto, filtrosRegistrados);
 console.log('6. Resultado de Renderizar variables',entradaRenderizada)
-
 
 //Motor DOM verificando que todo funciona en conjunto:
 enum TokenType {
@@ -480,7 +476,6 @@ interface NodoTexto {
 };
 
 type Nodo = NodoElemento | NodoTexto;
-
 
 function tokenizarHTML(html: string): string[] {
   // Esta expresión regular captura tanto etiquetas (abiertas, cerradas o autocierre)
@@ -652,3 +647,5 @@ function construirArbol(tokens: Token[]): Nodo {
 
 let arbolConstruido = construirArbol(htmlClasificado);
 console.log('3.DOM arbol construido', arbolConstruido)
+
+console.log(JSON.stringify(arbolConstruido, null, 2));
