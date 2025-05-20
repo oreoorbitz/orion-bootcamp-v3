@@ -25,6 +25,8 @@
  * │   ├── data.ts                  ← Archivo editable que exporta el objeto `contexto`
  * │   └── template.liquid          ← Tu plantilla HTML en formato liquid
  * ```
+ * Esta estructura puede cambiar dependiendo si estás usando un archivo central o una carpeta central, pero en caso de ser una carpeta
+ * la única diferencia radica en que tienes tres archivos en lugar de uno dentro de plantilla_motor.
  *
  * ✅ Instrucciones:
  * 1. Crea un archivo `data.ts` con una exportación:
@@ -36,7 +38,8 @@
  *    - Usa `Deno.watchFs()` para observar cambios en `data.ts`
  *    - Usa `import("file://" + path + "?version=" + Date.now())` para forzar la recarga del módulo cuando cambia
  *    - Vuelve a cargar `template.liquid` con `Deno.readTextFile()`
- *    - Usa `renderizarArchivoLiquid` desde tu `mod.ts` para procesar la plantilla con los datos
+ *    - Usa `renderizarArchivoLiquid` desde tu `mod.ts` (o desde el archivo correspondiente si tienes una carpeta central)
+ *      para procesar la plantilla con los datos
  *    - Imprime el HTML resultante en consola. Opcional: usa `console.clear()` entre renders
  *
  * 3. Usa tu pipeline completo:
