@@ -194,16 +194,16 @@ function construirArbol(tokens: Token[]): Nodo {
 
 
 export function htmlParser(entradaRenderizada: string): Nodo {
- // console.log("HTML a procesar en htmlParser:\n", entradaRenderizada); // ← Aquí ya tendrá un valor válido
+  console.log("HTML a procesar en htmlParser:\n", entradaRenderizada); // ← Aquí ya tendrá un valor válido
 
   const htmlTokenizado = tokenizarHTML(entradaRenderizada);
-//console.log("Tokens generados:\n", htmlTokenizado); // ← Verifica los tokens antes de seguir
+console.log("Tokens generados:\n", htmlTokenizado); // ← Verifica los tokens antes de seguir
 
   const htmlClasificado = clasificarTokens(htmlTokenizado);
-//console.log("Tokens clasificados:\n", htmlClasificado); // ← Revisa si la clasificación funciona
+console.log("Tokens clasificados:\n", htmlClasificado); // ← Revisa si la clasificación funciona
 
   const arbolConstruido = construirArbol(htmlClasificado);
-//console.log("Árbol DOM generado:\n", arbolConstruido); // ← Revisa si el árbol se construye correctamente
+console.log("Árbol DOM generado:\n", arbolConstruido); // ← Revisa si el árbol se construye correctamente
 
   return arbolConstruido;
 }

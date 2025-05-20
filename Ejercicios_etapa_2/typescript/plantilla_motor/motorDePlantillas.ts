@@ -313,29 +313,29 @@ function renderizarVariables(tokens: TokenPlantilla[], contexto: Record<string, 
             return valor.toString(); // Finalmente, reemplazamos correctamente el valor de la variable
         }
         return token.contenido; // Conservamos la estructura original
-    }).join('');
+    }).join(' ');
 }
 
 export function liquidEngine(entradaInicial: string, contexto: Record<string, any>): string {
-//console.log("Entrada inicial en liquidEngine:\n", entradaInicial);
+console.log("Entrada inicial en liquidEngine:\n", entradaInicial);
 
   const entradaTokenizada = detectarTokensPlantilla(entradaInicial);
-//console.log("Tokens de Liquid:\n", entradaTokenizada);
+console.log("Tokens de Liquid:\n", entradaTokenizada);
 
   const entradaClasificada = clasificarTokensPlantilla(entradaTokenizada);
-//console.log("Tokens clasificados:\n", entradaClasificada);
+console.log("Tokens clasificados:\n", entradaClasificada);
 
   const entradaProcesadaAsignacion = procesarAsignaciones(entradaClasificada, contexto);
-//console.log("Después de procesar asignaciones:\n", entradaProcesadaAsignacion);
+console.log("Después de procesar asignaciones:\n", entradaProcesadaAsignacion);
 
   const entradaProcesada = procesarCondicionales(entradaProcesadaAsignacion, contexto);
-//console.log("Después de procesar condicionales:\n", entradaProcesada);
+console.log("Después de procesar condicionales:\n", entradaProcesada);
 
   const buclesProcesados = procesarBucles(entradaProcesada, contexto);
-//console.log("Después de procesar bucles:\n", buclesProcesados);
+console.log("Después de procesar bucles:\n", buclesProcesados);
 
   const entradaRenderizada = renderizarVariables(buclesProcesados, contexto, filtrosRegistrados);
-//console.log("Resultado final de Liquid:\n", entradaRenderizada);
+console.log("Resultado final de Liquid:\n", entradaRenderizada);
 
   return entradaRenderizada;
 }
