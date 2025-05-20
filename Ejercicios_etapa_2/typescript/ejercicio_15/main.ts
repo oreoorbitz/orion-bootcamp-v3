@@ -47,3 +47,51 @@
  * - Piensa como si tu motor ya fuera una mini librería de verdad.
  * - Puedes incluir una sección de tipos al inicio del archivo para mantener todo bien organizado.
  */
+
+
+//IMPORTANTE ESTOS SON LOS IMPORTS QUE DEBO COPIAR Y PEGAR EN CADA UNO DE LOS ARCHIVOS PARA QUE EL MOTOR FUNCIONE <3
+import { liquidEngine } from "../plantilla_motor/motorDePlantillas.ts";
+import { htmlParser } from "../plantilla_motor/parserDehtml.ts";
+import { renderDOM } from "../plantilla_motor/renderizador.ts";
+
+
+//ESTA ES LA ENTRADA MANUAL QUE PUEDO CORREGIR PARA EJECUTAR EL MOTORRR
+const entradaManual = `
+<section>
+  <h1>{{ titulo | upcase }}</h1>
+  <ul>
+    {% for fruta in frutas %}
+      {% if fruta %}
+        <li>{{ fruta | upcase }}</li>
+      {% endif %}
+    {% endfor %}
+  </ul>
+</section>
+`;
+
+// Definir el contexto con las variables necesarias
+const contexto = {
+  titulo: "Frutas favoritas",
+  frutas: ["manzana", "plátano", "uva"]
+};
+
+// 🚀 **Procesamiento de la entrada**
+// 1️⃣ Ejecutamos el motor de plantillas
+const plantillaRenderizada = liquidEngine(entradaManual, contexto);
+console.log("Plantilla Renderizada:\n", plantillaRenderizada);
+
+// 2️⃣ Ejecutamos el parser de HTML
+const arbolDOM = htmlParser(plantillaRenderizada);
+console.log("Árbol DOM generado:\n", arbolDOM);
+
+// 3️⃣ Renderizamos el DOM a HTML final
+const htmlFinal = renderDOM(arbolDOM);
+console.log("HTML Final:\n", htmlFinal);
+
+
+//Para ejecutar este código usar este comando en la consola, cambiar el número de la carpeta si
+//es usado en otras carpetas, se puede usar indiscriminadamente, pero es recomendado en casos
+//dónde necesito acceder a otros archivos como liquid
+//            deno run --allow-read main.ts
+//También funciona el código siguiente SOLO EN CASOS DONDE NO NECESITO ACCEDER A OTROS ARCHIVOS
+//            deno run main.ts
