@@ -109,7 +109,7 @@ async function recargarYGenerarHTML() {
     console.clear();
 
     // 1️ Recargar `data.ts`
-    const contextoImportado = await import(`file://${Deno.cwd()}/${dataPath}?version=${Date.now()}`);
+    const contextoImportado = await import(`file://${Deno.cwd()}/data.ts?version=${Date.now()}`);
     const contexto = contextoImportado.contexto;
 
     // 2️ Leer `template.liquid`
