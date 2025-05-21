@@ -84,7 +84,7 @@ import { renderDOM } from "../plantilla_motor/renderizador.ts";
 const plantillaPath = "./template.liquid";
 const dataPath = "./data.ts";
 
-// 🕵️‍♀️ **Observar cambios en `data.ts`**
+// **Observar cambios en `data.ts`**
 async function observarCambios() {
   for await (const evento of Deno.watchFs("./")) {
     if (evento.paths.some(path => path.endsWith("data.ts"))) {
@@ -94,25 +94,24 @@ async function observarCambios() {
   }
 }
 
-// 🔄 **Recargar `data.ts` y procesar la plantilla**
+// **Recargar `data.ts` y procesar la plantilla**
 async function recargarYProcesar() {
   try {
     console.clear(); // Opcional, limpia la consola entre renders
 
-    // 1️⃣ Recargar `data.ts` con una nueva versión en cada cambio
+    // 1️ Recargar `data.ts` con una nueva versión en cada cambio
     const contextoImportado = await import(`file://${Deno.cwd()}/data.ts?version=${Date.now()}`);
     const contexto = contextoImportado.contexto; // Ahora sí accederá correctamente
-    console.log(contextoImportado)
-    console.log(contexto)
-    // 2️⃣ Leer `template.liquid`
+
+    // 2️ Leer `template.liquid`
     const entradaLiquid = await Deno.readTextFile(plantillaPath);
 
-    // 3️⃣ Procesar la plantilla con los datos actualizados
+    // 3️ Procesar la plantilla con los datos actualizados
     const plantillaRenderizada = liquidEngine(entradaLiquid, contexto);
     const arbolDOM = htmlParser(plantillaRenderizada);
     const htmlFinal = renderDOM(arbolDOM);
 
-    // 4️⃣ Mostrar el HTML actualizado en consola
+    // 4️ Mostrar el HTML actualizado en consola
     console.log("\n HTML generado:\n", htmlFinal);
   } catch (error) {
     console.error("\n Error al recargar:", error);
