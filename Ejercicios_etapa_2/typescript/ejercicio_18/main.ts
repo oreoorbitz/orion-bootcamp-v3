@@ -27,12 +27,13 @@
  * Ejercicios_etapa_2/
  * ├── plantilla_motor/
  * ├── ejercicio_18/
- * │   ├── main.ts                ← ejecuta la renderización y guarda el archivo
- * │   ├── plantilla.liquid       ← incluye html, head, title, body, etc.
- * │   ├── data.ts                ← exporta el objeto `contexto`
- * │   └── server.ts              ← servidor que sirve el archivo generado
- * └── dist/
- *     └── index.html             ← se genera automáticamente
+ * │   ├── main.ts               ← ejecuta la renderización y guarda el archivo
+ * │   ├── template.liquid       ← incluye html, head, title, body, etc.
+ * │   ├── data.ts               ← exporta el objeto `contexto`
+ * |   ├── server.ts             ← servidor que sirve el archivo generado
+ * │   └── dist/
+ * │       └── index.html       ← se genera automáticamente
+ *
  * ```
  *
  * ✅ Instrucciones:
