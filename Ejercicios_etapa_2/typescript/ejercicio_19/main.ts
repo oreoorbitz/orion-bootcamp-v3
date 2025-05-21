@@ -2,18 +2,19 @@
  * MÓDULO 19: MODULARIZACIÓN DEL SERVIDOR LOCAL (slightlyLate)
  *
  * 🧠 Concepto clave:
- * En proyectos reales, no escribimos un servidor desde cero cada vez. 
+ * En proyectos reales, no escribimos un servidor desde cero cada vez.
  * Usamos bibliotecas como **Express** (Node.js) o **Oak** (Deno) que encapsulan toda la lógica de servidor
  * en funciones reutilizables y fáciles de mantener.
 
  * En este módulo, vas a **extraer tu servidor a un módulo reutilizable** que te servirá para los siguientes ejercicios.
 
  * 🎯 Objetivo:
- * Crear un módulo llamado `slightlyLate.ts` que pueda iniciar un servidor básico y servir archivos HTML desde la carpeta `dist/`.
+ * Crear un módulo llamado `slightlyLate.ts` que pueda iniciar un servidor básico y servir archivos HTML desde la carpeta `dist/`
+ * de tu ejercicio corrspondiente.
 
  * ✅ Instrucciones:
  * 1. Crea un archivo llamado `slightlyLate.ts` en la carpeta raíz de esta parte del curso (por ejemplo, en `Ejercicios_etapa_2/`)
- * 
+ *
  * 2. En este archivo, exporta una función llamada `iniciarServidor`, que reciba un puerto como parámetro:
  *    ```ts
  *    export function iniciarServidor(puerto: number = 3000) {
