@@ -40,6 +40,8 @@
  * 1. Escribe una plantilla `plantilla.liquid` que represente una página HTML completa.
  *    - Incluye etiquetas `<html>`, `<head>`, `<title>`, y `<body>`
  *    - Usa variables dentro del body como `{{ nombre }}` o `{{ descripcion }}`
+ *    - A esta plantilla agrega <meta charset="UTF-8"> </meta> justo después de la etiqueta <head> para
+ *      que tu página pueda verse adecuadamente.
  *
  * 2. Usa tu función de renderizado para procesar la plantilla con el `contexto` definido en `data.ts`
  *    - Por ejemplo:

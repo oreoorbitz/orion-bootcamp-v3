@@ -8,21 +8,22 @@
   Welcome to the interactive coding course. Select a module to begin:
 </p>
 
+{%  comment %}
 <ul class="space-y-4">
     <li>{{ 'general/accordion' | link_to_module: 'Module 1: General → Accordion' }}</li>
 </ul>
+{% endcomment %}
 
-<section>
+<section class="">
+  {% htmlOutput %}
+  <button class="bg-brand-teal text-white px-4 py-2 rounded hover:bg-accent transition" >Click Me</button>
+  {% endhtmlOutput %}
 
-{% htmlOutput %}
-<button class="" >Click Me</button>
-{% endhtmlOutput %}
-
-{% javascriptInput %}
-<script>
-  document.querySelector('button').addEventListener('click', () => alert('clicked!'))
-</script>
-{% endjavascriptInput %}
+  {% javascriptInput %}
+  <script>
+    document.querySelector('button').addEventListener('click', () => alert('clicked!'))
+  </script>
+  {% endjavascriptInput %}
 </section>
 
 
