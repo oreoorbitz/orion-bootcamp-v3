@@ -49,7 +49,7 @@
 
 const entrada = [
     "<div>",
-    "Hello ",
+    "Hello",
     "<span>",
     "World",
     "</span>",
@@ -57,5 +57,34 @@ const entrada = [
 ]
 
 function clasificarTokens(tokens: string[]): any[] {
-    
+    return tokens.map(token => {
+        if(/^<\/[^>]+>$/.test(token)) {
+            return {
+                tipo: 'cierre',
+                nombre: token.match(/^<\/(\w+)/)?.[1] || null,
+                contenido: null
+            }
+        }
+        else if (/^<[^\/>]+>$/.test(token)){
+            return {
+                tipo: 'apertura',
+                nombre: token.match(/^<(\w+)/)?.[1] || null,
+                contenido: null
+            }
+        }
+        else {
+            return {
+                tipo: 'texto',
+                nombre: null,
+                contenido: token
+            }
+        }
+    })
 }
+
+console.log(clasificarTokens(entrada));
+
+/**
+ * .test() metodo para verificar saber si una cadena coincide con cierto patrón.
+ * .match() metodo para revisar si un texto contiene un patrón específico (no texto literal, sino un formato o estructura), y si lo encuentra, devolver lo que coincide con ese patrón.
+ */

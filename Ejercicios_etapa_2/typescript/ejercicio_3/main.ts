@@ -30,3 +30,57 @@
  * - Busca solo dentro del contenido de la etiqueta (no el texto externo)
  * - Este paso te ayudará a construir funciones como `getElementById` o `getElementsByClassName` más adelante.
  */
+
+
+const entrada = [
+    '<div class="box" id="main">',
+    'Hello',
+    '<span>',
+    'World',
+    '</span>',
+    '</div>'
+]
+
+function clasificarTokens(tokens: string[]): any[] {
+    return tokens.map(token => {
+        
+        if (/^<\/[^>]+>$/.test(token)) {
+            return {
+                tipo: 'cierre',
+                nombre: token.match(/^<\/(\w+)/)?.[1] || null,
+                contenido: null,
+                atributos: null
+            };
+        }
+
+        
+        else if (/^<[^\/>]+>$/.test(token)) {
+            const nombre = token.match(/^<(\w+)/)?.[1] || null;
+
+            const attrRegex = /(\w+)=["']([^"']+)["']/g;
+            const atributos: Record<string, string> = {};
+
+            for (const match of token.matchAll(attrRegex)) {
+                atributos[match[1]] = match[2];
+            }
+
+            return {
+                tipo: 'apertura',
+                nombre,
+                contenido: null,
+                atributos: Object.keys(atributos).length > 0 ? atributos : null
+            };
+        }
+
+        else {
+            return {
+                tipo: 'texto',
+                nombre: null,
+                contenido: token,
+                atributos: null
+            };
+        }
+    });
+}
+
+console.log(clasificarTokens(entrada));
