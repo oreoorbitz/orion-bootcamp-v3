@@ -9,7 +9,8 @@
  * En este módulo, vas a **extraer tu servidor a un módulo reutilizable** que te servirá para los siguientes ejercicios.
 
  * 🎯 Objetivo:
- * Crear un módulo llamado `slightlyLate.ts` que pueda iniciar un servidor básico y servir archivos HTML desde la carpeta `dist/`.
+ * Crear un módulo llamado `slightlyLate.ts` que pueda iniciar un servidor básico y servir archivos HTML desde la carpeta `dist/`
+ * de tu ejercicio corrspondiente.
 
  * ✅ Instrucciones:
  * 1. Crea un archivo llamado `slightlyLate.ts` en la carpeta raíz de esta parte del curso (por ejemplo, en `Ejercicios_etapa_2/`)
