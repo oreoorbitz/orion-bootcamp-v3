@@ -7,7 +7,7 @@
  *
  * ```html
  * <html>
- *   <head>
+ *   <head> <meta charset="UTF-8"> </meta>
  *     <title>...</title>
  *   </head>
  *   <body>
