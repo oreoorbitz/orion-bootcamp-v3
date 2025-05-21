@@ -1,1 +1,1 @@
-export const contexto = { nombre: "Paola", edad: 26 };
+export const contexto = { nombre: "perrito", edad: 53 };

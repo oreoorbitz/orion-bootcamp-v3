@@ -73,6 +73,8 @@
  * - Si usas `.json` en vez de `.ts`, puedes leerlo directamente con `Deno.readTextFile()` y `JSON.parse()`
  * - Este módulo demuestra cómo un flujo *reactivo* puede lograrse sin un navegador ni framework
  */
+
+//CORRER CON EN COMANDO     deno run --allow-read --allow-run main.ts
 //imports
 import { liquidEngine } from "../plantilla_motor/motorDePlantillas.ts";
 import { htmlParser } from "../plantilla_motor/parserDehtml.ts";
