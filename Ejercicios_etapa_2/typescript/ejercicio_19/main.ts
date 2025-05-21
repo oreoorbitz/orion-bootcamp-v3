@@ -33,10 +33,8 @@
  *    }
  *    ```
 
- * 3. En tu archivo `server.ts`, importa esta función:
- *    ```ts
- *    import { iniciarServidor } from "../slightlyLate.ts";
- *    iniciarServidor(3000);
+ * 3. Utilizar el archivo `slightlyLate.ts` para que realice el trabajo que servidor.ts hacía en el ejercicio anterior.
+ *    Recuerda importr esta función en tu archivo main en el que estes trabajando.
  *    ```
 
  * 4. Corre el servidor con los mismos permisos que antes:
