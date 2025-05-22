@@ -53,6 +53,7 @@
  * Este módulo sienta las bases para reutilizar tu servidor de forma sencilla a medida que tus proyectos crecen.
  */
 
+import { iniciarServidor } from '../slightlyLate.ts'
 import { liquidEngine } from "../plantilla_motor/motorDePlantillas.ts";
 import { htmlParser } from "../plantilla_motor/parserDehtml.ts";
 import { renderDOM } from "../plantilla_motor/renderizador.ts";
@@ -99,3 +100,7 @@ async function recargarYGenerarHTML() {
 //**Ejecutamos el watcher**
 await recargarYGenerarHTML(); // Render inicial
 observarCambios(); // Monitorea cambios en `data.ts`
+
+
+// 🔥 Iniciar el servidor después de generar el HTML(así ya no usamos la basurota d archivo server owo)
+iniciarServidor(3000);
