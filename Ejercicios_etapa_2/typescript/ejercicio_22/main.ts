@@ -18,7 +18,7 @@
  *
  * ✅ Instrucciones:
 
- * 1. En la carpeta padre del curso (`Ejercicios_etapa_2/`), crea un módulo llamado `transpilar.ts`
+ * 1. En la carpeta padre del curso (`Ejercicios_etapa_2/typescript`), crea un módulo llamado `transpilar.ts`
  *    que exporte una función:
  *
  * ```ts

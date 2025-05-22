@@ -16,7 +16,7 @@
  *
  * ✅ Instrucciones:
  * 1. Crea una nueva carpeta en el directorio padre del curso:
- *    `Ejercicios_etapa_2/plantilla_motor/`
+ *    `Ejercicios_etapa_2/typesctript/plantilla_motor/`
  *
  * 2a. Si quieres usar un archivo central: dentro de esa carpeta, crea un archivo llamado `mod.ts` y organiza tus funciones ahí:
  *    - Usa `export` para cada función o tipo
