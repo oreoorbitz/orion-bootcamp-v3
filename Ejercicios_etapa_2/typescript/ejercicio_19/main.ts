@@ -64,7 +64,7 @@ const outputPath = "./dist/index.html";
 
 //**Observar cambios en `data.ts`**
 async function observarCambios() {
-  for await (const evento of Deno.watchFs("./")) {
+  for await (const evento of Deno.watchFs("./")  )  {
     if (evento.paths.some(path => path.endsWith("data.ts"))) {
       console.log("\n🔄 Cambio detectado en `data.ts`, generando nuevo archivo HTML...");
       await recargarYGenerarHTML();

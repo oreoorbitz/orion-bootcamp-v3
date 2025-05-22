@@ -89,3 +89,60 @@
  * - Usa bien tus módulos
  * - Se lee como una historia: importar → preparar contexto → renderizar → servir
  */
+
+import { iniciarServidor } from '../slightlyLate.ts'
+import { liquidEngine } from "../plantilla_motor/motorDePlantillas.ts";
+import { htmlParser } from "../plantilla_motor/parserDehtml.ts";
+import { renderDOM } from "../plantilla_motor/renderizador.ts";
+
+const plantillaPath = "./template.liquid";
+const dataPath = "./data.ts";
+const outputPath = "./dist/index.html";
+
+//**Observar cambios en `data.ts`**
+async function observarCambios() {
+  console.log(" Observando cambios en `data.ts` y `index.liquid`...");
+
+  for await (const evento of Deno.watchFs("./")) {
+    if (
+      evento.paths.some(path => path.endsWith("data.ts")) ||
+      evento.paths.some(path => path.endsWith("index.liquid"))
+    ) {
+      console.log("\n🔄 Cambio detectado en `data.ts` o `index.liquid`, regenerando HTML...");
+      await recargarYGenerarHTML();
+    }
+  }
+}
+
+// **Recargar `data.ts` y generar el HTML**
+async function recargarYGenerarHTML() {
+  try {
+    console.clear();
+
+    // 1️ Recargar `data.ts`
+    const contextoImportado = await import(`file://${Deno.cwd()}/${dataPath}?version=${Date.now()}`);
+    const contexto = contextoImportado.contexto; // Usamos la variable `contexto` que definiste
+
+    // 2️ Leer `template.liquid`
+    const entradaLiquid = await Deno.readTextFile(plantillaPath);
+
+    // 3️ Procesar la plantilla con los datos actualizados
+    const plantillaRenderizada = liquidEngine(entradaLiquid, contexto);
+    const arbolDOM = htmlParser(plantillaRenderizada);
+    const htmlFinal = renderDOM(arbolDOM);
+
+    // 4️ Guardar el HTML en `dist/index.html`
+    await Deno.writeTextFile(outputPath, htmlFinal);
+    console.log("\n✅ Archivo `dist/index.html` generado exitosamente.");
+  } catch (error) {
+    console.error("\n❌ Error al generar el archivo HTML:", error);
+  }
+}
+
+//**Ejecutamos el watcher**
+await recargarYGenerarHTML(); // Render inicial
+observarCambios(); // Monitorea cambios en `data.ts`
+
+
+// 🔥 Iniciar el servidor después de generar el HTML(así ya no usamos la basurota d archivo server owo)
+iniciarServidor(3000);

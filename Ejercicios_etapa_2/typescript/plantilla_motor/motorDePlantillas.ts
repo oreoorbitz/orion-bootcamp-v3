@@ -173,6 +173,26 @@ function procesarCondicionales(tokens: TokenPlantilla[], contexto: Record<string
     return resultado;
 }
 
+function sustituirVariables(token: TokenPlantilla, contexto: Record<string, any>): TokenPlantilla {
+    if (token.tipo === "variable") {
+        let partes = token.contenido
+        let partesSeparadas = partes.split('|')
+        let partesSepEsp = partesSeparadas.map(p => p.trim());
+        let nombreVariable = partesSepEsp.shift() ?? '';
+
+        //Corrección: Acceder correctamente a valores dentro de objetos
+        let valorVariable = nombreVariable.split('.')
+        let valorVariableRed = valorVariable.reduce((obj, key) => obj?.[key], contexto)
+
+
+        // Si el valor es `undefined`, mantenemos el nombre original como fallback
+        valorVariableRed = valorVariableRed !== undefined ? valorVariableRed : nombreVariable;
+
+        return { tipo: "texto", contenido: valorVariableRed.toString() };
+    }
+
+    return token;
+}
 
 function procesarBucles(tokens: TokenPlantilla[], contexto: Record<string, any>): TokenPlantilla[] {
   let resultado: TokenPlantilla[] = [];
@@ -207,32 +227,10 @@ function procesarBucles(tokens: TokenPlantilla[], contexto: Record<string, any>)
         throw new Error("Error de sintaxis: {% for %} sin {% endfor %}");
       }
 
-      // Aquí recorremos cada valor de la lista usando contextoLocal para la iteración
+      // Iteramos sobre la lista y usamos `sustituirVariables()` para reemplazar correctamente las variables
       for (let valor of valoresLista) {
-        // Se crea un contexto local que sobrescribe el nombre del item con el valor actual
         let contextoLocal = { ...contexto, [nombreItem]: valor };
-
-        let tokensFinales = bloqueInterno.map<TokenPlantilla>(token => {
-          if (token.tipo === "variable") {
-            let partes = token.contenido.split('|').map(p => p.trim());
-            let nombreVariable = partes.shift() ?? '';
-
-            // Usamos el contextoLocal en lugar del contexto global
-            let valorVariable = contextoLocal[nombreVariable] ?? nombreVariable;
-
-            // Aplicamos cada filtro registrado, si existen
-            for (let filtroCrudo of partes) {
-              if (filtrosRegistrados[filtroCrudo]) {
-                valorVariable = filtrosRegistrados[filtroCrudo](valorVariable);
-              } else {
-                throw new Error(`Error: El filtro '${filtroCrudo}' no está definido.`);
-              }
-            }
-
-            return { tipo: "texto", contenido: valorVariable.toString() };
-          }
-          return token;
-        });
+        let tokensFinales = bloqueInterno.map(token => sustituirVariables(token, contextoLocal));
 
         resultado.push(...tokensFinales);
       }
@@ -248,76 +246,64 @@ function procesarBucles(tokens: TokenPlantilla[], contexto: Record<string, any>)
   return resultado;
 }
 
-function aplicarFiltros(nombreVariable: string, filtros: string[], contexto: Record<string, any>, filtrosRegistrados: Record<string, Function>): string | string[] {
-
-  let valor = contexto[nombreVariable] ?? nombreVariable; // Si no está en el contexto, usar el valor como texto
-
-    if (valor === undefined) {
-        throw new Error(`Error: La variable '${nombreVariable}' no está definida en el contexto.`);
-    }
-
-    // **Nueva condición**: Si es un array, aplica los filtros a cada elemento; si es un string, aplícalo directamente.
-    if (Array.isArray(valor)) {
-        return valor.map(elemento => {
-            let resultado = elemento;
-            for (let filtro of filtros) {
-                let filtroLimpio = filtro.trim();
-                if (!filtrosRegistrados[filtroLimpio]) {
-                    throw new Error(`Error: El filtro '${filtroLimpio}' no está definido.`);
-                }
-                resultado = filtrosRegistrados[filtroLimpio](resultado);
-            }
-            return resultado;
-        });
-    } else {
-        for (let filtro of filtros) {
-            let filtroLimpio = filtro.trim();
-            if (!filtrosRegistrados[filtroLimpio]) {
-                throw new Error(`Error: El filtro '${filtroLimpio}' no está definido.`);
-            }
-            valor = filtrosRegistrados[filtroLimpio](valor);
-        }
-        return valor;
-    }
-}
-
 function parseFiltro(crudo: string): [nombre: string, argumentos: any[]] {
     let [nombre, ...args] = crudo.split(':').map(p => p.trim());
     let argumentos = args.join(':').split(',').map(arg => arg.trim().replace(/^['"](.*)['"]$/, '$1')); // Elimina comillas
     return [nombre, argumentos];
 }
 
+function aplicarFiltros(nombreVariable: string, filtros: string[], contexto: Record<string, any>, filtrosRegistrados: Record<string, Function>): string | string[] {
+  let valor = contexto[nombreVariable] ?? nombreVariable; // Si no está en el contexto, usar el valor como texto
+
+  if (valor === undefined) {
+    throw new Error(`Error: La variable '${nombreVariable}' no está definida en el contexto.`);
+  }
+
+  if (Array.isArray(valor)) {
+    return valor.map(elemento => {
+      let resultado = elemento;
+      for (let filtroCrudo of filtros) {
+        let [nombreFiltro, args] = parseFiltro(filtroCrudo); // Ahora usamos `parseFiltro()`
+        if (!filtrosRegistrados[nombreFiltro]) {
+          throw new Error(`Error: El filtro '${nombreFiltro}' no está definido.`);
+        }
+        resultado = filtrosRegistrados[nombreFiltro](resultado, ...args);
+      }
+      return resultado;
+    });
+  } else {
+    for (let filtroCrudo of filtros) {
+      let [nombreFiltro, args] = parseFiltro(filtroCrudo); // Ahora usamos `parseFiltro()`
+      if (!filtrosRegistrados[nombreFiltro]) {
+        throw new Error(`Error: El filtro '${nombreFiltro}' no está definido.`);
+      }
+      valor = filtrosRegistrados[nombreFiltro](valor, ...args);
+    }
+    return valor;
+  }
+}
+
 
 function renderizarVariables(tokens: TokenPlantilla[], contexto: Record<string, any>, filtrosRegistrados: Record<string, Function>): string {
     return tokens.map(token => {
         if (token.tipo === "variable") {
-            let partes = token.contenido.split('|').map(p => p.trim());
+            // **Primero sustituimos la variable en el contexto global**
+            let tokenSustituido = sustituirVariables(token, contexto);
+
+            // **Aplicamos los filtros solo si existen**
+            let partes = tokenSustituido.contenido.split('|').map(p => p.trim());
             let nombreVariable = partes.shift() ?? '';
+            let valorFinal = aplicarFiltros(nombreVariable, partes, contexto, filtrosRegistrados);
 
-            // **Corrección importante:** Revisamos si la variable está dentro del contexto del bucle
-            let valor = contexto[nombreVariable] ?? nombreVariable;
-
-            if (Array.isArray(valor)) {
-                throw new Error(`Error: No se puede renderizar un array directamente. Debe ser iterado en un bucle.`);
-            }
-
-            // **Aplicamos los filtros en orden** si hay alguno registrado
-            for (let filtroCrudo of partes) {
-                let [nombreFiltro, args] = parseFiltro(filtroCrudo);
-                if (!filtrosRegistrados[nombreFiltro]) {
-                    throw new Error(`Error: El filtro '${nombreFiltro}' no está definido.`);
-                }
-                valor = filtrosRegistrados[nombreFiltro](valor, ...args);
-            }
-
-            return valor.toString(); // Finalmente, reemplazamos correctamente el valor de la variable
+            return Array.isArray(valorFinal) ? valorFinal.join(', ') : valorFinal.toString();
         }
-        return token.contenido; // Conservamos la estructura original
+        return token.contenido;
     }).join(' ');
 }
 
 export function liquidEngine(entradaInicial: string, contexto: Record<string, any>): string {
 console.log("Entrada inicial en liquidEngine:\n", entradaInicial);
+console.log('contextopasado', contexto)
 
   const entradaTokenizada = detectarTokensPlantilla(entradaInicial);
 console.log("Tokens de Liquid:\n", entradaTokenizada);

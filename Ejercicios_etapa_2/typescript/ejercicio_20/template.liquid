@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8"></meta>
+    <title>{{ titulo }}</title>
+    <link rel="stylesheet" href="styles.css"></link>
+</head>
+<body>
+    <header>
+        <h1>🌟 {{ titulo }} 🌟</h1>
+        <p>{{ descripcion }}</p>
+    </header>
+
+    <section class="productos">
+        <h2>🐣 Productos Tiernos 🐣</h2>
+        <ul>
+            {% for producto in productos %}
+            <li>
+                <p><strong>{{ producto.nombre }}</strong> - {{ producto.precio }}</p>
+            </li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <footer>
+        <p>Contacto: ✉️ <a href="mailto:{{ contacto.email }}">{{ contacto.email }}</a></p>
+        <p>💖 Síguenos en Instagram: <a href="https://instagram.com/{{ contacto.instagram }}">{{ contacto.instagram }}</a></p>
+    </footer>
+</body>
+</html>
