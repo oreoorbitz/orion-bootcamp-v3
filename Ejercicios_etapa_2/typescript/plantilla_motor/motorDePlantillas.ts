@@ -175,20 +175,18 @@ function procesarCondicionales(tokens: TokenPlantilla[], contexto: Record<string
 
 function sustituirVariables(token: TokenPlantilla, contexto: Record<string, any>): TokenPlantilla {
     if (token.tipo === "variable") {
-        let partes = token.contenido
-        let partesSeparadas = partes.split('|')
-        let partesSepEsp = partesSeparadas.map(p => p.trim());
-        let nombreVariable = partesSepEsp.shift() ?? '';
+        let partesSeparadas = token.contenido.split('|').map(p => p.trim());
+        let nombreVariable = partesSeparadas.shift() ?? '';
 
-        //Corrección: Acceder correctamente a valores dentro de objetos
-        let valorVariable = nombreVariable.split('.')
-        let valorVariableRed = valorVariable.reduce((obj, key) => obj?.[key], contexto)
+        // Acceder correctamente a valores dentro de objetos
+        let valorVariableRed = nombreVariable.split('.').reduce((obj, key) => {
+            return obj && typeof obj === "object" ? obj[key] : undefined;
+        }, contexto);
 
+        // Si el valor es `undefined`, mantener el nombre original como fallback
+        let contenidoFinal = valorVariableRed !== undefined ? valorVariableRed : nombreVariable;
 
-        // Si el valor es `undefined`, mantenemos el nombre original como fallback
-        valorVariableRed = valorVariableRed !== undefined ? valorVariableRed : nombreVariable;
-
-        return { tipo: "texto", contenido: valorVariableRed.toString() };
+        return { tipo: "texto", contenido: contenidoFinal.toString() };
     }
 
     return token;
@@ -301,27 +299,63 @@ function renderizarVariables(tokens: TokenPlantilla[], contexto: Record<string, 
     }).join(' ');
 }
 
-export function liquidEngine(entradaInicial: string, contexto: Record<string, any>): string {
-console.log("Entrada inicial en liquidEngine:\n", entradaInicial);
-console.log('contextopasado', contexto)
 
-  const entradaTokenizada = detectarTokensPlantilla(entradaInicial);
-console.log("Tokens de Liquid:\n", entradaTokenizada);
+async function procesarConLayout(htmlRenderizado: string, contexto: Record<string, any>): Promise<string> {
+    // 1️ Detectar automáticamente la carpeta donde se ejecuta `main.ts`
+    const rutaActual = Deno.cwd(); // Obtiene la ruta base en la que se está ejecutando el programa
+    const rutaLayout = `${rutaActual}/theme.liquid`; // Busca `theme.liquid` dentro de la carpeta actual
 
-  const entradaClasificada = clasificarTokensPlantilla(entradaTokenizada);
-console.log("Tokens clasificados:\n", entradaClasificada);
+    // 2️ Verificar si el archivo `theme.liquid` existe
+    try {
+        await Deno.stat(rutaLayout);
+    } catch {
+        throw new Error(`Error: El layout '${rutaLayout}' no existe. Verifica que esté en la carpeta correcta.`);
+    }
 
-  const entradaProcesadaAsignacion = procesarAsignaciones(entradaClasificada, contexto);
-console.log("Después de procesar asignaciones:\n", entradaProcesadaAsignacion);
+    // 3️⃣ Leer el contenido del layout
+    let contenidoLayout = await Deno.readTextFile(rutaLayout);
 
-  const entradaProcesada = procesarCondicionales(entradaProcesadaAsignacion, contexto);
-console.log("Después de procesar condicionales:\n", entradaProcesada);
+    // 4️⃣ Reemplazar `{{ content_for_index }}` con el HTML renderizado
+    let layoutConContenido = contenidoLayout.replace("{{ content_for_index }}", htmlRenderizado);
 
-  const buclesProcesados = procesarBucles(entradaProcesada, contexto);
-console.log("Después de procesar bucles:\n", buclesProcesados);
+    // 5️⃣ Procesar el layout con `liquidEngine()` para aplicar variables globales
+    return liquidEngine(layoutConContenido, contexto, false);
+}
 
-  const entradaRenderizada = renderizarVariables(buclesProcesados, contexto, filtrosRegistrados);
-console.log("Resultado final de Liquid:\n", entradaRenderizada);
+export async function liquidEngine(entradaInicial: string, contexto: Record<string, any>, aplicarLayout: boolean = true): Promise<string> {
+    //console.log("Entrada inicial en liquidEngine:\n", entradaInicial);
+    //console.log('contextopasado', contexto)
 
-  return entradaRenderizada;
+    // Paso 1: Tokenización
+    const entradaTokenizada = detectarTokensPlantilla(entradaInicial);
+    //console.log("Tokens de Liquid:\n", entradaTokenizada);
+
+    // Paso 2: Clasificación de tokens
+    const entradaClasificada = clasificarTokensPlantilla(entradaTokenizada);
+    //console.log("Tokens clasificados:\n", entradaClasificada);
+
+    // Paso 3: Procesar asignaciones
+    const entradaProcesadaAsignacion = procesarAsignaciones(entradaClasificada, contexto);
+    //console.log("Después de procesar asignaciones:\n", entradaProcesadaAsignacion);
+
+    // Paso 4: Procesar condicionales
+    const entradaProcesada = procesarCondicionales(entradaProcesadaAsignacion, contexto);
+    //console.log("Después de procesar condicionales:\n", entradaProcesada);
+
+    // Paso 5: Procesar bucles
+    const buclesProcesados = procesarBucles(entradaProcesada, contexto);
+    //console.log("Después de procesar bucles:\n", buclesProcesados);
+
+    // Paso 6: Renderizar variables
+    const entradaRenderizada = renderizarVariables(buclesProcesados, contexto, filtrosRegistrados);
+    //console.log("Resultado final de Liquid:\n", entradaRenderizada);
+
+    // Paso 7: Aplicar layout si es necesario
+    let resultadoFinal = entradaRenderizada;
+    if (aplicarLayout) {
+        resultadoFinal = await procesarConLayout(entradaRenderizada, contexto);
+    }
+    //console.log("Resultado final con layout aplicado:\n", resultadoFinal);
+
+    return String(resultadoFinal);
 }
