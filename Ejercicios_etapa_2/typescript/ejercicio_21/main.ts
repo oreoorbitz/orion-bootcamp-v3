@@ -20,7 +20,7 @@
  * <html>
  *   <head>
  *     <meta charset="UTF-8"></meta>
- *     <title>Titulo temporar</title>
+ *     <title> {{ settings.titulo }} </title>
  *   </head>
  *   <body>
  *     {{ content_for_index }}
