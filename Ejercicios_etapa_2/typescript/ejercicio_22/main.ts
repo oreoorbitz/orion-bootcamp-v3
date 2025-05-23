@@ -1,68 +1,55 @@
 /**
- * MÓDULO 22: INYECTAR JAVASCRIPT TRANSPILADO A HTML
-
+ * MÓDULO 22: INYECTAR JAVASCRIPT TRANSPILADO EN HTML
+ *
  * 🧠 Concepto clave:
- * Aunque en este curso hemos estado usando Deno con TypeScript directamente, **los navegadores no entienden TypeScript**.
- * Los navegadores solo ejecutan **JavaScript plano**. Por eso, todo proyecto moderno debe convertir (`transpilar`)
- * los archivos `.ts` a `.js` antes de usarlos en un `<script>` en una página.
-
- * Este módulo te ayudará a entender ese flujo:
- * - Crear TypeScript → Transpilar a JavaScript → Insertar en una página HTML
-
+ * Aunque Deno permite correr TypeScript directamente, los navegadores no lo soportan.
+ * Por eso, necesitamos transpilar nuestro código `.ts` a `.js` y luego insertarlo en la página.
+ *
+ * `Deno.emit()` nos da el JavaScript como texto (en memoria), así que no necesitamos crear archivos `.js`.
+ * Podemos tomar ese resultado y **modificar el HTML directamente, sin usar librerías**.
  *
  * 🎯 Objetivo:
- * - Crear un módulo que convierta archivos TypeScript a JavaScript
- * - Crear una función que permita insertar JavaScript en un HTML, como script inline
- * - Usar ambas cosas desde tu `main.ts`
-
+ * Crear una única función que:
+ * - Transpile un archivo `.ts` a `.js` en memoria
+ * - Inserte ese JS como script inline dentro de un archivo HTML
+ * - **Sobrescriba el HTML original con el resultado**
  *
  * ✅ Instrucciones:
-
- * 1. En la carpeta padre del curso (`Ejercicios_etapa_2/typescript`), crea un módulo llamado `transpilar.ts`
- *    que exporte una función:
+ *
+ * 1. En la raíz del proyecto (junto a `Ejercicios_etapa_2/`), crea un archivo `injector.ts`
+ * 2. Define y exporta la siguiente función:
  *
  * ```ts
- * export async function transpilarTSorThrow(inputPath: string, outputPath: string): Promise<void>
+ * export async function injector(
+ *   tsPath: string,
+ *   htmlPath: string
+ * ): Promise<void>
  * ```
  *
  * Esta función debe:
- * - Usar `Deno.emit()` para convertir el archivo `.ts` a `.js`
- * - Escribir el resultado en `outputPath` (solo JavaScript, sin mapas ni módulos externos)
+ * - Leer el contenido del archivo HTML en `htmlPath`
+ * - Usar `Deno.emit()` para transpilar `tsPath` a JavaScript (sin escribir archivos)
+ * - Insertar el resultado como `<script>...</script>` justo antes de la etiqueta `</body>`
+ * - Sobrescribir el archivo `htmlPath` con el nuevo contenido
+ *
+ * ⚙️ Importante:
+ * - Deno **no tiene un modelo DOM**, así que debes modificar el HTML como string
+ * - No uses ninguna librería externa — hazlo con `.replace()` o similares
  *
  *
- * 2. En tu módulo `slightlyLate.ts`, agrega una función:
- *
- * ```ts
- * export async function insertarScriptInline(
- *   html: string,
- *   script: string | { path: string }
- * ): Promise<string>
- * ```
- *
- * Esta función debe:
- * - Insertar el `<script>...</script>` justo antes de la etiqueta de cierre `</body>`
- * - Si `script` es un string: úsalo directamente como contenido del tag
- * - Si `script` es un objeto con `path`, lee el archivo y úsalo como contenido del tag
- *
- *
- * 3. En tu `main.ts`, prueba el flujo completo:
- * - Crea un archivo `frontend.ts` con algo como:
+ * ✅ Ejemplo de uso en `main.ts`:
  *
  * ```ts
- * console.log("Este JS se ejecuta en el navegador");
- * ```
+ * import { injector } from "../injector.ts";
  *
- * - Usa `transpilarTSorThrow("frontend.ts", "frontend.js")`
- * - Luego lee `index.html` y usa `insertarScriptInline` para insertar el contenido de `frontend.js`
- * - Escribe el resultado final en `dist/index.html`
-
+ * await injector("frontend.ts", "index.html");
+ * ```
  *
  * ✅ Resultado esperado:
- * Tu archivo HTML final debe verse así:
+ * El archivo `index.html` original debe ser reemplazado con una versión que contenga:
  *
  * ```html
  * <html>
- * <head>...</head>
  * <body>
  *   ...contenido HTML...
  *   <script>
@@ -72,14 +59,12 @@
  * </body>
  * </html>
  * ```
-
  *
  * 🧪 Consejo:
- * - Este patrón (TS → JS → HTML) es el mismo que usan frameworks como Vite, Astro, o Next.js internamente
- * - Usar `<script>` inline te permite experimentar sin tener que montar un sistema de rutas de archivos aún
+ * Esta técnica de inyección es común en herramientas modernas como Vite y Astro.
+ * Inyectar código inline te permite experimentar rápidamente sin montar servidores o rutas.
  *
  * ⚠️ Nota:
- * - Este módulo prepara el terreno para el **hot reload** (Módulo 23)
- * - En el siguiente paso necesitarás que el JS ya esté inyectado para poder abrir una conexión WebSocket desde el navegador
-
+ * Este módulo es la base para implementar **hot reload** en el Módulo 23.
+ * Necesitamos que el JS ya esté insertado para que el navegador pueda abrir una conexión WebSocket.
  */
