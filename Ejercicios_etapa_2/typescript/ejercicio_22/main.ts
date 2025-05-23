@@ -64,7 +64,14 @@
  * Esta técnica de inyección es común en herramientas modernas como Vite y Astro.
  * Inyectar código inline te permite experimentar rápidamente sin montar servidores o rutas.
  *
- * ⚠️ Nota:
- * Este módulo es la base para implementar **hot reload** en el Módulo 23.
- * Necesitamos que el JS ya esté insertado para que el navegador pueda abrir una conexión WebSocket.
+ * 🧩 Integración con tu flujo anterior:
+ * Puedes elegir cómo probar esta funcionalidad:
+ * - Opción A: Crear un HTML sencillo (como `index.html`) a mano para pruebas rápidas
+ * - Opción B: Usar el flujo que ya construiste en módulos anteriores (generación con Liquid, layouts, etc.)
+ *
+ * Ambas opciones son válidas **por ahora**.
+ *
+ * ⚠️ Pero atención:
+ * En el **Módulo 23**, necesitarás que esto funcione con tu flujo de plantillas anterior.
+ * El objetivo es agregar hot reload a tu sistema completo, así que asegúrate de tenerlo funcionando pronto.
  */
