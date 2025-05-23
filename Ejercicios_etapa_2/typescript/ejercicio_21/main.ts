@@ -55,7 +55,9 @@
  * theme.liquid
  * ```liquid
  * <html>
- *   <head><title>{{ settings.titulo }}</title></head>
+ *   <head> <meta charset="UTF-8"></meta>
+ *    <title>{{ settings.titulo }}</title>
+ *   </head>
  *   <body>
  *     {{ content_for_index }}
  *   </body>
