@@ -13,7 +13,7 @@
  * de tu ejercicio corrspondiente.
 
  * ✅ Instrucciones:
- * 1. Crea un archivo llamado `slightlyLate.ts` en la carpeta raíz de esta parte del curso (por ejemplo, en `Ejercicios_etapa_2/`)
+ * 1. Crea un archivo llamado `slightlyLate.ts` en la carpeta raíz de esta parte del curso (en `Ejercicios_etapa_2/typescript/`)
  *
  * 2. En este archivo, exporta una función llamada `iniciarServidor`, que reciba un puerto como parámetro:
  *    ```ts
