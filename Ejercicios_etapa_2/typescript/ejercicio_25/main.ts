@@ -86,7 +86,7 @@
  * - En Linux/Mac: edita tu `.bashrc`, `.zshrc`, o `.bash_profile`
  * - En Windows: usa la configuración del sistema para añadir el directorio al PATH
 
- * Este paso es completamente opcional, pero facilita mucho el uso de tu CLI personalizada.
+ * Este paso es completamente opcional, pero facilita mucho el uso de tu CLI personalizada
 
  * 🎯 Consejo:
  * - Puedes usar `console.log` con estilos Unicode o ASCII para mostrar bloques decorados
