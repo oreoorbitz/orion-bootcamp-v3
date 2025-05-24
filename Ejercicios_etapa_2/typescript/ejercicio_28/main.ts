@@ -1,93 +1,77 @@
 /**
  * MÓDULO 28: TIPOS DE ARREGLOS ASOCIATIVOS EN LIQUID
-
+ *
  * 🧠 Concepto clave:
- * En motores de plantillas como Liquid, los datos pueden organizarse en estructuras similares a objetos o arreglos.
- * Estas estructuras deben comportarse de manera predecible según su tipo:
- * 
- * - Un arreglo indexado puede recorrerse con bucles (`{% for %}`)
- * - Un objeto con claves accede a propiedades por nombre (`obj.key` o `obj['key']`)
- * - Algunas estructuras especiales globales combinan ambos comportamientos pero requieren restricciones futuras
-
- * En este módulo, vas a definir tres tipos de estructuras que tu motor Liquid debe reconocer y manejar correctamente.
-
- * 🎯 Objetivo:
- * Implementar soporte para 3 tipos de arreglos asociativos:
- * 
- * 1. **Arreglos indexados** (listas normales):
- *    - Se acceden con índice (`[0]`, `[1]`, etc.)
- *    - Pueden iterarse usando `{% for item in lista %}`
- *    - Son 0-indexados
- * 
- * 2. **Colecciones con claves (key-based)**:
- *    - No son iterables
- *    - Se acceden por `obj.propiedad` o `obj['propiedad']`
- *    - Usados para estructuras fijas con nombre (como configuraciones o grupos de datos relacionados)
-
- * 3. **Colecciones híbridas especiales (hybrid collections)**:
- *    - Se usan para variables globales como `collections` o `all_products`
- *    - Tienen dos formas de acceso:
- *      - `hybrid[0]` para acceso por índice
- *      - `hybrid['titulo-promocion']` para acceso por clave
- *    - Deben implementarse con un **sistema de limitaciones** que permita, por ejemplo:
- *      - Limitar la cantidad de productos que se procesan
- *      - Filtrar o cortar elementos al principio o final del recorrido
- *    - Este sistema asegura que en el futuro puedas controlar el rendimiento sin romper compatibilidad
-
+ * En motores como Liquid, los datos pueden representarse como arreglos, objetos o estructuras híbridas.
+ * Shopify resolvió esto usando un patrón llamado **Drop**: objetos que exponen datos de forma controlada.
+ *
+ * Los Drops permiten:
+ * - Acceso por clave (`drop['handle']`)
+ * - Encapsular comportamiento sin exponer toda la estructura original
+ * - Limitar cómo se usa un objeto en las plantillas, sin afectar el resto del sistema
+ *
+ * A lo largo del curso, irás creando Drops para representar datos específicos en rutas específicas.
+ * En este módulo comenzarás con `all_products`.
+ *
+ * 🎯 Objetivos:
+ *
+ * 1. Soportar acceso por índice en arreglos reales (`arr[0]`)
+ * 2. Soportar acceso por propiedad (`obj.prop` y `obj['prop']`)
+ * 3. Crear un Drop `AllProductsDrop` que:
+ *    - Permita acceso por clave (`drop['handle']`)
+ *    - Se comporte como un objeto controlado, no como un arreglo normal
+ *
  * ✅ Instrucciones:
-
- * 1. En tu motor Liquid, agrega una función de tipo "resolución de colección" que detecte si la variable es:
- *    - Una lista iterable (`Array.isArray()` o similar)
- *    - Un objeto con claves (`typeof === 'object'`)
- *    - Una colección híbrida (ver punto 3)
-
- * 2. Para las **colecciones híbridas**:
- *    - Crea una clase `HybridCollection` o similar
- *    - Internamente debe contener:
- *      - Un arreglo indexado (`this.lista`)
- *      - Un objeto con claves (`this.mapa`)
- *    - Implementa acceso por índice y por clave con lógica de fallback
- *    - Implementa un sistema de limitaciones como:
- *      ```ts
- *      collection.setLimit((items) => items.slice(0, 20));
- *      ```
- *      para limitar el número de elementos que se pueden recorrer o mostrar
-
- * 3. Asegúrate de que tu motor respete:
- *    - Solo iterar si el valor es verdaderamente iterable
- *    - Lanzar errores claros si se intenta iterar un objeto no iterable
-
- * 4. Expón en tus plantillas al menos una variable de cada tipo:
+ *
+ * 1. Asegúrate de que tu motor soporte estas expresiones:
  *    ```liquid
- *    {% for producto in productos %} {{ producto.nombre }} {% endfor %}
- *    {{ configuracion.color }}
- *    {{ all_products['collar-oro'] }}
+ *    {{ productos[1].title }}
+ *    {{ producto.title }}
+ *    {{ producto['title'] }}
  *    ```
-
- * 🧪 Ejemplo de contexto sugerido:
+ *
+ * 2. Crea una clase `AllProductsDrop` que:
+ *    - Permita acceder a un producto por clave (por ejemplo: `all_products['collar-dorado']`)
+ *    - No se comporte como un arreglo iterable o accesible por índice
+ *
+ * 3. En `contextPlease.ts`, crea una instancia de `AllProductsDrop` con la data de productos
+ *    y asígnala al contexto como `all_products`.
+ *
+ * 📝 Ejemplo de cómo podrías usar `AllProductsDrop` en `contextPlease.ts`
+ * (**esto es solo un ejemplo de uso, no lo copies literalmente**):
+ *
  * ```ts
- * const contexto = {
- *   productos: [
- *     { nombre: "Collar A" },
- *     { nombre: "Collar B" }
- *   ],
- *   configuracion: {
- *     color: "azul",
- *     version: "1.2.0"
- *   },
- *   all_products: new HybridCollection([
- *     { nombre: "Collar C" },
- *     { nombre: "Collar D" }
- *   ], {
- *     "collar-c": { nombre: "Collar C" },
- *     "collar-d": { nombre: "Collar D" }
- *   }).setLimit((arr) => arr.slice(0, 1))
- * };
+ * import { db } from "../db/client.ts";
+ * import { products } from "../db/schema.ts";
+ * import { AllProductsDrop } from "./drops.ts";
+ *
+ * export async function contextPlease(): Promise<Record<string, unknown>> {
+ *   const productResults = await db.select().from(products);
+ *   const all_products = new AllProductsDrop(productResults);
+ *
+ *   // ...tu otro código aquí para construir collections u otras variables
+ *
+ *   return {
+ *     all_products,
+ *     // otras propiedades del contexto
+ *   };
+ * }
  * ```
-
+ *
+ * ✅ Liquid que debería funcionar si todo está implementado correctamente:
+ *
+ * ```liquid
+ * {{ all_products['collar-dorado'].title }}
+ * ```
+ *
  * 🧠 Consejo:
- * - El sistema de limitación es importante porque en proyectos reales,
- *   como una tienda con miles de productos, **mostrar todo puede causar bloqueos o lentitud**
- * - Este patrón prepara tu motor para escalar en el futuro, como lo hace Shopify
-
+ * - Los Drops se comportan como objetos de solo lectura.
+ * - No se iteran ni acceden por índice, y no exponen métodos.
+ * - Son una forma práctica de exponer datos específicos en rutas específicas.
+ *   Por ejemplo: en el futuro usarás `productDrop` para representar el producto en una ruta como `/products/:handle`
+ *
+ * 🚀 Recomendación de arquitectura:
+ * - Identifica Drops usando `instanceof` o alguna marca como `.isDrop = true`
+ * - No trates los Drops como arreglos: piensa en ellos como mapas controlados
+ * - Sigue construyendo Drops que te permitan estructurar el contexto de forma segura y escalable
  */
