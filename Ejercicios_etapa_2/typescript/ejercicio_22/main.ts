@@ -85,52 +85,61 @@ import { iniciarServidor } from "../slightlyLate.ts";
 import { liquidEngine } from "../plantilla_motor/motorDePlantillas.ts";
 import { htmlParser } from "../plantilla_motor/parserDehtml.ts";
 import { renderDOM } from "../plantilla_motor/renderizador.ts";
+import { injector } from "../injector.ts"; //  Importamos `injector()`
 
-const plantillaPath = "./content_for_index.liquid"; //
+const plantillaPath = "./content_for_index.liquid";
 const outputPath = "./dist/index.html";
+const tsPath = "./frontend.ts"; //  Ajustamos la ruta de TypeScript
 
-// 🔹 Contexto declarado directamente en `main.ts`
+//  Contexto para la plantilla
 const contexto = {
     settings: { titulo: "Mi tienda" },
     producto: { titulo: "Camisa", descripcion: "De algodón" }
 };
 
-// **Observar cambios en `content_for_index.liquid`**
+// **Observar cambios en `content_for_index.liquid` y `frontend.ts`**
 async function observarCambios() {
-    console.log(" Observando cambios en `content_for_index.liquid`...");
+    console.log("🕵️ Observando cambios en `content_for_index.liquid` y `frontend.ts`...");
 
     for await (const evento of Deno.watchFs("./")) {
-        if (evento.paths.some((path) => path.endsWith("content_for_index.liquid"))) {
-            console.log("\n🔄 Cambio detectado en `content_for_index.liquid`, regenerando HTML...");
+        if (evento.paths.some((path) => path.endsWith("content_for_index.liquid")) ||
+            evento.paths.some((path) => path.endsWith("frontend.ts"))) {
+            console.log("\n🔄 Cambio detectado, regenerando HTML y transpiling TypeScript...");
             await recargarYGenerarHTML();
         }
     }
 }
 
-// **Generar el HTML**
+// **Generar el HTML + Inyectar el TypeScript**
 async function recargarYGenerarHTML() {
     try {
         console.clear();
+        console.log("✅ Generando HTML desde la plantilla...");
 
-        // 🔹 Leer `template.liquid`
+        //  Leer `template.liquid`
         const entradaLiquid = await Deno.readTextFile(plantillaPath);
 
-        // 🔹 Procesar la plantilla con el contexto declarado en `main.ts`
+        //  Procesar la plantilla con el contexto
         const plantillaRenderizada = liquidEngine(entradaLiquid, contexto);
         const arbolDOM = htmlParser(await plantillaRenderizada);
         const htmlFinal = renderDOM(arbolDOM);
 
-        // 🔹 Guardar el HTML en `dist/index.html`
+        //  Guardar el HTML en `dist/index.html`
         await Deno.writeTextFile(outputPath, htmlFinal);
         console.log("\n✅ Archivo `dist/index.html` generado exitosamente.");
+
+        //  Inyectar código TypeScript en `index.html`
+        await injector(tsPath, outputPath);
+        console.log("✅ Código TypeScript transpilado e inyectado en `index.html`.");
+
     } catch (error) {
         console.error("\n❌ Error al generar el archivo HTML:", error);
     }
 }
 
 // **Ejecutamos el watcher**
-await recargarYGenerarHTML(); // Render inicial
-observarCambios(); // Monitorea cambios en `template.liquid`
+await recargarYGenerarHTML(); //  Render inicial + Inyección de TS
+observarCambios(); //  Monitorea cambios en `content_for_index.liquid` y `frontend.ts`
 
 // 🔥 Iniciar el servidor una sola vez
 iniciarServidor(3000);

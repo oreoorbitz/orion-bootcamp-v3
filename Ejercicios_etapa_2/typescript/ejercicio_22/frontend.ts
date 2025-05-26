@@ -1,1 +1,1 @@
-console.log('No estoy dispuesta a aceptar una vida que no merezco')
+alert("🎉 ¡Este mensaje viene desde el JS transpilado!");
