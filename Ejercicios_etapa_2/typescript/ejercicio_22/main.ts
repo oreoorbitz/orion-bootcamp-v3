@@ -1,22 +1,25 @@
+import { transpile } from "https://deno.land/x/emit/mod.ts";
+
 /**
  * MÓDULO 22: INYECTAR JAVASCRIPT TRANSPILADO EN HTML
  *
  * 🧠 Concepto clave:
- * Aunque Deno permite correr TypeScript directamente, los navegadores no lo soportan.
- * Por eso, necesitamos transpilar nuestro código `.ts` a `.js` y luego insertarlo en la página.
+ * Aunque Deno permite ejecutar TypeScript directamente, los navegadores no lo soportan.
+ * Por eso, si quieres que tu código TypeScript corra en el navegador, primero debes transpilarlo a JavaScript plano.
  *
- * `Deno.emit()` nos da el JavaScript como texto (en memoria), así que no necesitamos crear archivos `.js`.
- * Podemos tomar ese resultado y **modificar el HTML directamente, sin usar librerías**.
+ * Usarás `transpile()` desde `https://deno.land/x/emit`, que reemplaza el antiguo `Deno.emit()`.
+ * Esto te permite obtener el JavaScript en memoria (como string), sin necesidad de generar archivos `.js`.
  *
  * 🎯 Objetivo:
- * Crear una única función que:
+ * Crear una función que:
  * - Transpile un archivo `.ts` a `.js` en memoria
- * - Inserte ese JS como script inline dentro de un archivo HTML
- * - **Sobrescriba el HTML original con el resultado**
+ * - Inserte ese JS como `<script>` inline dentro de un archivo HTML
+ * - Sobrescriba el HTML original con el nuevo contenido
  *
  * ✅ Instrucciones:
  *
  * 1. En la raíz del proyecto (junto a `Ejercicios_etapa_2/`), crea un archivo `injector.ts`
+ *
  * 2. Define y exporta la siguiente función:
  *
  * ```ts
@@ -26,18 +29,13 @@
  * ): Promise<void>
  * ```
  *
- * Esta función debe:
- * - Leer el contenido del archivo HTML en `htmlPath`
- * - Usar `Deno.emit()` para transpilar `tsPath` a JavaScript (sin escribir archivos)
- * - Insertar el resultado como `<script>...</script>` justo antes de la etiqueta `</body>`
- * - Sobrescribir el archivo `htmlPath` con el nuevo contenido
+ * 3. Esta función debe:
+ * - Leer el contenido del archivo HTML (`htmlPath`)
+ * - Usar `transpile()` para convertir el archivo `.ts` (`tsPath`) en JavaScript
+ * - Insertar el JS como script inline justo antes de `</body>`
+ * - Guardar el HTML resultante sobrescribiendo el archivo original
  *
- * ⚙️ Importante:
- * - Deno **no tiene un modelo DOM**, así que debes modificar el HTML como string
- * - No uses ninguna librería externa — hazlo con `.replace()` o similares
- *
- *
- * ✅ Ejemplo de uso en `main.ts`:
+ * ✅ Ejemplo de uso:
  *
  * ```ts
  * import { injector } from "../injector.ts";
@@ -45,8 +43,7 @@
  * await injector("frontend.ts", "index.html");
  * ```
  *
- * ✅ Resultado esperado:
- * El archivo `index.html` original debe ser reemplazado con una versión que contenga:
+ * ✅ Ejemplo del resultado esperado en `index.html`:
  *
  * ```html
  * <html>
@@ -60,18 +57,30 @@
  * </html>
  * ```
  *
+ * ⚙️ Importante:
+ * - Deno **no tiene un DOM**, así que debes modificar el HTML como string (usa `.replace()` o `.lastIndexOf()` sin librerías externas)
+ * - El módulo `emit` es el nuevo estándar para transpilar `.ts` sin escribir archivos intermedios:
+ *
+ * ```ts
+ * import { transpile } from "https://deno.land/x/emit/mod.ts";
+ *
+ * const url = new URL("./frontend.ts", import.meta.url);
+ * const result = await transpile(url);
+ * const jsCode = result.get(url.href); // código JS como string
+ * ```
+ *
  * 🧪 Consejo:
- * Esta técnica de inyección es común en herramientas modernas como Vite y Astro.
- * Inyectar código inline te permite experimentar rápidamente sin montar servidores o rutas.
+ * Esta técnica es común en herramientas modernas como Vite y Astro.
+ * Inyectar código inline te permite experimentar sin necesidad de un sistema complejo de rutas.
  *
- * 🧩 Integración con tu flujo anterior:
- * Puedes elegir cómo probar esta funcionalidad:
- * - Opción A: Crear un HTML sencillo (como `index.html`) a mano para pruebas rápidas
- * - Opción B: Usar el flujo que ya construiste en módulos anteriores (generación con Liquid, layouts, etc.)
+ * 🧩 Integración con tu flujo actual:
+ * Puedes probar esta función de dos maneras:
+ * - A: Crear un `index.html` manual con contenido básico
+ * - B: Usar el HTML generado por tu sistema de plantillas
  *
- * Ambas opciones son válidas **por ahora**.
+ * Ambas opciones funcionan, pero **en el siguiente módulo necesitarás integrarlo a tu flujo real**.
  *
- * ⚠️ Pero atención:
- * En el **Módulo 23**, necesitarás que esto funcione con tu flujo de plantillas anterior.
- * El objetivo es agregar hot reload a tu sistema completo, así que asegúrate de tenerlo funcionando pronto.
+ * ⚠️ Recomendación:
+ * Asegúrate de tener `injector()` funcionando correctamente con HTML generado desde plantillas,
+ * ya que en el Módulo 23 lo necesitarás para implementar hot reload completo.
  */
