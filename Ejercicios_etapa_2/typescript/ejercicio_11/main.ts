@@ -12,13 +12,25 @@
  *
  * ✅ Ejemplo de plantilla:
  * ```liquid
- * {% assign mensaje = 'Fruta disponible:' %}
+ * {% assign mensaje = \"Fruta disponible:\" %}
  * {% for fruta in frutas %}
  *   {% if fruta %}
  *     {{ mensaje | upcase }} {{ fruta | upcase | reverse }}
  *   {% endif %}
  * {% endfor %}
  * ```
+ *
+ * ⚠️ Nota importante sobre las comillas:
+ * En nuestros ejercicios, los strings de entrada son escritos dentro de código JavaScript
+ * y usamos comillas dobles (`"`) como delimitador externo.
+ * Por eso, si el contenido del string también contiene comillas dobles,
+ * **debes escaparlas con una barra invertida (`\"`)** para evitar errores de sintaxis.
+ *
+ * Ejemplo:
+ * ```ts
+ * const entrada = "{% assign mensaje = \\\"Fruta disponible:\\\" %}";
+ * ```
+ * Esto es lo que permite que el parser lea el contenido correctamente como parte de la plantilla Liquid.
  *
  * ✅ Tokens clasificados esperados:
  * ```ts
