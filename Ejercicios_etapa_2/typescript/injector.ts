@@ -3,12 +3,12 @@
 //}
 const tsPath = "../ejercicio_22/frontend.ts";
 
-import { emit } from "https://deno.land/x/deno_emit/mod.ts";
+import { transpile } from "https://deno.land/x/emit/mod.ts";
 
 
 
 try {
-    const { files } = await emit(tsPath, { bundle: "module" });
+    const { files } = await transpile(tsPath, { bundle: "module" });
 
     console.log("🔹 Código JS transpilar:", files["deno:///bundle.js"]);
 } catch (error) {
