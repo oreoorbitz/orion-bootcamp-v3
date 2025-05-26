@@ -1,5 +1,3 @@
-import { transpile } from "https://deno.land/x/emit/mod.ts";
-
 /**
  * MÓDULO 22: INYECTAR JAVASCRIPT TRANSPILADO EN HTML
  *
@@ -7,7 +5,7 @@ import { transpile } from "https://deno.land/x/emit/mod.ts";
  * Aunque Deno permite ejecutar TypeScript directamente, los navegadores no lo soportan.
  * Por eso, si quieres que tu código TypeScript corra en el navegador, primero debes transpilarlo a JavaScript plano.
  *
- * Usarás `transpile()` desde `https://deno.land/x/emit`, que reemplaza el antiguo `Deno.emit()`.
+ * Usarás `transpile()` desde `https://deno.land/x/emit/mod.ts`, que reemplaza el antiguo `Deno.emit()`.
  * Esto te permite obtener el JavaScript en memoria (como string), sin necesidad de generar archivos `.js`.
  *
  * 🎯 Objetivo:
