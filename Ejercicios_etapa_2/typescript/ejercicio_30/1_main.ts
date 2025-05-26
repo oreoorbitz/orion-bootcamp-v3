@@ -1,63 +1,83 @@
 /**
- * MÓDULO 30 (parte 2): GENERACIÓN Y SERVICIO DE HTML DINÁMICO CON RUTAS
+ * MÓDULO 30 (parte 2): GENERAR HTML POR RUTA Y ENLACES ENTRE PÁGINAS
  *
  * 🧠 Concepto clave:
- * En la parte anterior, definiste una lista de rutas, cada una con su URL, plantilla y contexto.
- * Ahora vas a generar los archivos HTML correspondientes y asegurarte de que se sirvan correctamente
- * desde tu servidor actual.
+ * En este archivo tomarás las rutas definidas en `0_main.ts` y las usarás para:
+ * - Cargar y renderizar la plantilla asociada
+ * - Inyectar el script de hot reload
+ * - Guardar el archivo HTML en `dist/`
  *
- * Este paso conecta tu ruteo interno con el HTML real que se mostrará en el navegador.
+ * También debes asegurarte de que tus objetos `product` y `collection` tengan una propiedad `.url`
+ * para que las plantillas puedan generar enlaces entre páginas.
  *
  * 🎯 Objetivo:
- * - Tomar la estructura de rutas que preparaste
- * - Renderizar HTML usando tus plantillas y contextos
- * - Inyectar el script de hot reload
- * - Escribir los archivos HTML en `dist/` siguiendo la estructura de rutas
+ * - Generar archivos HTML para cada ruta
+ * - Asegurar enlaces navegables entre páginas usando `.url`
+ * - Mantener el hot reload funcionando en todas las rutas
  *
  * ✅ Instrucciones:
  *
- * 1. Copia la estructura de rutas que creaste en `0_main.ts` y pégala en este archivo.
- *    Aquí es donde vas a hacer el render final de cada página.
+ * 1. Copia la lista de rutas que definiste en `0_main.ts` y pégala al inicio de este archivo.
+ *    - Cada entrada debe incluir: `url`, `template`, y `context`
  *
- * 2. Usa tu motor de plantillas para generar el HTML correspondiente a cada ruta.
- *    - Usa `renderizarHTML(plantilla, contexto)` o el equivalente que estés usando
- *    - Usa tu módulo `injector()` para inyectar el script de hot reload
- *    - Guarda el resultado en la ubicación adecuada dentro de `dist/`
+ * 2. Asegúrate de que los datos provenientes de `contextPlease.ts` ya incluyan `.url` en cada producto y colección:
  *
- * 📝 Ejemplo del flujo general (esto es solo una referencia de uso, no lo copies literalmente):
- *
+ * 📝 Ejemplo de cómo agregar `.url` (esto ocurre en el modelo, no aquí):
  * ```ts
- * import { renderizarHTML } from "../path/to/liquidRenderer.ts";
- * import { injector } from "../server/injector.ts";
- * import { writeFile } from "../path/to/utils.ts";
+ * product.url = `/products/${product.handle}`;
+ * collection.url = `/collections/${collection.handle}`;
+ * ```
  *
+ * 3. Para cada ruta:
+ *    - Carga la plantilla desde `templates/`
+ *    - Renderiza el HTML con el contexto de la ruta
+ *    - Inyecta el script de hot reload
+ *    - Guarda el archivo resultante en `dist/` respetando la estructura de URL
+ *
+ * ✅ Ejemplo de flujo general (solo referencia, no copiar literalmente):
+ * ```ts
  * for (const ruta of rutas) {
- *   const rawHtml = await renderizarHTML(`templates/${ruta.template}`, ruta.context);
- *   const finalHtml = await injector(rawHtml, "server/hotreload.ts");
+ *   const plantilla = await Deno.readTextFile(`templates/${ruta.template}`);
+ *   const html = renderizar(plantilla, ruta.context); // o como hayas implementado tu render
+ *   const finalHtml = await injector(html, "server/hotreload.ts");
  *
  *   const outputPath = `dist${ruta.url}.html`;
- *   await writeFile(outputPath, finalHtml);
+ *   await saveHtml(outputPath, finalHtml);
  * }
  * ```
  *
- * 3. Verifica que tu servidor está configurado para:
- *    - Servir cualquier archivo HTML desde `dist/` según la URL solicitada
- *    - Por ejemplo, `/products/gold-necklace` debe servir `dist/products/gold-necklace.html`
+ * ✅ Liquid que puedes usar en `content_for_index.liquid`:
+ * ```liquid
+ * <ul>
+ *   {% for collection in collections %}
+ *     <li><a href="{{ collection.url }}">{{ collection.title }}</a></li>
+ *   {% endfor %}
+ * </ul>
+ * ```
  *
- * 4. Asegúrate de que el hot reload siga funcionando.
- *    - El script debe estar inyectado en cada archivo
- *    - Cuando modifiques una plantilla o archivo de datos, los HTML correspondientes deben regenerarse
+ * ✅ Liquid que puedes usar en `collection.liquid`:
+ * ```liquid
+ * <h1>{{ collection.title }}</h1>
+ * <ul>
+ *   {% for product in collection.products %}
+ *     <li><a href="{{ product.url }}">{{ product.title }}</a></li>
+ *   {% endfor %}
+ * </ul>
+ * ```
  *
- * ✅ Verifica:
- * - Que se genera un archivo `.html` por cada producto y colección
- * - Que están guardados en rutas como:
- *   - `dist/products/:handle.html`
- *   - `dist/collections/:handle.html`
- * - Que los enlaces entre páginas funcionan correctamente en el navegador
- * - Que el servidor los sirve correctamente
- * - Que el script de hot reload está presente en cada HTML generado
+ * ✅ Liquid que puedes usar en `product.liquid`:
+ * ```liquid
+ * <h1>{{ product.title }}</h1>
+ * <p>{{ product.description }}</p>
+ * ```
  *
  * 🧠 Consejo:
- * - Esta arquitectura te permite generar sitios completos sin necesidad de un servidor dinámico
- * - En siguientes módulos, extenderás este patrón para otras páginas, secciones o contenido personalizado
+ * - Este archivo representa tu controlador: toma decisiones de flujo, no transforma datos
+ * - Toda lógica de `.url` debe venir ya preparada desde el modelo (`contextPlease.ts`)
+ * - Cada archivo HTML debe ser completamente funcional y estar listo para navegación entre rutas
+ *
+ * ✅ Verifica:
+ * - Que cada archivo `.html` esté correctamente guardado en `dist/`
+ * - Que el script de hot reload esté presente
+ * - Que los enlaces entre páginas funcionen correctamente
  */
