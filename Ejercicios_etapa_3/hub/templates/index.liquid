@@ -1,20 +1,44 @@
 {% assign page_title = "Welcome to the Course" %}
 {% layout "layout.liquid" %}
 
+{% liquid
+# header-xl: text-3xl md:text-4xl lg:text-5xl font-bold text-brand-light mb-6 #
+# header-lg: text-2xl md:text-3xl lg:text-4xl font-semibold text-brand-light mb-5 #
+# header-md: text-xl md:text-2xl font-semibold text-muted mb-4 #
+# header-sm: text-lg md:text-xl font-medium text-muted mb-3 #
+
+# img-fixed: w-64 h-auto mx-auto rounded shadow-md #
+# img-responsive: w-full max-w-2xl mx-auto rounded-lg shadow #
+# img-thumbnail: w-32 h-32 object-cover rounded-full border-2 border-muted #
+
+# video-responsive: w-full max-w-3xl aspect-video mx-auto rounded overflow-hidden shadow #
+
+# code-block: bg-brand-dark text-brand-light font-mono text-sm p-4 rounded-lg overflow-auto shadow-inner #
+
+# graph-block: bg-white p-4 rounded-xl border border-muted shadow-sm max-w-4xl mx-auto #
+
+
+# input-line: w-full bg-white text-brand-dark border border-muted rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent #
+# input-block: w-full h-32 bg-white text-brand-dark border border-muted rounded px-3 py-2 text-sm font-mono resize-none focus:outline-none focus:ring-2 focus:ring-accent #
+# button-primary: bg-brand-teal text-white px-4 py-2 rounded hover:bg-accent transition #
+# button-secondary: bg-white text-brand-dark border border-muted px-4 py-2 rounded hover:bg-accent transition #
+# button-link: text-brand-teal hover:text-accent transition font-semibold underline #
+# button-link-secondary: text-muted hover:text-accent transition font-semibold underline #
+
+%}
+
 {% block %}
-<h1 class="header-xl">Start Your Journey</h1>
+<div class="flex flex-row"></div>
+<div class="flex-col" >
+  <h1 class="header-xl">Start Your Journey</h1>
 
-<p class="text-lg text-muted mb-6">
-  Welcome to the interactive coding course. Select a module to begin:
-</p>
+  <p class="text-lg text-muted mb-6">
+    Welcome to the interactive coding course. Select a module to begin:
+  </p>
+</div>
 
-{%  comment %}
-<ul class="space-y-4">
-    <li>{{ 'general/accordion' | link_to_module: 'Module 1: General → Accordion' }}</li>
-</ul>
-{% endcomment %}
 
-<section class="">
+<section class="flex-row">
   {% htmlOutput %}
   <button class="bg-brand-teal text-white px-4 py-2 rounded hover:bg-accent transition" >Click Me</button>
   {% endhtmlOutput %}
@@ -25,6 +49,6 @@
   </script>
   {% endjavascriptInput %}
 </section>
-
+ 
 
 {% endblock %}

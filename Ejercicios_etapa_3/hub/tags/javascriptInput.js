@@ -1,3 +1,6 @@
+import { javascriptInputHtml } from '../tags_html/javascript-input-html.js';
+import { primarySemiRoundedButton } from '../elements/buttons/primary-semi-rounded-button.js';
+
 export default function register(engine) {
   engine.registerTag('javascriptInput', {
     parse(tagToken, remainTokens) {
@@ -14,23 +17,14 @@ export default function register(engine) {
 
       if (!match) {
         emitter.write(`<div class="text-red-600">❌ No &lt;script&gt; found in javascriptInput</div>`)
-        return
+        return 
       }
 
       const scriptContent = match[1].trim()
       const exerciseIds = context.environments.exercise_ids || []
       const targetId = exerciseIds[exerciseIds.length - 1] || 'html-output-missing'
 
-      emitter.write(`
-        <section class="flex flex-col items-center max-w-[1000px] mx-auto mt-6 space-y-4">
-          <pre contenteditable="true"
-               data-html-for="${targetId}"
-               data-type="js"
-               class="language-js input-block font-mono text-sm bg-code-block text-brand-light rounded p-4 w-full min-h-[8rem]"
-               spellcheck="false">${scriptContent}</pre>
-          <button data-html-submit="${targetId}" class="bg-brand-teal text-white px-4 py-2 rounded hover:bg-accent transition">Run</button>
-        </section>
-      `)
+      emitter.write(javascriptInputHtml(targetId, scriptContent))
     }
   });
 }
