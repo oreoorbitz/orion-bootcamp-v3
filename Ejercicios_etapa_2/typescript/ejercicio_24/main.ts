@@ -61,7 +61,7 @@
  * <link rel="stylesheet" href="./assets/theme.css" />
  * ```
  *
- * 5. Crea o edita el archivo `server/hotreload.ts` para agregar soporte a recarga de CSS sin refrescar toda la página:
+ * 5. Crea o edita el archivo `server/hotreload.ts` para agregar soporte a recarga de CSS sin recargar toda la página:
  *
  * ```ts
  * const link = document.querySelector('link[rel="stylesheet"]');
@@ -86,20 +86,24 @@
  * }
  * ```
  *
- * 7. Usa `injector()` para inyectar el script de `server/hotreload.ts` en cada archivo HTML generado.
- *    Recuerda usar la función `transpile()` para obtener el código como string:
+ * 7. Usa `injector()` para inyectar el script de `server/hotreload.ts` en tu HTML como hiciste en el módulo anterior.
+ *    Recuerda usar la función `transpile()` para obtener el JS como string:
  *
  * ```ts
  * import { transpile } from "https://deno.land/x/emit/mod.ts";
  * import { injector } from "../injector.ts";
+ * 
+ *...posible otro codigo
  *
  * const url = new URL("../server/hotreload.ts", import.meta.url);
  * const result = await transpile(url);
  * const jsCode = result.get(url.href);
  *
  * if (jsCode) {
- *   await injector(jsCode, "dist/tu-pagina.html"); // Aplica uno por uno a cada archivo generado
+ *   await injector(jsCode, "index.html");
  * }
+ * 
+ * ...posible otro codigo
  * ```
  *
  * ✅ Resultado esperado:
