@@ -1,4 +1,3 @@
-import { transpile } from "https://deno.land/x/emit/mod.ts";
 /**
  * MÓDULO 23: HOT RELOAD CON WEBSOCKETS (HTML + JS)
  *
