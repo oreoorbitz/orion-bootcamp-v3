@@ -117,3 +117,97 @@
  * - A automatizar tu flujo de desarrollo con recarga en vivo
  * - A separar responsabilidades entre servidor (`server/`) y HTML generado
  */
+import { iniciarServidor } from "../server/slightlyLate.ts";
+import { liquidEngine } from "../plantilla_motor/motorDePlantillas.ts";
+import { htmlParser } from "../plantilla_motor/parserDehtml.ts";
+import { renderDOM } from "../plantilla_motor/renderizador.ts";
+import { injector } from "../injector.ts"; //  Importamos `injector()`
+import { transpile } from "https://deno.land/x/emit/mod.ts";
+import { notificarReload } from "../server/wsServer.ts";
+
+
+
+const plantillaPath = "./content_for_index.liquid";
+const outputPath = "./dist/index.html";
+const tsPath = "./frontend.ts"; //  Ajustamos la ruta de TypeScript
+
+//  Contexto para la plantilla
+const contexto = {
+    settings: { titulo: "Mi tienda" },
+    producto: { titulo: "Camisa", descripcion: "De algodón" }
+};
+
+// **Observar cambios en `content_for_index.liquid` y `frontend.ts`**
+
+async function observarCambios() {
+    const watcher = Deno.watchFs(["content_for_index.liquid", "frontend.ts"]);
+    for await (const event of watcher) {
+        console.log(`🔄 Archivo(s) modificado(s): ${event.paths.join(", ")}`);
+
+        await recargarYGenerarHTML(); // Recompila el HTML
+        await inyectarHotReload(); // Inyecta el script de hot reload
+
+        notificarReload(); // Envía la señal de recarga al navegador
+    }
+}
+
+
+
+// **Generar el HTML + Inyectar el TypeScript**
+async function recargarYGenerarHTML() {
+    try {
+        console.clear();
+        console.log("✅ Generando HTML desde la plantilla...");
+
+        //  Leer `template.liquid`
+        const entradaLiquid = await Deno.readTextFile(plantillaPath);
+
+        //  Procesar la plantilla con el contexto
+        const plantillaRenderizada = liquidEngine(entradaLiquid, contexto);
+        const arbolDOM = htmlParser(await plantillaRenderizada);
+        const htmlFinal = renderDOM(arbolDOM);
+
+        //  Guardar el HTML en `dist/index.html`
+        await Deno.writeTextFile(outputPath, htmlFinal);
+        console.log("\n✅ Archivo `dist/index.html` generado exitosamente.");
+
+        //  Inyectar código TypeScript en `index.html`
+        await injector(tsPath, outputPath);
+        console.log("✅ Código TypeScript transpilado e inyectado en `index.html`.");
+
+    } catch (error) {
+        console.error("\n❌ Error al generar el archivo HTML:", error);
+    }
+}
+
+async function inyectarHotReload() {
+    console.log("🔥 Transpilando `hotreload.ts` para hot reload...");
+
+    try {
+        //  Ajustamos la ruta del archivo `hotreload.ts`
+        const url = new URL("../server/hotreload.ts", import.meta.url);
+
+        //  Transpilar `hotreload.ts` a JavaScript
+        const result = await transpile(url);
+
+        //  Extraer el código JavaScript generado
+        const jsCode = result.get(url.href);
+
+        if (jsCode) {
+            console.log("✅ Código transpilado con éxito. Inyectando en `index.html`...");
+            await injector("../server/hotreload.ts", "./dist/index.html");
+            console.log("✅ `hotreload.ts` inyectado correctamente.");
+        } else {
+            console.error("❌ Error: No se pudo transpilar `hotreload.ts`.");
+        }
+    } catch (error) {
+        console.error("❌ Error en `inyectarHotReload()`: ", error);
+    }
+}
+
+await recargarYGenerarHTML(); //  Render inicial + Inyección de TS
+await inyectarHotReload(); //  Inyecta el script de hot reload
+observarCambios(); //  Monitorea cambios en archivos
+
+// 🔥 Iniciar el servidor una sola vez
+iniciarServidor(3000);

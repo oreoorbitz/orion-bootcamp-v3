@@ -81,7 +81,7 @@
  * Asegúrate de tener `injector()` funcionando correctamente con HTML generado desde plantillas,
  * ya que en el Módulo 23 lo necesitarás para implementar hot reload completo.
  */
-import { iniciarServidor } from "../slightlyLate.ts";
+import { iniciarServidor } from "../server/slightlyLate.ts";
 import { liquidEngine } from "../plantilla_motor/motorDePlantillas.ts";
 import { htmlParser } from "../plantilla_motor/parserDehtml.ts";
 import { renderDOM } from "../plantilla_motor/renderizador.ts";
@@ -141,5 +141,5 @@ async function recargarYGenerarHTML() {
 await recargarYGenerarHTML(); //  Render inicial + Inyección de TS
 observarCambios(); //  Monitorea cambios en `content_for_index.liquid` y `frontend.ts`
 
-// 🔥 Iniciar el servidor una sola vez
+//  Iniciar el servidor una sola vez
 iniciarServidor(3000);

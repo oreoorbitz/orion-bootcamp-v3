@@ -90,7 +90,7 @@
  * - Se lee como una historia: importar → preparar contexto → renderizar → servir
  */
 
-import { iniciarServidor } from '../slightlyLate.ts'
+import { iniciarServidor } from '../server/slightlyLate.ts'
 import { liquidEngine } from "../plantilla_motor/motorDePlantillas.ts";
 import { htmlParser } from "../plantilla_motor/parserDehtml.ts";
 import { renderDOM } from "../plantilla_motor/renderizador.ts";
@@ -144,5 +144,5 @@ await recargarYGenerarHTML(); // Render inicial
 observarCambios(); // Monitorea cambios en `data.ts`
 
 
-// 🔥 Iniciar el servidor después de generar el HTML(así ya no usamos la basurota d archivo server owo)
+//  Iniciar el servidor después de generar el HTML(así ya no usamos la basurota d archivo server owo)
 iniciarServidor(3000);

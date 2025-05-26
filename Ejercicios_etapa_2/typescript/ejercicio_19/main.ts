@@ -53,7 +53,7 @@
  * Este módulo sienta las bases para reutilizar tu servidor de forma sencilla a medida que tus proyectos crecen.
  */
 
-import { iniciarServidor } from '../slightlyLate.ts'
+import { iniciarServidor } from '../server/slightlyLate.ts'
 import { liquidEngine } from "../plantilla_motor/motorDePlantillas.ts";
 import { htmlParser } from "../plantilla_motor/parserDehtml.ts";
 import { renderDOM } from "../plantilla_motor/renderizador.ts";
