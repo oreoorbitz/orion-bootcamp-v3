@@ -6,7 +6,7 @@
  * Estos filtros permiten aplicar funciones como mayúsculas, formateo de moneda, inversión de texto, etc.
  *
  * Los filtros se escriben después de la variable, separados por `|`, y se aplican en orden como una *tubería* (pipeline):
- *
+ * También podemos tener texto en lugar de una variable, tu función debe ser capaz de aplicar los filtros a ambos.
  * Ejemplo:
  *   - `{{ nombre | upcase }}` → convierte a mayúsculas
  *   - `{{ nombre | upcase | reverse }}` → mayúsculas y luego invertir el texto
@@ -15,6 +15,7 @@
  *
  * ✅ Ejemplo de plantilla completa (con loop, condición y filtros combinados):
  * ```liquid
+ * {{ "nuestra fruta es" | upcase }}
  * {% for fruta in frutas %}
  *   {% if fruta %}
  *     {{ fruta | upcase | reverse }}
@@ -22,9 +23,12 @@
  * {% endfor %}
  * ```
  *
+ *
+ *
  * ✅ Tokens clasificados de entrada:
  * ```ts
  * [
+ *   { tipo: "variable", contenido: "nuestra fruta es" | upcase },
  *   { tipo: "directiva", contenido: "for fruta in frutas" },
  *   { tipo: "directiva", contenido: "if fruta" },
  *   { tipo: "variable", contenido: "fruta | upcase | reverse" },
@@ -36,6 +40,7 @@
  * ✅ Resultado esperado (si frutas = ["manzana", "plátano", "uva"]):
  * ```ts
  * [
+ *   { tipo: "texto", contenido: "NUESTRA FRUTA ES"}
  *   { tipo: "texto", contenido: "ANAZNAM" },
  *   { tipo: "texto", contenido: "ONATÁLP" }
  * ]
@@ -49,7 +54,7 @@
  *    - Busca el valor en el contexto
  *    - Aplica cada filtro desde `filtrosRegistrados` en orden
  *    nota: el objeto de 'filtrosRegistrados' esta escrito mas abajo en las instruciones
- * 
+ *
  *
  * 2. Extiende tu función `renderizarVariables()` para:
  *    - Detectar si el contenido del token `variable` contiene `|`
@@ -131,6 +136,6 @@
  * function parseFiltro(crudo: string): [nombre: string, argumentos: string[]]
  * ```
  *
- * Esto no se usará en módulos futuros,  
+ * Esto no se usará en módulos futuros,
  * pero te ayudará a familiarizarte con cómo Shopify y Liquid manejan funciones con argumentos.
  */
