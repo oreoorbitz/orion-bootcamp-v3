@@ -68,7 +68,7 @@
  * }
  * ```
  *
- * 4. En tu archivo `wsServer.ts`, crea un servidor WebSocket que mantenga la lista de conexiones abiertas:
+ * 4. En tu archivo `server/wsServer.ts`, crea un servidor WebSocket que mantenga la lista de conexiones abiertas:
  *
  * ```ts
  * import { serve } from "https://deno.land/std/http/server.ts";

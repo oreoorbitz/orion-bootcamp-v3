@@ -77,7 +77,7 @@
  * };
  * ```
  *
- * 6. Modifica tu servidor WebSocket (`wsServer.ts`) para enviar `{ type: 'reload-css' }`
+ * 6. Modifica tu servidor WebSocket (`server/wsServer.ts`) para enviar `{ type: 'reload-css' }`
  *    cuando detecte cambios en archivos `.css` dentro de la carpeta `assets/`:
  *
  * ```ts
@@ -92,7 +92,7 @@
  * ```ts
  * import { transpile } from "https://deno.land/x/emit/mod.ts";
  * import { injector } from "../injector.ts";
- * 
+ *
  *...posible otro codigo
  *
  * const url = new URL("../server/hotreload.ts", import.meta.url);
@@ -102,7 +102,7 @@
  * if (jsCode) {
  *   await injector(jsCode, "index.html");
  * }
- * 
+ *
  * ...posible otro codigo
  * ```
  *
