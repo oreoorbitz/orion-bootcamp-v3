@@ -181,7 +181,7 @@ async function recargarYGenerarHTML() {
 }
 
 async function inyectarHotReload() {
-    console.log("🔥 Transpilando `hotreload.ts` para hot reload...");
+    console.log(" Transpilando `hotreload.ts` para hot reload...");
 
     try {
         //  Ajustamos la ruta del archivo `hotreload.ts`
