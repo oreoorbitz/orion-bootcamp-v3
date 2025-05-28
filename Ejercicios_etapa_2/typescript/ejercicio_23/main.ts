@@ -95,6 +95,7 @@
  *    - Transpila el JS necesario
  *    - Usa `injector()` para insertarlo
  *    - Llama a `notificarReload()` para que el navegador recargue
+ *    -IMPORTANTE: frontend.ts sólo se crea en esta carpeta, en los siguientes ejercicios no es necesario hacerlo.
  *
  * ✅ Resultado esperado:
  * - Abres `localhost:3000` y ves tu HTML generado desde Liquid
