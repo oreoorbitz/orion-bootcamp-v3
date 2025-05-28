@@ -7,10 +7,10 @@ if (!link) {
     socket.onmessage = (event) => {
         const data = JSON.parse(event.data);
         if (data.type === "reload-css") {
-            // 🔄 Recarga la hoja de estilos sin recargar toda la página
+            console.log("🔄 Recargando estilos CSS...");
             const url = new URL(link.href);
-            url.searchParams.set("t", Date.now().toString()); // Evita el cache
-            link.href = url.toString();
+            url.searchParams.set("t", Date.now().toString()); // 🔄 Evita el caché del navegador
+            link.href = url.toString(); // 🔄 Aplica la recarga de estilos
         }
     };
 }

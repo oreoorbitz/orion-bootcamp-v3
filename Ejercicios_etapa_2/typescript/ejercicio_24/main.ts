@@ -143,18 +143,26 @@ const contexto = {
 
 // **Observar cambios en `content_for_index.liquid` y `frontend.ts`**
 
+let ultimaModificacionCSS = 0;
+
 async function observarCambios() {
-    const watcher = Deno.watchFs(["content_for_index.liquid", "frontend.ts"]);
+    const watcher = Deno.watchFs(["content_for_index.liquid", "frontend.ts", "assets"]);
     for await (const event of watcher) {
         console.log(`🔄 Archivo(s) modificado(s): ${event.paths.join(", ")}`);
 
-        await recargarYGenerarHTML(); // Recompila el HTML
-        await inyectarHotReload(); // Inyecta el script de hot reload
-
-        notificarReloadCSS(); // Envía la señal de recarga al navegador
+        if (event.paths.some((path) => path.endsWith(".css"))) {
+            const ahora = Date.now();
+            if (ahora - ultimaModificacionCSS > 500) { // Evita múltiples eventos en menos de 500ms
+                ultimaModificacionCSS = ahora;
+                notificarReloadCSS(); // 🔄 Recarga CSS solo si no hubo otro evento inmediato
+            }
+        } else {
+            await recargarYGenerarHTML();
+            console.log()
+            await inyectarHotReload();
+        }
     }
 }
-
 
 
 // **Generar el HTML + Inyectar el TypeScript**
@@ -176,8 +184,8 @@ async function recargarYGenerarHTML() {
         console.log("\n✅ Archivo `dist/index.html` generado exitosamente.");
 
         //  Inyectar código TypeScript en `index.html`
-        await injector(tsPath, outputPath);
-        console.log("✅ Código TypeScript transpilado e inyectado en `index.html`.");
+        //await injector(tsPath, outputPath);
+        //console.log("✅ Código TypeScript transpilado e inyectado en `index.html`.");
 
     } catch (error) {
         console.error("\n❌ Error al generar el archivo HTML:", error);
@@ -188,31 +196,15 @@ async function inyectarHotReload() {
     console.log(" Transpilando `hotreload.ts` para hot reload...");
 
     try {
-        //  Ajustamos la ruta del archivo `hotreload.ts`
-        const url = new URL("../server/hotreload.ts", import.meta.url);
-
-        //  Transpilar `hotreload.ts` a JavaScript
-        const result = await transpile(url);
-
-        //  Extraer el código JavaScript generado
-        const jsCode = result.get(url.href);
-
-        if (jsCode) {
-            console.log("✅ Código transpilado con éxito. Inyectando en `index.html`...");
             await injector("../server/hotreload.ts", "./dist/index.html");
-            console.log("✅ `hotreload.ts` inyectado correctamente.");
-        } else {
-            console.error("❌ Error: No se pudo transpilar `hotreload.ts`.");
-        }
+
     } catch (error) {
         console.error("❌ Error en `inyectarHotReload()`: ", error);
     }
 }
 
-await recargarYGenerarHTML(); //  Render inicial + Inyección de TS
-//await inyectarHotReload(); //  Inyecta el script de hot reload
-observarCambios(); //  Monitorea cambios en archivos
+await recargarYGenerarHTML(); // Render inicial + Inyección de TS
+observarCambios(); // Monitorea cambios en archivos
 
-
-// 🔥 Iniciar el servidor una sola vez
+//  **Asegurar que el servidor se inicia correctamente**
 iniciarServidor(3000);
