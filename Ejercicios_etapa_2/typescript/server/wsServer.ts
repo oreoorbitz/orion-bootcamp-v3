@@ -7,9 +7,22 @@ Deno.serve({ port: 3001 }, (req) => {
     return response;
 });
 
-export function notificarReload() {
-    console.log("🔄 Enviando señal de recarga a los clientes WebSocket...");
+//Monitoreo de cambios en `assets/`
+export async function watchCSSChanges() {
+    for await (const eventoDetectado of Deno.watchFs("assets")) {
+        for (const cambio of eventoDetectado.paths) {
+            if (cambio.endsWith(".css")) {
+                console.log(`🔄 Archivo CSS modificado: ${cambio}`);
+                notificarReloadCSS(); // Enviar señal de recarga solo para CSS
+            }
+        }
+    }
+}
+
+// Notificar recarga específica para CSS
+export function notificarReloadCSS() {
+    console.log(" Enviando señal de recarga de CSS a los clientes WebSocket...");
     for (const client of clients) {
-        client.send(JSON.stringify({ type: "reload" }));
+        client.send(JSON.stringify({ type: "reload-css" }));
     }
 }

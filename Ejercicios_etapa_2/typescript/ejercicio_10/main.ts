@@ -93,7 +93,7 @@
 
 //Este código funciona perfectamente, se coloca en comentarios para poder hacer los opcionales, copiar de aquí si es necesario si rompes algo <3
 
-/* type TipoDirectiva = 'if' | 'endif' | 'for' | 'endfor' | 'else' | 'elsif';
+type TipoDirectiva = 'if' | 'endif' | 'for' | 'endfor' | 'else' | 'elsif';
 
 interface TokenPlantilla {
   tipo: 'texto' | 'variable' | 'directiva';
@@ -102,14 +102,16 @@ interface TokenPlantilla {
 }
 
 //Aqui colocar los datos que necesito para que las funciones encadenadas trabajen adecuadamente:
-let entradaInicial = "{% for fruta in frutas %}{% if fruta %}{{ fruta | upcase | reverse }}{% endif %}{% endfor %}";
+let entradaInicial = "{{ 'theme.css' | asset_url | stylesheet_tag }}{% for fruta in frutas %}{% if fruta %}{{ fruta | upcase | reverse }}{% endif %}{% endfor %}";
 let contexto = {
  frutas: ["manzana", "plátano", "uva"]
 };
 
 let filtrosRegistrados: {} = {
   upcase: (x) => x.toUpperCase(),
-  reverse: (x) => x.split('').reverse().join('')
+  reverse: (x) => x.split('').reverse().join(''),
+  asset_url: (x: string) => `./assets/${x}`,
+  stylesheet_tag: (x: string) => `<link rel="stylesheet" href="${x}" />`
 }
 
 function detectarTokensPlantilla(entrada: string): string[] {
@@ -376,7 +378,7 @@ function renderizarVariables(tokens: TokenPlantilla[], contexto: Record<string, 
 
 
 let entradaRenderizada = renderizarVariables(buclesProcesados, contexto, filtrosRegistrados);
-console.log('5.Resultado entrada renderizada:',entradaRenderizada) */
+console.log('5.Resultado entrada renderizada:',entradaRenderizada)
 
 
 /**
@@ -431,7 +433,7 @@ console.log('5.Resultado entrada renderizada:',entradaRenderizada) */
 
 //Cosa de prueba, funciona perfectamente, usar cualquiera de los dos códigos.
 
-type TipoDirectiva = 'if' | 'endif' | 'for' | 'endfor' | 'else' | 'elsif';
+/* type TipoDirectiva = 'if' | 'endif' | 'for' | 'endfor' | 'else' | 'elsif';
 
 interface TokenPlantilla {
   tipo: 'texto' | 'variable' | 'directiva';
@@ -734,3 +736,4 @@ function parseFiltro(crudo: string): [nombre: string, argumentos: any[]] {
 
 let entradaRenderizada = renderizarVariables(buclesProcesados, contexto, filtrosRegistrados);
 console.log('5.Resultado entrada renderizada:',entradaRenderizada)
+ */

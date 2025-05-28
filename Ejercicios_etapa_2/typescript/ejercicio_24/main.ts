@@ -126,7 +126,8 @@ import { htmlParser } from "../plantilla_motor/parserDehtml.ts";
 import { renderDOM } from "../plantilla_motor/renderizador.ts";
 import { injector } from "../injector.ts"; //  Importamos `injector()`
 import { transpile } from "https://deno.land/x/emit/mod.ts";
-import { notificarReload } from "../server/wsServer.ts";
+import { notificarReloadCSS } from "../server/wsServer.ts";
+
 
 
 
@@ -138,7 +139,6 @@ const tsPath = "./frontend.ts"; //  Ajustamos la ruta de TypeScript
 const contexto = {
     settings: { titulo: "Mi tienda" },
     producto: { titulo: "Camisa", descripcion: "De algodón" },
-    styles: ["theme.css"]
 };
 
 // **Observar cambios en `content_for_index.liquid` y `frontend.ts`**
@@ -151,7 +151,7 @@ async function observarCambios() {
         await recargarYGenerarHTML(); // Recompila el HTML
         await inyectarHotReload(); // Inyecta el script de hot reload
 
-        notificarReload(); // Envía la señal de recarga al navegador
+        notificarReloadCSS(); // Envía la señal de recarga al navegador
     }
 }
 
@@ -210,8 +210,9 @@ async function inyectarHotReload() {
 }
 
 await recargarYGenerarHTML(); //  Render inicial + Inyección de TS
-await inyectarHotReload(); //  Inyecta el script de hot reload
+//await inyectarHotReload(); //  Inyecta el script de hot reload
 observarCambios(); //  Monitorea cambios en archivos
+
 
 // 🔥 Iniciar el servidor una sola vez
 iniciarServidor(3000);
