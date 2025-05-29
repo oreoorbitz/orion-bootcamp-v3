@@ -1,5 +1,6 @@
 // @ts-check
 
+
 /**
  * MÓDULO DE REPASO: EJERCICIOS EN TYPESCRIPT
  *
@@ -14,8 +15,7 @@
  * - Las pruebas deben estar en un archivo separado llamado `index_test.ts`.
  *
  * NOTA:
- * - Las funciones asincrónicas pueden omitirse en los tests.
- * - El objetivo principal es reforzar la creación de funciones y el manejo de tipos en TypeScript.
+ * - soy
  */
 
 /* ============================
@@ -31,7 +31,7 @@
  * @example
  * edadEnDias(1) // 365
  */
- 
+
 // TODO: Escribir la función aquí
 
 /* ============================
