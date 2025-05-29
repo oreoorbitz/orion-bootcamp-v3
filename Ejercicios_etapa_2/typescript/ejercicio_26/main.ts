@@ -18,8 +18,8 @@
  *
  * ```ts
  * export const products = [
- *   { id: 1, title: "Producto A", precio: 1000 },
- *   { id: 2, title: "Producto B", precio: 2000 }
+ *   { id: 1, title: "Producto A", precio: 1000, handle: "producto-a" },
+ *   { id: 2, title: "Producto B", precio: 2000, handle: "producto-b" }
  * ];
  * ```
  *
