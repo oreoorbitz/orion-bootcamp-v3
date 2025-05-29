@@ -125,15 +125,10 @@ import { liquidEngine } from "../plantilla_motor/motorDePlantillas.ts";
 import { htmlParser } from "../plantilla_motor/parserDehtml.ts";
 import { renderDOM } from "../plantilla_motor/renderizador.ts";
 import { injector } from "../injector.ts"; //  Importamos `injector()`
-import { transpile } from "https://deno.land/x/emit/mod.ts";
 import { notificarReloadCSS } from "../server/wsServer.ts";
-
-
-
 
 const plantillaPath = "./content_for_index.liquid";
 const outputPath = "./dist/index.html";
-const tsPath = "./frontend.ts"; //  Ajustamos la ruta de TypeScript
 
 //  Contexto para la plantilla
 const contexto = {
@@ -142,30 +137,21 @@ const contexto = {
 };
 
 // **Observar cambios en `content_for_index.liquid` y `frontend.ts`**
-
-let ultimaModificacionCSS = 0;
-
 async function observarCambios() {
-    const watcher = Deno.watchFs(["content_for_index.liquid", "frontend.ts", "assets"]);
+    const watcher = Deno.watchFs(["content_for_index.liquid", "assets"]);
     for await (const event of watcher) {
         console.log(`🔄 Archivo(s) modificado(s): ${event.paths.join(", ")}`);
 
         if (event.paths.some((path) => path.endsWith(".css"))) {
-            const ahora = Date.now();
-            if (ahora - ultimaModificacionCSS > 500) { // Evita múltiples eventos en menos de 500ms
-                ultimaModificacionCSS = ahora;
-                notificarReloadCSS(); // 🔄 Recarga CSS solo si no hubo otro evento inmediato
-            }
+                notificarReloadCSS();
         } else {
             await recargarYGenerarHTML();
-            console.log()
-            await inyectarHotReload();
+
         }
     }
 }
 
 
-// **Generar el HTML + Inyectar el TypeScript**
 async function recargarYGenerarHTML() {
     try {
         console.clear();
@@ -183,27 +169,17 @@ async function recargarYGenerarHTML() {
         await Deno.writeTextFile(outputPath, htmlFinal);
         console.log("\n✅ Archivo `dist/index.html` generado exitosamente.");
 
-        //  Inyectar código TypeScript en `index.html`
-        //await injector(tsPath, outputPath);
-        //console.log("✅ Código TypeScript transpilado e inyectado en `index.html`.");
+        // Inyectar `hotreload.ts` en el HTML
+        await injector("../server/hotreload.ts", outputPath);
+        console.log("\n✅ Hot Reload inyectado correctamente en index.html.");
 
     } catch (error) {
         console.error("\n❌ Error al generar el archivo HTML:", error);
     }
 }
 
-async function inyectarHotReload() {
-    console.log(" Transpilando `hotreload.ts` para hot reload...");
 
-    try {
-            await injector("../server/hotreload.ts", "./dist/index.html");
-
-    } catch (error) {
-        console.error("❌ Error en `inyectarHotReload()`: ", error);
-    }
-}
-
-await recargarYGenerarHTML(); // Render inicial + Inyección de TS
+await recargarYGenerarHTML(); //
 observarCambios(); // Monitorea cambios en archivos
 
 //  **Asegurar que el servidor se inicia correctamente**
