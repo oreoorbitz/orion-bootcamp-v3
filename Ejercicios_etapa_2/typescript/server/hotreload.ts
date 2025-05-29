@@ -9,8 +9,8 @@ if (!link) {
         if (data.type === "reload-css") {
             console.log("🔄 Recargando estilos CSS...");
             const url = new URL(link.href);
-            url.searchParams.set("t", Date.now().toString()); // 🔄 Evita el caché del navegador
-            link.href = url.toString(); // 🔄 Aplica la recarga de estilos
+            url.searchParams.set("t", Date.now().toString());
+            link.href = url.toString();
         }
     };
 }
