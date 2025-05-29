@@ -36,7 +36,6 @@
  * ```
  * .
  * ├── assets/
- * │   └── theme.css
  * ├── content_for_index.liquid
  * └── theme.liquid
  * ```
