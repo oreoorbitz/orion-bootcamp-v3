@@ -170,7 +170,8 @@ async function recargarYGenerarHTML() {
         console.log("\n✅ Archivo `dist/index.html` generado exitosamente.");
 
         // Inyectar `hotreload.ts` en el HTML
-        await injector("../server/hotreload.ts", outputPath);
+        const tsPath = new URL("../server/hotreload.ts", import.meta.url).href
+        await injector(tsPath, outputPath);
         console.log("\n✅ Hot Reload inyectado correctamente en index.html.");
 
     } catch (error) {

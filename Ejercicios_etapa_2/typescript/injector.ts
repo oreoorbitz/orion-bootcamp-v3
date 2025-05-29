@@ -11,11 +11,9 @@ export async function injector(tsPath: string, htmlPath: string): Promise<void> 
         console.log(" Contenido HTML leído correctamente.");
 
         // Transpilar TypeScript a JavaScript
-        const tsPathAbsoluto = new URL(tsPath, import.meta.url).href.replace("/server/", "/typescript/server/");
-        console.log(new URL(tsPath, import.meta.url).href)
-        console.log('tsPathAbsoluto es:',tsPathAbsoluto)
-        console.log('tsPath es:',tsPath)
-        const result = await transpile(tsPathAbsoluto);
+        //const tsPathAbsoluto = new URL(tsPath, import.meta.url).href //.replace("/server/", "/typescript/server/");
+
+        const result = await transpile(tsPath);
 
         // Verificar si hay código transpilado
         if (!result || result.size === 0) {
@@ -23,7 +21,7 @@ export async function injector(tsPath: string, htmlPath: string): Promise<void> 
         }
 
         // Extraer el código JS generado
-        const jsCode = result.get(tsPathAbsoluto);
+        const jsCode = result.get(tsPath);
 
         if (!jsCode) {
         throw new Error("❌ Error: Código transpilado está vacío.");
