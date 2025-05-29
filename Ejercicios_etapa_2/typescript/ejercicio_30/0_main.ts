@@ -31,13 +31,13 @@
  * 3. Crea Drops específicos para cada entidad si es necesario:
  *    - Por ejemplo: `new ProductDrop(product)`
  *    - Esto encapsula la lógica de cada entidad dentro de su ruta
+ *    - La ubicación y organización de estos Drops queda a tu criterio
  *
  * 📝 Ejemplo de cómo podrías estructurar las rutas dentro de este archivo:
  * (**esto es solo una referencia de uso, no lo copies literalmente**)
  *
  * ```ts
  * import { contextPlease } from "../server/contextPlease.ts";
- * import { ProductDrop } from "../server/drops.ts";
  *
  * const { collections } = await contextPlease();
  *
@@ -59,7 +59,7 @@
  *       url: `/products/${product.handle}`,
  *       template: "product.liquid",
  *       context: {
- *         product: new ProductDrop(product)
+ *         product: new ProductDrop(product) // o como sea que implementaste tu drop
  *       }
  *     });
  *   }

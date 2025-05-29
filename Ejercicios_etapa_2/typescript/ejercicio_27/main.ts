@@ -27,41 +27,51 @@
  *
  * 2. Crea un archivo `db/schema.ts` con la definición de tus tablas.
  *    Este archivo define cómo está estructurada tu base de datos.
+ *    Asegúrate de incluir un campo `handle` en las tablas de `products` y `collections`.
+ *    Este campo será clave para el ruteo dinámico y para acceder a datos desde los Drops en módulos siguientes.
  *
- * 📝 Ejemplo de uso de `db/schema.ts` (no es código para copiar literalmente):
+ * 📝 Ejemplo de esquema (`db/schema.ts`) — solo para referencia:
  *
  * ```ts
- * import { collections, products, productCollections } from "../db/schema.ts";
+ * import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
  *
- * await db.insert(products).values([
- *   { id: 1, title: "Producto A" },
- *   { id: 2, title: "Producto B" }
- * ]);
+ * export const products = sqliteTable("products", {
+ *   id: integer("id").primaryKey(),
+ *   title: text("title").notNull(),
+ *   handle: text("handle").notNull().unique()
+ * });
+ *
+ * export const collections = sqliteTable("collections", {
+ *   id: integer("id").primaryKey(),
+ *   title: text("title").notNull(),
+ *   handle: text("handle").notNull().unique()
+ * });
+ *
+ * export const productCollections = sqliteTable("product_collections", {
+ *   productId: integer("product_id").references(() => products.id),
+ *   collectionId: integer("collection_id").references(() => collections.id)
+ * });
  * ```
  *
  * 3. Crea `db/seed.ts` y usa Drizzle para insertar datos de ejemplo.
- *    Este archivo sirve para poblar la base con entradas iniciales.
  *
- * Puedes usar esta estructura como punto de partida (ajústala a tu diseño):
+ * ✅ Usa el archivo compartido `../seedData.ts` ubicado en el directorio padre.
+ * Este archivo contiene una colección consistente de productos y colecciones que usaremos en todos los módulos.
+ *
+ * Importa y utiliza su contenido así:
  *
  * ```ts
- * [
- *   { id: 1, title: "Producto A" },
- *   { id: 2, title: "Producto B" },
- *   { id: 3, title: "Producto C" }
- * ]
+ * import { db } from "./client.ts";
+ * import {
+ *   products,
+ *   collections,
+ *   productCollections
+ * } from "./schema.ts";
+ * import { seedCollections, seedProducts, seedProductCollections } from "../seedData.ts";
  *
- * [
- *   { id: 1, title: "Ofertas" },
- *   { id: 2, title: "Nuevos lanzamientos" }
- * ]
- *
- * [
- *   { productId: 1, collectionId: 1 },
- *   { productId: 2, collectionId: 1 },
- *   { productId: 2, collectionId: 2 },
- *   { productId: 3, collectionId: 2 }
- * ]
+ * await db.insert(products).values(seedProducts);
+ * await db.insert(collections).values(seedCollections);
+ * await db.insert(productCollections).values(seedProductCollections);
  * ```
  *
  * 4. Crea un archivo `server/contextPlease.ts`.
@@ -78,7 +88,20 @@
  * ```
  *
  * 5. Asegúrate de que el contexto incluya una propiedad `collections` que represente las colecciones
- *    y sus productos asociados, en un formato adecuado para tus plantillas Liquid.
+ *    y sus productos asociados. La estructura recomendada es:
+ *
+ * ```ts
+ * [
+ *   {
+ *     title: "Soft Shirts",
+ *     handle: "soft-shirts",
+ *     products: [
+ *       { title: "Camisa suave A", handle: "camisa-suave-a" },
+ *       { title: "Camisa suave B", handle: "camisa-suave-b" }
+ *     ]
+ *   }
+ * ]
+ * ```
  *
  * 🔁 Flujo esperado:
  * - Tu CLI ejecuta el servidor con la ruta del ejercicio
@@ -89,4 +112,6 @@
  * 🧠 Consejo:
  * - A partir de este punto, `contextPlease.ts` será el lugar donde agregarás otras variables globales como `all_products`
  * - Esta estructura modular te permite mantener tu lógica de datos separada de tu motor de renderizado
+ * - El campo `handle` será esencial para ruteo dinámico y acceso con Drops personalizados
+ * - Usar un archivo `seedData.ts` centralizado facilita mantener ejemplos consistentes en todos los módulos
  */
