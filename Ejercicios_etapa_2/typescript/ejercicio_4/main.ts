@@ -3,7 +3,10 @@
  *
  * 🧠 Concepto clave:
  * Un documento HTML es una estructura jerárquica de elementos y textos.
- * Cada apertura de etiqueta crea un nuevo nodo, cada cierre cierra un contexto, y los textos son hijos normales.
+ * Cada apertura de etiqueta crea un nuevo nodo, cada cierre cierra un contexto, los textos son hijos normales.
+ * Las etiquetas de autocierre (<br />, <img />, etc.) se representan como nodos sin hijos y no requieren un
+ * cierre posterior. Se insertan directamente en el árbol sin alterar el contexto actual.
+ *
  *
  * En este módulo vas a construir:
  * - Un árbol anidado que representa tu HTML
@@ -20,6 +23,7 @@
  *   Hola
  *   <span>mundo</span>
  * </div>
+ * <br />
  * ```
  *
  * ✅ Ejemplo de entrada esperada (los tokens que ya generaste en módulos anteriores):
@@ -30,7 +34,8 @@
  *   { tipo: TipoToken.Apertura, nombre: "span", contenido: null, atributos: {} },
  *   { tipo: TipoToken.Texto, nombre: null, contenido: "mundo", atributos: null },
  *   { tipo: TipoToken.Cierre, nombre: "span", contenido: null, atributos: null },
- *   { tipo: TipoToken.Cierre, nombre: "div", contenido: null, atributos: null }
+ *   { tipo: TipoToken.Cierre, nombre: "div", contenido: null, atributos: null },
+ *   { tipo: TipoToken.Autocierre, nombre: "br", contenido: null, atributos: null }
  * ]
  * ```
  *
@@ -98,8 +103,10 @@
  *      - Crea un `NodoTexto`
  *      - Agrégalo como hijo del nodo actual
  *    - Cuando encuentres una etiqueta de autocierre:
- *      - Crea un `NodoElemento` sin hijos
- *      - Agrégalo directamente como hijo del nodo actual
+ *      - Crea un NodoElemento con su nombre, atributos y un array hijos vacío
+ *      - No hagas push al stack
+ *      - Agrégalo directamente al array hijos del nodo actual
+ *
  *
  * ✅ Reglas clave:
  * - El primer nodo abierto será el **nodo raíz**
@@ -108,7 +115,7 @@
  *
  * Consejo:
  * - No tienes que volver a tokenizar el HTML aquí. ¡El arreglo de tokens ya viene preparado del módulo anterior!
- * - Usa pseudocódigo si sientes que te pierdes:  
+ * - Usa pseudocódigo si sientes que te pierdes:
  *   "Si apertura → crear hijo → moverse abajo... Si cierre → volver arriba..."
  *
  * Este ejercicio simula **cómo un navegador construye el DOM real**: un proceso de lectura y anidación basado en apertura y cierre de etiquetas.
@@ -151,6 +158,6 @@
  * - "recursive tree traversal"
  * - En español: *recorrer estructura de árbol con funciones recursivas*
 
- * Esta funcionalidad **no es obligatoria** y no se usará en los siguientes módulos.  
+ * Esta funcionalidad **no es obligatoria** y no se usará en los siguientes módulos.
  * Sin embargo, te ayuda a familiarizarte con cómo funciona internamente el DOM real.
  */

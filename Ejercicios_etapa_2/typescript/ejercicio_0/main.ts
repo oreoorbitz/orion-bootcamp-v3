@@ -15,7 +15,7 @@
  * - Las pruebas deben estar en un archivo separado llamado `index_test.ts`.
  *
  * NOTA:
- * - soy
+ *
  */
 
 /* ============================
@@ -28,7 +28,7 @@
  * - Asegúrate de tipar el parámetro y el valor de retorno.
  * - La función debe ser exportada para su prueba.
  *
- * @example
+ * @Ejemplo:
  * edadEnDias(1) // 365
  */
 
@@ -43,7 +43,7 @@
  * - Retornar un saludo en el formato "Hola, <primerNombre> <apellido>!".
  * - Asegúrate de tipar correctamente los parámetros y el valor de retorno.
  *
- * @example
+ * @Ejemplo:
  * cualEsTuNombre("Juan", "Pérez") // "Hola, Juan Pérez!"
  */
 
@@ -58,7 +58,7 @@
  * 2. Crear una función `triple` que reciba un número y retorne el triple.
  * 3. Crear una función `dobleMasTriple` que reciba un número y retorne la suma del doble y el triple.
  *
- * @example
+ * @Ejemplo:
  * doble(2) // 4
  * triple(3) // 9
  * dobleMasTriple(2) // 4 + 6 = 10
@@ -76,7 +76,7 @@
  * - Crear una función `checarTipoSeguro` que determine si una variable es un `string` o `number`.
  * - Retornar un mensaje indicando el tipo detectado.
  *
- * @example
+ * @Ejemplo:
  * checarTipoSeguro(21) // "Es un número con valor: 21"
  *
  *
@@ -87,7 +87,7 @@
  * - Usar `Number()` para la conversión.
  * - Si no es convertible, retornar "No es un número válido".
  *
- * @example
+ * @Ejemplo:
  * convertirANumero("123") // 123
  */
 
@@ -103,7 +103,7 @@
  * - Validar que la moneda sea válida (USD, EUR, GBP).
  * - Retornar el valor formateado como string.
  *
- * @example
+ * @Ejemplo:
  * convertirCentsAMoneda(1234, "USD") // "$12.34"
  */
 
@@ -129,7 +129,7 @@
  * TODO:
  * - Crear una función `sumarElementos` que sume los valores numéricos de un array.
  *
- * @example
+ * @Ejemplo:
  * accederArray(['a', 'b', 'c'], 2) // 'c'
  * manipulaArray(['a'], 1, 2, 3) // 2
  * sumarElementos([1, 2, 3]) // 6
@@ -157,7 +157,7 @@
  * TODO:
  * - Crear una función `miReduce` que reciba un array, una función reductora y un valor inicial.
  *
- * @example
+ * @Ejemplo:
  * miMapa([1, 2, 3], x => x * 2) // [2, 4, 6]
  * miFilter([1, 2, 3, 4], x => x % 2 === 0) // [2, 4]
  * miReduce([1, 2, 3, 4], (acc, x) => acc + x, 0) // 10
@@ -180,7 +180,7 @@
  * TODO:
  * - Crear una clase `Usuario` con propiedades `nombre` y `rol`, y un método `saludar()`.
  *
- * @example
+ * @Ejemplo:
  * const usuarioProto = crearUsuarioConPrototipo("Luis", "admin");
  * usuarioProto.saludar(); // "Hola, soy Luis y soy admin"
  *
@@ -208,7 +208,7 @@
  * ❗IMPORTANTE:
  * - Estas funciones no requieren tests.
  *
- * @example
+ * @Ejemplo:
  * procesarEnvio(); // Simulación de proceso logístico
  * await procesarEnvioAsync(); // Simulación de proceso logístico
  */

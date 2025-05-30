@@ -20,10 +20,11 @@
  * Hola, {{ nombre }}. Bienvenido a {{ ciudad }}.
  * ```
  *
- * Puedes reutilizar tu código del módulo 5 y 6 para:
+ * Reutiliza tu código del módulo 5 y 6 para:
  * 1. Tokenizar esta cadena (`detectarTokensPlantilla`)
  * 2. Clasificar los tokens (`clasificarTokensPlantilla`)
  *
+ * De esta manera vas a tener la entrada esperada para esta función:
  * Entrada:
  * tokens:
  * [

@@ -24,7 +24,7 @@
  *
  * ✅ Estructura sugerida:
  * ```
- * Ejercicios_etapa_2/
+ * Typescript/
  * ├── plantilla_motor/
  * ├── ejercicio_18/
  * │   ├── main.ts               ← ejecuta la renderización y guarda el archivo

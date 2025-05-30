@@ -11,7 +11,8 @@
  * - Reemplazaste variables simples con `{{ nombre }}`
  *
  * Ahora vas a interpretar una nueva directiva: los bucles con `{% for item in lista %}`.
- * Además, dentro del cuerpo del bucle puede haber condicionales — lo cual pondrá a prueba si tu motor procesa los bloques en orden correcto.
+ * Además, dentro del cuerpo del bucle puede haber condicionales — lo cual pondrá a prueba si tu motor (las funciones creadas en orden)
+ * procesa los bloques en orden correcto.
  *
  * ✅ Ejemplo de plantilla original:
  * ```liquid
@@ -65,4 +66,5 @@
  * - Aplica `procesarCondicionales()` para manejar `if` dentro del `for`
  * - Haz un bucle externo para recorrer los tokens y detectar el inicio y fin del `for`
  * - Asegúrate de mantener el orden de ejecución: primero condicionales, luego variables
+ *
  */

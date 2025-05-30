@@ -13,7 +13,7 @@
  *
  * ✅ Estructura sugerida:
  * ```
- * Ejercicios_etapa_2/
+ * Typescript/
  * ├── plantilla_motor/
  * │   └── mod.ts
  * ├── ejercicio_17/

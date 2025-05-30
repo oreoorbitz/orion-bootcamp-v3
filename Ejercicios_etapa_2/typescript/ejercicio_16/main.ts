@@ -17,7 +17,7 @@
  *
  * ✅ Estructura esperada:
  * ```
- * Ejercicios_etapa_2/
+ * Typescript/
  * ├── plantilla_motor/
  * │   └── mod.ts                   ← Tu motor unificado
  * ├── ejercicio_16/

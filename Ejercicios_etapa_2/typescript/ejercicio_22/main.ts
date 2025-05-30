@@ -16,7 +16,7 @@
  *
  * ✅ Instrucciones:
  *
- * 1. En la raíz del proyecto (junto a `Ejercicios_etapa_2/`), crea un archivo `injector.ts`
+ * 1. En la raíz del proyecto (junto a `Ejercicios_etapa_2/typescript`), crea un archivo `injector.ts`
  *
  * 2. Define y exporta la siguiente función:
  *
