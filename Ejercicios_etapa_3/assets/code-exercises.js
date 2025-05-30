@@ -8,8 +8,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const jsInput = document.querySelector(`[data-html-for="${exerciseId}"][data-type="js"]`);
     const button = document.querySelector(`[data-html-submit="${exerciseId}"]`);
 
-    // 🔒 Store the original rendered HTML once
     const initialHTML = renderTarget?.innerHTML || '';
+
+    console.log(htmlInput, button);
 
     if (button) {
       button.addEventListener('click', () => {
