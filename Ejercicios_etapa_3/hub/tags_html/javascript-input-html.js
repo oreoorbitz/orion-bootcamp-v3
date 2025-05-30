@@ -1,7 +1,7 @@
-import { primarySemiRoundedButton } from '../elements/buttons/primary-semi-rounded-button.js';
+import { primarySemiRoundedButton } from '../elements/buttons/primary-semi-rounded-button.js'
 
 const buttonAttributes = id => {
-  return `data-html-submit="${id}" class="bg-brand-teal text-white px-4 py-2 rounded hover:bg-accent transition"`;
+  return `data-html-submit="${id}" class="bg-brand-teal text-white px-4 py-2 rounded hover:bg-accent transition"`
 }
 
 export const javascriptInputHtml = (targetId, scriptContent) => {
