@@ -40,6 +40,7 @@ const watchPaths = [
   path.join(__dirname, 'javascript'),
   path.join(__dirname, 'elements'),
   path.join(__dirname, 'tags_html'),
+  path.join(__dirname, 'tags')
 ];
 
 chokidar.watch(watchPaths, {
