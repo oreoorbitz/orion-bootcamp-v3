@@ -39,3 +39,22 @@ export function notificarReloadCSS() {
         }
     }
 }
+
+export function notificarRecargaPagina() {
+    console.log("🔄 Enviando señal de recarga de página a los clientes WebSocket...");
+
+    if (clients.size === 0) {
+        console.warn("⚠ No hay clientes conectados al WebSocket.");
+        return;
+    }
+
+    for (const client of clients) {
+        try {
+            const mensaje = JSON.stringify({ type: "reload" });
+            client.send(mensaje);
+            console.log(`📤 Señal de recarga enviada a un cliente WebSocket: ${mensaje}`);
+        } catch (error) {
+            console.error("❌ Error al enviar mensaje de recarga:", error);
+        }
+    }
+}

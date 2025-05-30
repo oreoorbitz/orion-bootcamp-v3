@@ -23,3 +23,21 @@ function validarEstructura(): boolean {
     console.log("✅ Estructura correcta. Todos los archivos y carpetas requeridos están presentes.");
     return true;
 }
+
+export async function observarCambios() {
+    console.log("👀 Observando cambios en archivos importantes...");
+
+    const watcher = Deno.watchFs(["assets", "content_for_index.liquid", "theme.liquid"]);
+
+    for await (const event of watcher) {
+        console.log(`🔄 Archivo(s) modificado(s): ${event.paths.join(", ")}`);
+
+        if (event.paths.some((path) => path.endsWith(".css"))) {
+            console.log("🔄 Cambios en CSS detectados, recargando estilos...");
+            notificarReloadCSS();
+        } else {
+            console.log("🔄 Cambio detectado, regenerando HTML...");
+            await recargarYGenerarHTML();
+        }
+    }
+}

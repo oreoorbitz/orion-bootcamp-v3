@@ -126,6 +126,7 @@ import { htmlParser } from "../plantilla_motor/parserDehtml.ts";
 import { renderDOM } from "../plantilla_motor/renderizador.ts";
 import { injector } from "../injector.ts"; //  Importamos `injector()`
 import { notificarReloadCSS } from "../server/wsServer.ts";
+import { notificarRecargaPagina } from "../server/wsServer.ts";
 
 const plantillaPath = "./content_for_index.liquid";
 const outputPath = "./dist/index.html";
@@ -136,21 +137,22 @@ const contexto = {
     producto: { titulo: "Camisa", descripcion: "De algodón" },
 };
 
-// **Observar cambios en `content_for_index.liquid` y `frontend.ts`**
+// **Observar cambios
 async function observarCambios() {
-    const watcher = Deno.watchFs(["content_for_index.liquid", "assets"]);
+    const watcher = Deno.watchFs(["content_for_index.liquid", "theme.liquid", "assets"]);
     for await (const event of watcher) {
         console.log(`🔄 Archivo(s) modificado(s): ${event.paths.join(", ")}`);
 
         if (event.paths.some((path) => path.endsWith(".css"))) {
-                notificarReloadCSS();
+            console.log("🔄 Cambios en CSS detectados, recargando estilos...");
+            notificarReloadCSS();
         } else {
+            console.log("🔄 Cambio en la plantilla detectado, recargando página...");
             await recargarYGenerarHTML();
-
+            notificarRecargaPagina();
         }
     }
 }
-
 
 async function recargarYGenerarHTML() {
     try {

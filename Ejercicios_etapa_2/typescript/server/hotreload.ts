@@ -6,11 +6,19 @@ if (!link) {
 
     socket.onmessage = (event) => {
         const data = JSON.parse(event.data);
+
+        // 🔄 Si el servidor envía "reload-css", actualizamos estilos sin recargar la página
         if (data.type === "reload-css") {
             console.log("🔄 Recargando estilos CSS...");
             const url = new URL(link.href);
-            url.searchParams.set("t", Date.now().toString());
+            url.searchParams.set("t", Date.now().toString()); // Fuerza actualización de CSS
             link.href = url.toString();
+        }
+
+        // 🔄 Si el servidor envía "reload", recargamos toda la página
+        if (data.type === "reload") {
+            console.log("🔄 Recargando página por cambios en `.liquid`...");
+            location.reload();
         }
     };
 }
