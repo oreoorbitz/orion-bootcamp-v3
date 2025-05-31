@@ -1,8 +1,8 @@
 
 # Introducción: Árboles de Nodos y el DOM
 
-Cuando el navegador recibe un archivo HTML, **no trabaja directamente con el texto**.  
-El motor de JavaScript (y otros motores del navegador) **lee** ese HTML y **construye una estructura de nodos en memoria**.  
+Cuando el navegador recibe un archivo HTML, **no trabaja directamente con el texto**.
+El motor de JavaScript (y otros motores del navegador) **lee** ese HTML y **construye una estructura de nodos en memoria**.
 Esta estructura se llama **DOM**: **Document Object Model**.
 
 ---
@@ -14,7 +14,7 @@ Esta estructura se llama **DOM**: **Document Object Model**.
 - Cada bloque de texto entre etiquetas crea un **nodo de texto** ("Hola", "mundo", etc).
 - Cada nodo puede tener **hijos** (otros nodos dentro de él).
 
-El navegador **nunca manipula el HTML original**.  
+El navegador **nunca manipula el HTML original**.
 Siempre trabaja **sobre el árbol** que creó a partir del HTML.
 
 ---
@@ -54,22 +54,22 @@ El objetivo es **entender cómo se representan documentos en memoria**, no solo 
 ```mermaid
 flowchart TD
   Start(["Stack: []"])
-  
+
   T1["Token 1: apertura <div><br>Acción: Crear nodo 'div' y pushear"]
   Stack1(["Stack: [div]"])
-  
+
   T2["Token 2: texto 'Hola'<br>Acción: Agregar texto a 'div'"]
   Stack2(["Stack: [div]"])
-  
+
   T3["Token 3: apertura <span><br>Acción: Crear nodo 'span' y pushear"]
   Stack3(["Stack: [div, span]"])
-  
+
   T4["Token 4: texto 'mundo'<br>Acción: Agregar texto a 'span'"]
   Stack4(["Stack: [div, span]"])
-  
+
   T5["Token 5: cierre </span><br>Acción: Pop de 'span' (volver a 'div')"]
   Stack5(["Stack: [div]"])
-  
+
   T6["Token 6: cierre </div><br>Acción: Pop de 'div' (árbol completo)"]
   Stack6(["Stack: []"])
 
@@ -80,10 +80,10 @@ flowchart TD
 
 ## 🧪 Extra opcional: Cómo implementar `querySelector` en tu árbol de nodos
 
-Hasta ahora, construiste un árbol DOM simple.  
+Hasta ahora, construiste un árbol DOM simple.
 Pero en el navegador, los nodos tienen métodos útiles para buscar elementos descendientes, como:
 
-document.querySelector('.boton')  
+document.querySelector('.boton')
 document.querySelector('#principal')
 
 Vamos a simular ese comportamiento en nuestros propios nodos.
@@ -129,10 +129,10 @@ En estructuras como árboles (como nuestro DOM), es una herramienta ideal para r
 
 🤔 ¿Por qué usar recursividad?
 
-Porque no sabes cuántos niveles puede tener tu árbol.  
+Porque no sabes cuántos niveles puede tener tu árbol.
 Podrías tener un `<div>` dentro de un `<section>` dentro de otro `<div>` dentro de un `<main>` y así sucesivamente.
 
-Un bucle `for` por sí solo no bastaría para cubrir todos los niveles.  
+Un bucle `for` por sí solo no bastaría para cubrir todos los niveles.
 Pero con recursividad, cada función se encarga de explorar un nivel y todos los niveles que contiene.
 
 ---
@@ -162,7 +162,7 @@ Si no conoces recursividad, busca estos términos:
 - "recursive tree traversal"
 - En español: recorrer estructura de árbol con funciones recursivas
 
-No te preocupes por performance.  
+No te preocupes por performance.
 Este ejercicio es solo para familiarizarte con cómo funcionan las búsquedas en un DOM real.
 
 ---
@@ -177,12 +177,16 @@ Imagina que tienes este HTML:
 
 Después de convertirlo en un árbol:
 
-const arbol = construirArbol(tokens)  
+const arbol = construirArbol(tokens)
 const nodo = arbol.querySelector('.destacado')
 
 `nodo` debería ser el nodo `span` con clase "destacado".
 
 ---
 
-⚠️ Este ejercicio es completamente opcional.  
+⚠️ Este ejercicio es completamente opcional.
 No será usado en los siguientes módulos, pero es excelente para practicar cómo funciona el navegador internamente.
+
+Videos recomendados:
+https://www.youtube.com/watch?v=tBaOQeyXYqg&t=475s&ab_channel=VidaMRR-Programacionweb
+En este video no es necesario profundizar en los ejercicios, si no en la teoría y cómo pueden usarse los árboles para resolver problemas.

@@ -51,5 +51,6 @@
  *
  * Consejo:
  * - Usa `.startsWith()` y `.endsWith()` para clasificar cada string
- * - Recorta los delimitadores (`{{ }}`, `{% %}`) usando `.slice()` o `.replace()` para extraer solo el contenido
+ * - Recorta los delimitadores (`{{ }}`, `{% %}`) usando `.slice()` o `.replace()` para extraer solo el contenido.
+ * - Utiliza la función del ejercicio anterior para generar la entrada esperada de esta nueva función.
  */
