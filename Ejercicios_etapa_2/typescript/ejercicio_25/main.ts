@@ -77,30 +77,30 @@
  * └── dist/
  * ```
  *
- * 🧠 Importante: ¿Quién se encarga de qué?
+ * 🧠 Importante: ¿Quién hace qué?
  *
- * A partir de este módulo, vas a usar `mockify.ts` para observar archivos y comunicarte con el servidor.
+ * A partir de este módulo, usarás `mockify.ts` para observar archivos y comunicarte con el servidor.
  *
- * Pero **la lógica de generación de HTML (como `recargarYGenerarHTML()`), sigue en `main.ts`**. Es decir:
+ * Pero la generación del HTML y la lógica de transformación siguen estando en tu archivo `main.ts`:
  *
  * - `Mockify` no ejecuta `main.ts`
- * - Tú debes seguir ejecutando `main.ts` por separado (por ejemplo: `deno run --allow-all main.ts`)
- * - En el siguiente módulo comenzarás a mover esa lógica fuera de `main.ts`
+ * - Tú debes seguir ejecutando `main.ts` por separado (por ejemplo con `deno run --allow-all main.ts`)
+ * - En el siguiente módulo empezarás a mover más responsabilidades fuera de `main.ts`
  *
  * 🎯 En resumen:
- * - `Mockify` observa cambios y notifica al servidor
- * - `main.ts` genera el HTML cuando lo ejecutas
- * - El servidor recarga el navegador cuando recibe notificaciones
+ * - `Mockify` observa cambios y los notifica
+ * - `main.ts` es el responsable de generar el HTML
+ * - El servidor recarga el navegador cuando recibe los avisos
  *
- * Este patrón te ayuda a dividir responsabilidades progresivamente, acercándote a un entorno real de desarrollo.
+ * Este patrón te ayuda a dividir responsabilidades de manera progresiva, como en un entorno de desarrollo profesional.
  *
  * 🧭 Consejo:
  * Si quieres correr el comando como `Mockify theme dev` directamente,
  * puedes añadir el directorio donde está `mockify.ts` a tu `PATH` del sistema.
  *
- * Esto es opcional pero útil para imitar el flujo de trabajo de herramientas profesionales.
+ * Esto es opcional pero útil para imitar el flujo de trabajo de herramientas reales.
  *
  * 🔁 Recomendación:
- * Usa este módulo como punto de partida para un flujo de desarrollo donde la consola,
- * el servidor, el navegador y los archivos estén sincronizados.
+ * Usa este módulo como base para un entorno de desarrollo donde consola, servidor,
+ * navegador y archivos estén conectados y reaccionen en tiempo real.
  */
