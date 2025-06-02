@@ -9,6 +9,7 @@
  * - Validar la estructura de carpetas esperada
  * - Observar archivos importantes para cambios
  * - Comunicarse con un servidor WebSocket para notificar cambios
+ * - Ejecutar `main.ts` automáticamente cada vez que se detecten cambios
  *
  * 🎯 Objetivo:
  * Implementar una CLI usable como:
@@ -21,6 +22,7 @@
  * - Valide que el directorio actual tenga la estructura esperada
  * - Observe cambios en archivos `.liquid` o dentro de `assets/`
  * - Envíe notificaciones al servidor WebSocket
+ * - Ejecute `main.ts` automáticamente para regenerar el HTML
  * - Reciba una URL para previsualizar la tienda y la muestre en consola
  *
  * ✅ Instrucciones:
@@ -31,6 +33,7 @@
  *    - Una carpeta `assets/`
  *    - Un archivo `content_for_index.liquid`
  *    - Un archivo `theme.liquid`
+ *    - Un archivo `main.ts`
  *
  * 3. Usa `Deno.watchFs()` para escuchar cambios en:
  *    - Todos los archivos dentro de `assets/`
@@ -58,13 +61,30 @@
  * ╰──────────────────────────────────────────────────────╯
  * ```
  *
- * 6. Cada vez que un archivo observado cambie, envía un mensaje al servidor como:
+ * 6. Cada vez que un archivo observado cambie:
+ *    - Si es un archivo `.css`, envía al servidor:
  *
  * ```ts
- * { type: 'change', file: 'path/a/archivo.liquid' }
+ * { type: "reload-css" }
  * ```
  *
- * para que el navegador se actualice.
+ *    - Si es un archivo `.liquid`, ejecuta automáticamente `main.ts` con:
+ *
+ * ```ts
+ * deno run --allow-all ./main.ts
+ * ```
+ *
+ *    - Luego, envía al servidor:
+ *
+ * ```ts
+ * { type: "reload" }
+ * ```
+ *
+ * para que el navegador recargue.
+ *
+ * 🧠 Nota:
+ * `Mockify` ejecuta `main.ts` como un proceso aparte con Deno. No necesitas importarlo ni modificar rutas.
+ * Solo asegúrate de que `main.ts` exista en la carpeta actual.
  *
  * 📁 Estructura esperada:
  * En la carpeta donde se ejecuta `Mockify`, debe existir:
@@ -74,25 +94,19 @@
  * ├── assets/
  * ├── content_for_index.liquid
  * ├── theme.liquid
+ * ├── main.ts
  * └── dist/
  * ```
  *
- * 🧠 Importante: ¿Quién hace qué?
+ * 🧠 ¿Quién hace qué?
  *
- * A partir de este módulo, usarás `mockify.ts` para observar archivos y comunicarte con el servidor.
+ * A partir de este módulo:
  *
- * Pero la generación del HTML y la lógica de transformación siguen estando en tu archivo `main.ts`:
+ * - `Mockify` se encarga de observar archivos, ejecutar `main.ts` y comunicarse con el servidor.
+ * - `main.ts` sigue siendo responsable de generar el HTML e inyectar el script de recarga.
  *
- * - `Mockify` no ejecuta `main.ts`
- * - Tú debes seguir ejecutando `main.ts` por separado (por ejemplo con `deno run --allow-all main.ts`)
- * - En el siguiente módulo empezarás a mover más responsabilidades fuera de `main.ts`
- *
- * 🎯 En resumen:
- * - `Mockify` observa cambios y los notifica
- * - `main.ts` es el responsable de generar el HTML
- * - El servidor recarga el navegador cuando recibe los avisos
- *
- * Este patrón te ayuda a dividir responsabilidades de manera progresiva, como en un entorno de desarrollo profesional.
+ * En módulos futuros, `main.ts` irá perdiendo responsabilidades hasta desaparecer,
+ * y el servidor o el CLI se harán cargo por completo.
  *
  * 🧭 Consejo:
  * Si quieres correr el comando como `Mockify theme dev` directamente,
