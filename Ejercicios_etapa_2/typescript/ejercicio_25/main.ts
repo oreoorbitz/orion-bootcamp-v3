@@ -68,10 +68,14 @@
  * { type: "reload-css" }
  * ```
  *
- *    - Si es un archivo `.liquid`, ejecuta automáticamente `main.ts` con:
+ *    - Si es un archivo `.liquid`, ejecuta automáticamente `main.ts` usando una ruta absoluta:
  *
  * ```ts
- * deno run --allow-all ./main.ts
+ * const rutaMain = new URL("./main.ts", `file://${Deno.cwd()}/`).href;
+ * const comando = new Deno.Command("deno", {
+ *   args: ["run", "--allow-all", rutaMain],
+ * });
+ * await comando.output();
  * ```
  *
  *    - Luego, envía al servidor:
@@ -84,7 +88,7 @@
  *
  * 🧠 Nota:
  * `Mockify` ejecuta `main.ts` como un proceso aparte con Deno. No necesitas importarlo ni modificar rutas.
- * Solo asegúrate de que `main.ts` exista en la carpeta actual.
+ * Al usar `new URL(..., import.meta.url).href` o `file://${Deno.cwd()}`, obtienes una ruta absoluta robusta.
  *
  * 📁 Estructura esperada:
  * En la carpeta donde se ejecuta `Mockify`, debe existir:
