@@ -28,6 +28,7 @@
     "express": "^5.1.0",
     "liquidjs": "^10.21.1",
     "livereload": "^0.9.3",
+    "prismjs": "^1.30.0",
     "sequelize": "^6.37.7",
     "sqlite3": "^5.1.7",
     "vitest": "^3.0.9"
