@@ -18,10 +18,10 @@
  * 📁 Estructura esperada:
  *
  * /Ejercicios_etapa_2/
+ * |── typescript/
  * ├── ejercicio_25/
  * │   └── main.ts            ← Este archivo solo enviará una petición al servidor
- * └── typescript/
- *     └── server/
+ * └── server/
  *         ├── controller.ts   ← Mueve aquí la lógica de renderizado
  *         ├── slightlyLate.ts ← Servidor con endpoint `/theme-update`
  *         └── themes/
