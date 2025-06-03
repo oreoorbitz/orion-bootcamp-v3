@@ -20,3 +20,5 @@ insta/
 Cargo.lock
 target/
 deno.lock
+/dist/
+dist/

@@ -1,113 +1,117 @@
 /**
  * MÓDULO 27: Introducción a Bases de Datos Relacionales con SQLite y Drizzle ORM
-
+ *
  * 🧠 Concepto clave:
- * Shopify fue construido originalmente con Ruby on Rails v1, utilizando MySQL como base de datos principal,
- * y Redis para manejo de caché. Este patrón relacional ha sido una constante en desarrollo web.
-
- * Un patrón común en comercio electrónico es:
- * - Un producto puede estar en múltiples colecciones
- * - Una colección puede tener múltiples productos
- * 
- * Este tipo de relación se llama **muchos a muchos**, y normalmente se resuelve con una tabla intermedia.
-
- * En este módulo:
- * Vas a instalar SQLite y usar Drizzle ORM para simular esta relación en tu entorno local.
-
+ * En sistemas como Shopify, los datos como productos y colecciones se gestionan en bases de datos relacionales.
+ * Un patrón común es la relación **muchos a muchos**, donde:
+ *
+ * - Un producto puede pertenecer a múltiples colecciones
+ * - Una colección puede contener múltiples productos
+ *
+ * Este módulo te permite replicar ese modelo usando SQLite y Drizzle ORM, y preparar tus datos
+ * para integrarlos al motor Liquid a través de un módulo dedicado.
+ *
  * 🎯 Objetivo:
- * - Instalar SQLite en tu entorno local
- * - Usar Drizzle ORM para definir tablas relacionales
- * - Crear una tabla de `products`, otra de `collections`, y una tabla intermedia
- * - Agregar datos a la base
- * - Exponer una variable global `collections` al motor Liquid, que contenga cada colección y sus productos asociados
-
+ * - Configurar SQLite y Drizzle ORM
+ * - Crear una base de datos relacional con productos y colecciones
+ * - Construir un módulo `contextPlease.ts` que devuelva el contexto para tu motor Liquid
+ *
  * ✅ Instrucciones:
-
- * 1. Instala SQLite en tu carpeta principal del curso (Ejercicios_etapa_2/)
- *    Puedes usar el siguiente comando:
- *    ```bash
- *    deno run -A npm:drizzle-kit@latest generate:sqlite
- *    ```
-
- *    Asegúrate de tener también estos paquetes:
- *    ```bash
- *    deno add drizzle-orm sqlite
- *    ```
-
- * 2. Crea en tu directorio raíz un archivo `db/schema.ts` con la definición de tus tablas:
- *    ```ts
- *    import { sqliteTable, integer, text } from "drizzle-orm/sqlite-core";
-
- *    export const products = sqliteTable("products", {
- *      id: integer("id").primaryKey(),
- *      title: text("title").notNull(),
- *    });
-
- *    export const collections = sqliteTable("collections", {
- *      id: integer("id").primaryKey(),
- *      title: text("title").notNull(),
- *    });
-
- *    export const productCollections = sqliteTable("product_collections", {
- *      productId: integer("product_id").references(() => products.id),
- *      collectionId: integer("collection_id").references(() => collections.id),
- *    });
- *    ```
-
- * 3. Crea un archivo `db/seed.ts` para insertar datos de ejemplo. Puedes usar esta lógica base:
- *    ```ts
- *    import { db } from "./client.ts";
- *    import { products, collections, productCollections } from "./schema.ts";
-
- *    await db.insert(products).values([
- *      { id: 1, title: "Producto A" },
- *      { id: 2, title: "Producto B" },
- *    ]);
-
- *    await db.insert(collections).values([
- *      { id: 1, title: "Promociones" },
- *      { id: 2, title: "Nuevos productos" },
- *    ]);
-
- *    await db.insert(productCollections).values([
- *      { productId: 1, collectionId: 1 },
- *      { productId: 2, collectionId: 1 },
- *      { productId: 2, collectionId: 2 },
- *    ]);
- *    ```
-
- * 4. En tu servidor (`slightlyLate.ts`), crea una función que:
- *    - Haga un JOIN para obtener las colecciones y los productos relacionados
- *    - Devuelva la estructura esperada por Liquid:
- *      ```ts
- *      [
- *        {
- *          title: "Promociones",
- *          products: [
- *            { title: "Producto A" },
- *            { title: "Producto B" }
- *          ]
- *        },
- *        {
- *          title: "Nuevos productos",
- *          products: [
- *            { title: "Producto B" }
- *          ]
- *        }
- *      ]
- *      ```
-
- *    Este valor debe estar disponible como la variable global `collections` dentro de las plantillas.
-
+ *
+ * 1. Instala SQLite y Drizzle ORM en la raíz de tu proyecto:
+ *
+ * ```bash
+ * deno run -A npm:drizzle-kit@latest generate:sqlite
+ * deno add drizzle-orm sqlite
+ * ```
+ *
+ * 2. Crea un archivo `db/schema.ts` con la definición de tus tablas.
+ *    Este archivo define cómo está estructurada tu base de datos.
+ *    Asegúrate de incluir un campo `handle` en las tablas de `products` y `collections`.
+ *    Este campo será clave para el ruteo dinámico y para acceder a datos desde los Drops en módulos siguientes.
+ *
+ * 📝 Ejemplo de esquema (`db/schema.ts`) — solo para referencia:
+ *
+ * ```ts
+ * import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+ *
+ * export const products = sqliteTable("products", {
+ *   id: integer("id").primaryKey(),
+ *   title: text("title").notNull(),
+ *   handle: text("handle").notNull().unique()
+ * });
+ *
+ * export const collections = sqliteTable("collections", {
+ *   id: integer("id").primaryKey(),
+ *   title: text("title").notNull(),
+ *   handle: text("handle").notNull().unique()
+ * });
+ *
+ * export const productCollections = sqliteTable("product_collections", {
+ *   productId: integer("product_id").references(() => products.id),
+ *   collectionId: integer("collection_id").references(() => collections.id)
+ * });
+ * ```
+ *
+ * 3. Crea `db/seed.ts` y usa Drizzle para insertar datos de ejemplo.
+ *
+ * ✅ Usa el archivo compartido `../seedData.ts` ubicado en el directorio padre.
+ * Este archivo contiene una colección consistente de productos y colecciones que usaremos en todos los módulos.
+ *
+ * Importa y utiliza su contenido así:
+ *
+ * ```ts
+ * import { db } from "./client.ts";
+ * import {
+ *   products,
+ *   collections,
+ *   productCollections
+ * } from "./schema.ts";
+ * import { seedCollections, seedProducts, seedProductCollections } from "../seedData.ts";
+ *
+ * await db.insert(products).values(seedProducts);
+ * await db.insert(collections).values(seedCollections);
+ * await db.insert(productCollections).values(seedProductCollections);
+ * ```
+ *
+ * 4. Crea un archivo `server/contextPlease.ts`.
+ *    Este módulo será responsable de consultar la base de datos y devolver el objeto `contexto`
+ *    que tu motor Liquid utilizará.
+ *
+ * 📝 Ejemplo de uso de `contextPlease.ts` (solo para referencia):
+ *
+ * ```ts
+ * import { contextPlease } from "../server/contextPlease.ts";
+ *
+ * const contexto = await contextPlease();
+ * renderizarHTML(tokens, contexto); // o como sea que implementaste tu función de render
+ * ```
+ *
+ * 5. Asegúrate de que el contexto incluya una propiedad `collections` que represente las colecciones
+ *    y sus productos asociados. La estructura recomendada es:
+ *
+ * ```ts
+ * [
+ *   {
+ *     title: "Soft Shirts",
+ *     handle: "soft-shirts",
+ *     products: [
+ *       { title: "Camisa suave A", handle: "camisa-suave-a" },
+ *       { title: "Camisa suave B", handle: "camisa-suave-b" }
+ *     ]
+ *   }
+ * ]
+ * ```
+ *
  * 🔁 Flujo esperado:
- * - El CLI `Mockify` sigue enviando el path al servidor
- * - El servidor usa Drizzle para consultar la base SQLite
- * - El resultado se pasa como contexto a tu motor Liquid
- * - Se renderiza la plantilla en `dist/index.html`
- * - Se sirve por HTTP y se actualiza al detectar cambios
-
+ * - Tu CLI ejecuta el servidor con la ruta del ejercicio
+ * - El servidor llama a `contextPlease()` para obtener el contexto
+ * - El motor Liquid usa ese contexto para renderizar
+ * - El resultado se guarda como HTML y se sirve por HTTP
+ *
  * 🧠 Consejo:
- * - No necesitas dominar SQL ni relaciones complejas aún. Solo asegúrate de comprender la idea de "una colección tiene muchos productos"
- * - Esta arquitectura es la base de la mayoría de los CMS modernos como Shopify, WordPress, Sanity, etc.
-
+ * - A partir de este punto, `contextPlease.ts` será el lugar donde agregarás otras variables globales como `all_products`
+ * - Esta estructura modular te permite mantener tu lógica de datos separada de tu motor de renderizado
+ * - El campo `handle` será esencial para ruteo dinámico y acceso con Drops personalizados
+ * - Usar un archivo `seedData.ts` centralizado facilita mantener ejemplos consistentes en todos los módulos
  */

@@ -1,84 +1,90 @@
 /**
- * MÓDULO 11: FILTROS EN VARIABLES DE PLANTILLA
+ * MÓDULO 11: ASIGNACIÓN DE VARIABLES EN PLANTILLAS
  *
  * 🧠 Concepto clave:
- * En Liquid (y otros motores de plantillas), una variable se puede transformar antes de renderizarse usando *filtros*.
- * Estos filtros permiten aplicar funciones como mayúsculas, formateo de moneda, inversión de texto, etc.
+ * En Liquid (y otros motores de plantillas), se pueden definir nuevas variables directamente desde la plantilla usando `{% assign %}`.
+ * Esto permite guardar temporalmente un valor para usarlo más adelante en condiciones, bucles o filtros.
  *
- * Los filtros se escriben después de la variable, separados por `|`, y se aplican en orden como una *tubería* (pipeline):
+ * Imagina que tienes una lista de frutas, y quieres mostrar cada una precedida por un mensaje común definido con `assign`.
+ * Además, transformas el contenido usando filtros como `upcase` y `reverse`.
  *
- * Ejemplo:
- *   - `{{ nombre | upcase }}` → convierte a mayúsculas
- *   - `{{ nombre | upcase | reverse }}` → mayúsculas y luego invertir el texto
- *
- * En este módulo extenderás tu motor para aplicar esos filtros antes de mostrar el valor.
- *
- * ✅ Ejemplo de plantilla completa (con loop, condición y filtros combinados):
+ * ✅ Ejemplo de plantilla:
  * ```liquid
+ * {% assign mensaje = \"Fruta disponible:\" %}
  * {% for fruta in frutas %}
- *   {% if fruta != 'uva' %}
- *     {{ fruta | upcase | reverse }}
+ *   {% if fruta %}
+ *     {{ mensaje | upcase }} {{ fruta | upcase | reverse }}
  *   {% endif %}
  * {% endfor %}
  * ```
  *
- * ✅ Tokens clasificados de entrada:
+ * ⚠️ Nota importante sobre las comillas:
+ * En nuestros ejercicios, los strings de entrada son escritos dentro de código JavaScript
+ * y usamos comillas dobles (`"`) como delimitador externo.
+ * Por eso, si el contenido del string también contiene comillas dobles,
+ * **debes escaparlas con una barra invertida (`\"`)** para evitar errores de sintaxis.
+ *
+ * Ejemplo:
+ * ```ts
+ * const entrada = "{% assign mensaje = \\\"Fruta disponible:\\\" %}";
+ * ```
+ * Esto es lo que permite que el parser lea el contenido correctamente como parte de la plantilla Liquid.
+ *
+ * ✅ Tokens clasificados esperados:
  * ```ts
  * [
+ *   { tipo: "directiva", contenido: "assign mensaje = \"Fruta disponible:\"" },
  *   { tipo: "directiva", contenido: "for fruta in frutas" },
- *   { tipo: "directiva", contenido: "if fruta != 'uva'" },
+ *   { tipo: "directiva", contenido: "if fruta" },
+ *   { tipo: "variable", contenido: "mensaje | upcase" },
  *   { tipo: "variable", contenido: "fruta | upcase | reverse" },
  *   { tipo: "directiva", contenido: "endif" },
  *   { tipo: "directiva", contenido: "endfor" }
  * ]
  * ```
  *
- * ✅ Resultado esperado (si frutas = ["manzana", "plátano", "uva"]):
+ * ✅ Contexto de entrada:
+ * ```ts
+ * { frutas: ["manzana", "plátano"] }
+ * ```
+ *
+ * ✅ Resultado esperado:
  * ```ts
  * [
- *   { tipo: "texto", contenido: "ANAZNAM" },
- *   { tipo: "texto", contenido: "ONATÁLP" }
+ *   { tipo: "texto", contenido: "FRUTA DISPONIBLE: ANAZNAM" },
+ *   { tipo: "texto", contenido: "FRUTA DISPONIBLE: ONATÁLP" }
  * ]
  * ```
  *
- * Objetivo:
- * Agregar soporte para filtros dentro de `{{ ... }}`, aplicándolos antes de mostrar el valor final.
+ * 🎯 Objetivo:
+ * Detectar y ejecutar asignaciones del tipo `{% assign nombre = valor %}` y actualizar el `contexto` con la nueva variable.
  *
- * Instrucciones:
- * 1. Crea una función `aplicarFiltros(nombreVariable: string, filtros: string[], contexto: Record<string, any>, filtrosRegistrados: Record<string, Function>): string`
- *    - Busca el valor en el contexto
- *    - Aplica cada filtro desde `filtrosRegistrados` en orden
+ * 🛠️ Instrucciones:
+ * 1. Crea una función `procesarAsignaciones(tokens: TokenPlantilla[], contexto: Record<string, any>): TokenPlantilla[]`
+ * 2. Para cada token `tipo: "directiva"` que comience con `"assign "`:
+ *    - Extrae el nombre y el valor con `.split("=")`
+ *    - Si el valor está entre comillas (`"Hola"`), guárdalo como texto literal
+ *    - Si **no** tiene comillas (`otroNombre`), busca el valor en el `contexto`
+ *    - Guarda esa nueva variable en el `contexto`
+ *    - El token `assign` no debe producir ningún contenido visible
  *
- * 2. Extiende tu función `renderizarVariables()` para:
- *    - Detectar si el contenido del token `variable` contiene `|`
- *    - Separar el nombre de variable y los filtros con `.split('|')`
- *    - Aplicar `aplicarFiltros(...)` en lugar de acceder directamente al contexto
+ * 🔍 Detalles a tener en cuenta:
+ * - Los valores pueden ser:
+ *   - Texto literal entre comillas: `"Hola"`
+ *   - Un número: `42`
+ *   - Otro nombre de variable: `otroNombre`
+ * - Si detectas comillas (`"` o `'`), quítalas al guardar el valor
+ * - Si no hay comillas, interpreta el contenido como el nombre de otra variable
  *
- * Entrada de ejemplo (solo el token):
- * ```ts
- * { tipo: "variable", contenido: "fruta | upcase | reverse" }
- * ```
+ * ✅ Consejo:
+ * - Usa `.trim()` después del `split("=")` para evitar errores con espacios
+ * - Este paso debe ejecutarse **antes** de renderizar variables o evaluar condicionales
+ * - Las asignaciones no deben dejar rastros visibles en el resultado renderizado
  *
- * contexto:
- * ```ts
- * { fruta: "plátano" }
- * ```
- *
- * filtrosRegistrados:
- * ```ts
- * {
- *   upcase: (x) => x.toUpperCase(),
- *   reverse: (x) => x.split('').reverse().join('')
- * }
- * ```
- *
- * Resultado esperado:
- * ```ts
- * "ONATÁLP"
- * ```
- *
- * Consejo:
- * - Recorta espacios usando `.trim()` en cada parte del filtro
- * - Puedes lanzar un error si el filtro no está definido
- * - Reutiliza el motor completo: primero bucles, luego condiciones, luego filtros → orden importa
+ * ⚠️ Validación:
+ * Asegúrate de que tu motor todavía pueda:
+ * - Procesar filtros (`upcase`, `reverse`, etc.)
+ * - Evaluar condicionales (`if fruta`)
+ * - Repetir contenido en bucles (`for fruta in frutas`)
+ * - Y ahora también asignar valores (`assign`)
  */

@@ -1,101 +1,97 @@
 /**
  * MÓDULO 29: RUTEO Y PLANTILLAS DINÁMICAS PARA PRODUCTOS Y COLECCIONES
-
+ *
  * 🧠 Concepto clave:
- * En cualquier sitio web dinámico (como una tienda), las rutas definen qué contenido mostrar:
- * - `/products/gold-necklace` debería mostrar un producto específico
- * - `/collections/sale` debería mostrar una colección con productos
-
- * Este módulo conecta:
- * - Tu sistema de rutas (servidor)
- * - Tu base de datos SQLite (vía Drizzle)
- * - Tu motor de plantillas Liquid personalizado
-
- * 📁 Estructura esperada en cada proyecto de tema:
+ * En un sitio web dinámico (como una tienda), las rutas definen qué contenido mostrar.
+ *
+ * - `/products/gold-necklace` debe mostrar un producto específico
+ * - `/collections/sale` debe mostrar una colección y sus productos relacionados
+ *
+ * En este módulo, vas a:
+ * - Generar una página HTML por cada producto y colección
+ * - Renderizar esas páginas con tus plantillas Liquid
+ * - Servirlas desde tu servidor actual
+ * - Mantener funcionando el hot reload
+ *
+ * 🎯 Objetivo:
+ * - Implementar ruteo basado en archivos HTML precompilados
+ * - Generar una página por ruta (`/products/:handle`, `/collections/:handle`)
+ * - Usar las plantillas `product.liquid` y `collection.liquid` con datos desde SQLite
+ *
+ * ✅ Instrucciones:
+ *
+ * 1. Crea una carpeta de plantillas si aún no la tienes:
+ *
  * ```
  * templates/
  * ├── product.liquid
  * └── collection.liquid
  * ```
-
- * ✅ Objetivo:
- * Conectar tu base de datos a tu sistema de ruteo y generar HTML real usando plantillas dinámicas.
-
- * ✅ Instrucciones:
-
- * 1. Dentro del proyecto del tema (`ejercicio_29` o similar), crea una carpeta:
- *    ```
- *    templates/
- *    ├── product.liquid
- *    └── collection.liquid
- *    ```
-
- * 2. En tu módulo del servidor (por ejemplo, `slightlyLate.ts`):
- *    - Agrega soporte para rutas dinámicas:
- *      - `/products/:handle` → renderiza `product.liquid` con el producto que tenga ese `handle`
- *      - `/collections/:handle` → renderiza `collection.liquid` con la colección correspondiente
-
- * 3. Usa Drizzle para consultar la base de datos SQLite:
- *    - Productos y colecciones deben tener una columna `handle` única
- *    - Cuando se accede a una ruta, realiza la consulta a la base de datos
- *    - Si no existe el producto o colección, devuelve un mensaje de error o una página 404 simple
-
- * 4. Agrega al contexto dentro del motor de plantillas:
- *    - Para producto: `{ product: objetoDelProducto }`
- *    - Para colección: `{ collection: objetoDeLaColeccion }`
-
- * 5. Asegúrate de que la plantilla pueda acceder a los datos como:
- *    ```liquid
- *    <h1>{{ product.title }}</h1>
- *    <p>{{ product.description }}</p>
- *    ```
-
- * 6. Usa tu pipeline existente para:
- *    - Cargar la plantilla desde `templates/`
- *    - Pasarle el contexto apropiado (producto o colección)
- *    - Renderizar el HTML y enviarlo como respuesta al navegador
- *    - (opcional) Guardarlo en la carpeta `dist/` si estás en modo build
-
- * 🧪 Ejemplo de flujo:
-
- * URL accedida: `/products/gold-necklace`
-
- * En base de datos:
- * {
- *   id: 1,
- *   title: "Gold Necklace",
- *   description: "Handmade with real gold.",
- *   handle: "gold-necklace"
+ *
+ * 2. Actualiza tu proceso de build para que:
+ *    - Compile un HTML por producto y por colección
+ *    - Guarde cada archivo en `dist/products/:handle.html` o `dist/collections/:handle.html`
+ *    - Siga inyectando el script de hot reload al final del `<body>`
+ *
+ * 📝 Ejemplo de cómo podrías usar `contextPlease.ts` para preparar los datos para cada página:
+ * (esto es solo una referencia de uso, no lo copies literalmente)
+ *
+ * ```ts
+ * const productos = await getAllProductsFromDB();
+ * for (const producto of productos) {
+ *   const contexto = { product: producto };
+ *   const html = renderizarHTML(template, contexto); // o como sea que implementaste el render
+ *   const finalHtml = await injector(html, "server/hotreload.ts");
+ *   await saveHtml(`dist/products/${producto.handle}.html`, finalHtml);
  * }
-
- * Plantilla `product.liquid`:
  * ```
+ *
+ * 3. Actualiza tu servidor para:
+ *    - Servir archivos desde `dist/` según la URL solicitada
+ *    - Por ejemplo, `/products/gold-necklace` → `dist/products/gold-necklace.html`
+ *    - `/collections/sale` → `dist/collections/sale.html`
+ *
+ * 4. Asegúrate de que el hot reload siga funcionando.
+ *    - El script inyectado en cada HTML debe seguir conectándose al WebSocket
+ *    - Cuando modifiques una plantilla, los archivos afectados deben ser regenerados
+ *
+ * ✅ Ejemplo de contenido esperado en una plantilla de colección (`collection.liquid`)
+ * (esta plantilla debe estar en `templates/collection.liquid`)
+ *
+ * ```liquid
+ * <h1>{{ collection.title }}</h1>
+ * <ul>
+ *   {% for producto in collection.products %}
+ *     <li>
+ *       <a href="/products/{{ producto.handle }}">
+ *         {{ producto.title }}
+ *       </a>
+ *     </li>
+ *   {% endfor %}
+ * </ul>
+ * ```
+ *
+ * ✅ Ejemplo de contenido esperado en una plantilla de producto (`product.liquid`)
+ *
+ * ```liquid
  * <h1>{{ product.title }}</h1>
  * <p>{{ product.description }}</p>
  * ```
-
- * Resultado renderizado:
+ *
+ * ✅ Ejemplo de cómo una plantilla puede vincular a una colección
+ * (por ejemplo, en `index.liquid` o cualquier otra):
+ *
+ * ```liquid
+ * <a href="/collections/sale">Ver ofertas</a>
  * ```
- * <h1>Gold Necklace</h1>
- * <p>Handmade with real gold.</p>
- * ```
-
- * 🛠 Consejo:
- * - Este patrón es el mismo que usan Shopify y otros sistemas:
- *   - Tienen rutas dinámicas basadas en `handle`
- *   - Cargan los datos desde una base (MySQL, SQLite, GraphQL)
- *   - Renderizan el contenido con un motor de plantillas
-
- * - Puedes comenzar con rutas simples (solo `product` y `collection`) y extender en el futuro
-
- * 🔁 Verifica:
- * - Que tu servidor reciba la ruta desde el navegador
- * - Que se consulte correctamente la base de datos usando el `handle`
- * - Que el archivo de plantilla (`product.liquid` o `collection.liquid`) exista en `templates/`
- * - Que el HTML generado se renderice correctamente con los datos inyectados
- * - Que el CLI `Mockify` también valide:
- *    - Que la carpeta `templates/` exista
- *    - Que los archivos requeridos estén presentes:
- *        - `product.liquid`
- *        - `collection.liquid`
- *    - Si falta alguno, debe mostrar un mensaje de advertencia o error y detener la ejecución
+ *
+ * 🧠 Consejo:
+ * - No estás creando un servidor dinámico: estás generando páginas HTML individuales que el servidor sirve como archivos
+ * - El ruteo se basa en el nombre del archivo `.html` dentro de `dist/`
+ *
+ * ✅ Verifica:
+ * - Que se genera un archivo `.html` por cada producto y colección
+ * - Que esos archivos contienen el contenido correcto y el script de hot reload
+ * - Que el servidor puede servirlos correctamente cuando se accede por URL
+ * - Que los enlaces en la página funcionan y llevan al archivo HTML correcto
+ */

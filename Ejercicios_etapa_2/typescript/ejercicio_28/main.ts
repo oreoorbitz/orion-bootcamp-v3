@@ -1,93 +1,109 @@
 /**
  * MÓDULO 28: TIPOS DE ARREGLOS ASOCIATIVOS EN LIQUID
-
+ *
  * 🧠 Concepto clave:
- * En motores de plantillas como Liquid, los datos pueden organizarse en estructuras similares a objetos o arreglos.
- * Estas estructuras deben comportarse de manera predecible según su tipo:
- * 
- * - Un arreglo indexado puede recorrerse con bucles (`{% for %}`)
- * - Un objeto con claves accede a propiedades por nombre (`obj.key` o `obj['key']`)
- * - Algunas estructuras especiales globales combinan ambos comportamientos pero requieren restricciones futuras
-
- * En este módulo, vas a definir tres tipos de estructuras que tu motor Liquid debe reconocer y manejar correctamente.
-
- * 🎯 Objetivo:
- * Implementar soporte para 3 tipos de arreglos asociativos:
- * 
- * 1. **Arreglos indexados** (listas normales):
- *    - Se acceden con índice (`[0]`, `[1]`, etc.)
- *    - Pueden iterarse usando `{% for item in lista %}`
- *    - Son 0-indexados
- * 
- * 2. **Colecciones con claves (key-based)**:
- *    - No son iterables
- *    - Se acceden por `obj.propiedad` o `obj['propiedad']`
- *    - Usados para estructuras fijas con nombre (como configuraciones o grupos de datos relacionados)
-
- * 3. **Colecciones híbridas especiales (hybrid collections)**:
- *    - Se usan para variables globales como `collections` o `all_products`
- *    - Tienen dos formas de acceso:
- *      - `hybrid[0]` para acceso por índice
- *      - `hybrid['titulo-promocion']` para acceso por clave
- *    - Deben implementarse con un **sistema de limitaciones** que permita, por ejemplo:
- *      - Limitar la cantidad de productos que se procesan
- *      - Filtrar o cortar elementos al principio o final del recorrido
- *    - Este sistema asegura que en el futuro puedas controlar el rendimiento sin romper compatibilidad
-
+ * En motores como Liquid, los datos pueden representarse como arreglos, objetos o estructuras híbridas.
+ * Shopify resolvió esto usando un patrón llamado **Drop**: objetos que exponen datos de forma controlada.
+ *
+ * Los Drops permiten:
+ * - Acceso por clave (`drop['handle']`)
+ * - Encapsular comportamiento sin exponer toda la estructura original
+ * - Limitar cómo se usa un objeto en las plantillas, sin afectar el resto del sistema
+ *
+ * En este módulo vas a construir tus dos primeros Drops:
+ * - `all_products`: que contendrá todos los productos por `handle`
+ * - `collections`: que contendrá todas las colecciones por `handle`
+ *
+ * 🎯 Objetivos:
+ *
+ * 1. Soportar acceso por índice en arreglos reales (`arr[0]`)
+ * 2. Soportar acceso por propiedad (`obj.prop` y `obj['prop']`)
+ * 3. Crear un Drop `AllProductsDrop` que:
+ *    - Permita acceso por clave (`all_products['some-handle']`)
+ *    - No permita iteración ni acceso por índice
+ * 4. Crear un Drop `CollectionsDrop` que:
+ *    - Permita acceso por clave (`collections['soft-shirts']`)
+ *    - No permita iteración ni acceso por índice
+ *
  * ✅ Instrucciones:
-
- * 1. En tu motor Liquid, agrega una función de tipo "resolución de colección" que detecte si la variable es:
- *    - Una lista iterable (`Array.isArray()` o similar)
- *    - Un objeto con claves (`typeof === 'object'`)
- *    - Una colección híbrida (ver punto 3)
-
- * 2. Para las **colecciones híbridas**:
- *    - Crea una clase `HybridCollection` o similar
- *    - Internamente debe contener:
- *      - Un arreglo indexado (`this.lista`)
- *      - Un objeto con claves (`this.mapa`)
- *    - Implementa acceso por índice y por clave con lógica de fallback
- *    - Implementa un sistema de limitaciones como:
- *      ```ts
- *      collection.setLimit((items) => items.slice(0, 20));
- *      ```
- *      para limitar el número de elementos que se pueden recorrer o mostrar
-
- * 3. Asegúrate de que tu motor respete:
- *    - Solo iterar si el valor es verdaderamente iterable
- *    - Lanzar errores claros si se intenta iterar un objeto no iterable
-
- * 4. Expón en tus plantillas al menos una variable de cada tipo:
+ *
+ * 1. Asegúrate de que tu motor soporte estas expresiones con datos reales:
  *    ```liquid
- *    {% for producto in productos %} {{ producto.nombre }} {% endfor %}
- *    {{ configuracion.color }}
- *    {{ all_products['collar-oro'] }}
+ *    {{ productos[1].title }}
+ *    {{ producto.title }}
+ *    {{ producto['title'] }}
  *    ```
-
- * 🧪 Ejemplo de contexto sugerido:
+ *
+ * 2. Crea una clase `AllProductsDrop`:
+ *    - Recibe todos los productos en su constructor
+ *    - Internamente crea un mapa por `handle`
+ *    - Soporta únicamente acceso como: `all_products['producto-handle']`
+ *    - Lanza un error si se intenta acceder con índice
+ *
+ * 3. Crea una clase `CollectionsDrop`:
+ *    - Recibe todas las colecciones en su constructor
+ *    - Internamente crea un mapa por `handle`
+ *    - Soporta únicamente acceso como: `collections['soft-shirts']`
+ *    - Cada colección dentro del Drop puede tener productos (como un arreglo normal)
+ *
+ * 4. En `contextPlease.ts`, crea e inyecta estos Drops dentro del objeto `contexto`.
+ *
+ * 💾 Datos consistentes:
+ * Este módulo reutiliza los datos comunes definidos en `seedData.ts`, ubicado en la carpeta principal.
+ * Ya existe una colección con handle `"soft-shirts"` y productos con handles como `"camisa-suave-a"`, `"camisa-suave-b"`, etc.
+ *
+ * 📝 Ejemplo de uso en `contextPlease.ts` (esto es solo un ejemplo de uso, no lo copies literalmente):
+ *
  * ```ts
- * const contexto = {
- *   productos: [
- *     { nombre: "Collar A" },
- *     { nombre: "Collar B" }
- *   ],
- *   configuracion: {
- *     color: "azul",
- *     version: "1.2.0"
- *   },
- *   all_products: new HybridCollection([
- *     { nombre: "Collar C" },
- *     { nombre: "Collar D" }
- *   ], {
- *     "collar-c": { nombre: "Collar C" },
- *     "collar-d": { nombre: "Collar D" }
- *   }).setLimit((arr) => arr.slice(0, 1))
- * };
+ * import { db } from "../db/client.ts";
+ * import { products, collections, productCollections } from "../db/schema.ts";
+ * import { AllProductsDrop, CollectionsDrop } from "./drops.ts";
+ *
+ * export async function contextPlease(): Promise<Record<string, unknown>> {
+ *   const productResults = await db.select().from(products);
+ *   const all_products = new AllProductsDrop(productResults);
+ *
+ *   const collectionsWithProducts = await db.query.collections.findMany({
+ *     with: {
+ *       productCollections: {
+ *         with: { product: true }
+ *       }
+ *     }
+ *   });
+ *
+ *   const collectionsData = collectionsWithProducts.map((c) => ({
+ *     ...c,
+ *     products: c.productCollections.map(pc => pc.product)
+ *   }));
+ *
+ *   const collections = new CollectionsDrop(collectionsData);
+ *
+ *   return {
+ *     all_products,
+ *     collections
+ *   };
+ * }
  * ```
-
+ *
+ * ✅ Liquid que debería funcionar si todo está implementado correctamente:
+ *
+ * ```liquid
+ * {{ all_products['camisa-suave-a'].title }}
+ *
+ * {{ collections['soft-shirts'].title }}
+ *
+ * {% for producto in collections['soft-shirts'].products %}
+ *   {{ producto.title }}
+ * {% endfor %}
+ * ```
+ *
  * 🧠 Consejo:
- * - El sistema de limitación es importante porque en proyectos reales,
- *   como una tienda con miles de productos, **mostrar todo puede causar bloqueos o lentitud**
- * - Este patrón prepara tu motor para escalar en el futuro, como lo hace Shopify
-
+ * - Los Drops son objetos personalizados que permiten controlar cómo se accede a los datos.
+ * - A diferencia de los arreglos comunes, **no permiten iteración ni acceso por índice**.
+ * - Esto los hace ideales para representar datos globales con acceso restringido.
+ *
+ * 🚀 Recomendación de arquitectura:
+ * - Usa `instanceof` o una propiedad `.isDrop = true` para detectar si un valor es un Drop
+ * - En `renderizarVariables()` y `procesarBucles()`, asegúrate de no iterar Drops a menos que explícitamente lo permitan
+ * - Estos Drops se volverán la base para otros como `productDrop`, `collectionDrop`, y más adelante `cart`, `customer`, etc.
  */

@@ -2,58 +2,83 @@
  * MÓDULO 14: CONVERTIR UN ARCHIVO `.liquid` EN HTML COMPLETO
  *
  * 🧠 Concepto clave:
- * Hasta ahora has trabajado con plantillas y datos directamente en strings. Pero en proyectos reales, las plantillas viven en archivos `.liquid`,
- * los datos en objetos o archivos `.json`, y el resultado se transforma en HTML para mostrar en un navegador o guardar como archivo.
+ * En el módulo anterior combinaste dos piezas esenciales:
+ * - Un motor Liquid que interpreta variables, condicionales, bucles, filtros y asignaciones.
+ * - Un parser DOM que transforma HTML plano en un árbol de nodos manipulables.
  *
- * En este módulo, vas a crear una función que lea un archivo `.liquid`, procese sus directivas, y lo convierta en un HTML completo.
- * Este es el paso final que convierte tu motor de plantillas en una herramienta funcional de compilación.
+ * Ahora, vas a dar el siguiente paso: tomar una plantilla real almacenada en un archivo `.liquid`, procesarla con tu motor, y renderizarla como HTML final.
+ * Este paso es lo que convierte tu sistema en una **herramienta de compilación completa**, similar a los generadores de sitios estáticos como Jekyll o Eleventy.
  *
- * ✅ Herramientas que vas a usar:
- * - `Deno.readTextFile` para leer archivos `.liquid`
- * - Todas tus funciones del motor de plantillas (`tokenizar`, `procesarCondicionales`, `renderizarVariables`, etc.)
- * - Tu parser HTML (`tokenizarHTML`, `clasificarTokens`, `construirArbol`)
- * - Tu renderer final (`renderizarHTML`)
+ * ✅ Este módulo conecta:
+ * - 📄 Tu motor Liquid (plantilla + contexto)
+ * - 🌳 Tu parser DOM (construcción de árbol)
+ * - 🧾 Tu renderer final (HTML como string)
+ *
+ * ✅ Flujo completo:
+ * 1. Leer la plantilla `.liquid` desde disco
+ * 2. Ejecutar el motor Liquid con el contexto
+ * 3. Pasar el resultado como string HTML a tu parser
+ * 4. Construir el árbol de nodos
+ * 5. Renderizar el árbol como HTML plano
  *
  * 🎯 Objetivo:
  * Implementar una función `renderizarArchivoLiquid(ruta: string, contexto: Record<string, any>): Promise<string>` que:
- * 1. Lea un archivo `.liquid` del disco
- * 2. Procese la plantilla usando tu motor
- * 3. Convierta el contenido a tokens HTML
- * 4. Convierta los tokens en árbol DOM
- * 5. Renderice el árbol como HTML final
+ * - Use `Deno.readTextFile` para obtener el contenido
+ * - Procese todas las directivas y expresiones de plantilla
+ * - Pase el resultado al parser HTML (`construirArbol`)
+ * - Devuelva un string HTML final listo para mostrar o guardar
  *
- * ✅ Ejemplo de uso:
+ * ✅ Ejemplo de plantilla `./plantillas/bienvenida.liquid`:
+ * ```liquid
+ * <section>
+ *   <h1>{{ titulo | upcase }}</h1>
+ *   <ul>
+ *     {% for fruta in frutas %}
+ *       {% if fruta %}
+ *         <li>{{ fruta | upcase }}</li>
+ *       {% endif %}
+ *     {% endfor %}
+ *   </ul>
+ * </section>
+ * ```
+ *
+ * ✅ Contexto de ejemplo:
  * ```ts
  * const contexto = {
- *   titulo: "Hola mundo",
+ *   titulo: "Frutas favoritas",
  *   frutas: ["manzana", "uva", "naranja"]
  * };
- *
- * const html = await renderizarArchivoLiquid("./plantillas/bienvenida.liquid", contexto);
- * console.log(html);
  * ```
  *
- * ✅ Resultado esperado (si la plantilla es válida):
+ * ✅ Resultado esperado:
  * ```html
- * <h1>Hola mundo</h1>
- * <ul><li>manzana</li><li>uva</li><li>naranja</li></ul>
+ * <section>
+ *   <h1>FRUTAS FAVORITAS</h1>
+ *   <ul><li>MANZANA</li><li>UVA</li><li>NARANJA</li></ul>
+ * </section>
  * ```
  *
- * Instrucciones:
- * 1. Crea un archivo de plantilla `.liquid` (puede estar en una carpeta como `/plantillas`)
- * 2. Implementa `renderizarArchivoLiquid(ruta, contexto)`
- * 3. Usa tus funciones de los módulos anteriores en orden:
- *    - detectarTokensPlantilla()
- *    - procesarAsignaciones()
- *    - procesarCondicionales()
- *    - procesarBucles()
- *    - renderizarVariables() con filtros
- *    - tokenizarHTML() → clasificarTokens() → construirArbol()
- *    - renderizarHTML()
- * 4. Devuelve el HTML como string
+ * 🛠️ Instrucciones:
+ * 1. Crea una carpeta `/plantillas` con un archivo `.liquid`
+ * 2. Implementa la función `renderizarArchivoLiquid(ruta, contexto)`
+ * 3. Usa las funciones de módulos anteriores en este orden:
+ *    - `detectarTokensPlantilla()`
+ *    - `procesarAsignaciones()`
+ *    - `procesarCondicionales()`
+ *    - `procesarBucles()`
+ *    - `renderizarVariables()` con soporte de filtros
+ *    - `tokenizarHTML()` → `clasificarTokens()` → `construirArbol()`
+ *    - `renderizarHTML()`
+ * 4. Devuelve el string HTML renderizado
  *
- * Consejo:
- * - Puedes permitir que esta función sirva como el "compilador" principal de tu sistema
- * - Esto simula cómo trabaja un generador de sitios estáticos como Jekyll, Eleventy o Astro
- * - Usa `console.log()` para verificar en qué punto del pipeline algo puede estar fallando
+ * ✅ Uso propuesto:
+ * ```ts
+ * const html = await renderizarArchivoLiquid("./plantillas/bienvenida.liquid", contexto)
+ * console.log(html)
+ * ```
+ *
+ * 🧠 Consejo:
+ * - Este módulo no agrega nueva lógica de plantillas, pero **une todos los módulos anteriores en un flujo completo**
+ * - Esta función se convertirá en el punto de entrada principal de tu sistema
+ * - Verifica cada paso con `console.log()` si algo no se transforma como esperas
  */
