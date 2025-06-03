@@ -10,18 +10,27 @@ export async function injector(tsPath: string, htmlPath: string): Promise<void> 
         const htmlContent = await Deno.readTextFile(htmlPath);
         console.log(" Contenido HTML leído correctamente.");
 
-        // Transpilar TypeScript a JavaScript
-        //const tsPathAbsoluto = new URL(tsPath, import.meta.url).href //.replace("/server/", "/typescript/server/");
-
+        //console.log("📌 Verificando ruta TS antes de transpilar:", tsPath);
         const result = await transpile(tsPath);
+        //console.log("📌 Resultado de transpile:", result);
 
         // Verificar si hay código transpilado
         if (!result || result.size === 0) {
         throw new Error("❌ Error: No se generó código transpilado.");
         }
 
+        // Verificar qué clave tiene `result`
+        console.log("📌 Claves disponibles en result:", Array.from(result.keys()));
+
+        // Buscar la clave correcta en el Map
+        const transpiledKey = Array.from(result.keys()).find(key => key.includes("hotreload.ts"));
+
+        if (!transpiledKey) {
+          throw new Error("❌ Error: No se encontró la clave correcta para el código transpilado.");
+        }
+
         // Extraer el código JS generado
-        const jsCode = result.get(tsPath);
+        const jsCode = result.get(transpiledKey);
 
         if (!jsCode) {
         throw new Error("❌ Error: Código transpilado está vacío.");

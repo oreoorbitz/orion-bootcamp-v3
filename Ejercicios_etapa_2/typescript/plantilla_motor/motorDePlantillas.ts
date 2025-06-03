@@ -291,24 +291,22 @@ function renderizarVariables(tokens: TokenPlantilla[], contexto: Record<string, 
 
 
 async function procesarConLayout(htmlRenderizado: string, contexto: Record<string, any>): Promise<string> {
-    // 1️ Detectar automáticamente la carpeta donde se ejecuta `main.ts`
-    const rutaActual = Deno.cwd(); // Obtiene la ruta base en la que se está ejecutando el programa
-    const rutaLayout = `${rutaActual}/theme.liquid`; // Busca `theme.liquid` dentro de la carpeta actual
+    const rutaLayout = new URL("../server/themes/dev/theme.liquid", import.meta.url).pathname;
 
-    // 2️ Verificar si el archivo `theme.liquid` existe
+    // Verificar si el archivo `theme.liquid` existe
     try {
         await Deno.stat(rutaLayout);
     } catch {
         throw new Error(`Error: El layout '${rutaLayout}' no existe. Verifica que esté en la carpeta correcta.`);
     }
 
-    // 3️ Leer el contenido del layout
+    // Leer el contenido del layout
     let contenidoLayout = await Deno.readTextFile(rutaLayout);
 
-    // 4️ Reemplazar `{{ content_for_index }}` con el HTML renderizado
+    // Reemplazar `{{ content_for_index }}` con el HTML renderizado
     let layoutConContenido = contenidoLayout.replace("{{ content_for_index }}", htmlRenderizado);
 
-    // 5️ Procesar el layout con `liquidEngine()` para aplicar variables globales
+    // Procesar el layout con `liquidEngine()` para aplicar variables globales
     return liquidEngine(layoutConContenido, contexto, false);
 }
 

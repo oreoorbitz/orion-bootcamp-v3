@@ -73,54 +73,11 @@
  * - [ ] `slightlyLate.ts` expone el endpoint `/theme-update`
  * - [ ] `main.ts` usa `fetch()` para pedir que se genere el HTML y muestra la respuesta
  */
-import { iniciarServidor } from "./server/slightlyLate.ts";
-import { liquidEngine } from "./plantilla_motor/motorDePlantillas.ts";
-import { htmlParser } from "./plantilla_motor/parserDehtml.ts";
-import { renderDOM } from "./plantilla_motor/renderizador.ts";
-import { injector } from "./injector.ts";
 
-const plantillaPath = "./content_for_index.liquid";
-const outputPath = "./dist/index.html";
+const res = await fetch("http://localhost:3000/theme-update", {
+    method: "POST",
+    body: JSON.stringify({ message: "hello" }),
+});
 
-//  Contexto para la plantilla
-const contexto = {
-    settings: { titulo: "Mi tienda" },
-    producto: { titulo: "Camisa", descripcion: "De algodón" },
-};
-
-
-
-//Para recargar y regenerar el html
-async function recargarYGenerarHTML() {
-    try {
-        console.clear();
-        console.log("✅ Generando HTML desde la plantilla...");
-
-        //  Leer `template.liquid`
-        const entradaLiquid = await Deno.readTextFile(plantillaPath);
-
-        //  Procesar la plantilla con el contexto
-        const plantillaRenderizada = liquidEngine(entradaLiquid, contexto);
-        const arbolDOM = htmlParser(await plantillaRenderizada);
-        const htmlFinal = renderDOM(arbolDOM);
-
-        //  Guardar el HTML en `dist/index.html`
-        await Deno.writeTextFile(outputPath, htmlFinal);
-        console.log("\n✅ Archivo `dist/index.html` generado exitosamente.");
-
-        // Inyectar `hotreload.ts` en el HTML
-        const tsPath = new URL("../server/hotreload.ts", import.meta.url).href
-        await injector(tsPath, outputPath);
-        console.log("\n✅ Hot Reload inyectado correctamente en index.html.");
-
-    } catch (error) {
-        console.error("\n❌ Error al generar el archivo HTML:", error);
-    }
-}
-
-//// Esto es lo que va a ser ejecutado
-
-await recargarYGenerarHTML(); //
-
-//  **Asegurar que el servidor se inicia correctamente**
-iniciarServidor(3000);
+const texto = await res.text();
+console.log("🖥️ Respuesta del servidor:", texto);
