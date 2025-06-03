@@ -3,13 +3,11 @@
  *
  * 🧠 Concepto clave:
  * En entornos profesionales como Shopify, los desarrolladores usan una interfaz de línea de comandos (CLI)
- * para iniciar un servidor, observar archivos, generar plantillas y ver una vista previa del sitio.
+ * para iniciar un servidor, observar archivos, generar plantillas
  *
  * En este módulo, vas a crear tu propia CLI llamada `Mockify` para simular parte de ese flujo:
  * - Validar la estructura de carpetas esperada
  * - Observar archivos importantes para cambios
- * - Comunicarse con un servidor WebSocket para notificar cambios
- * - Ejecutar `main.ts` automáticamente cada vez que se detecten cambios
  *
  * 🎯 Objetivo:
  * Implementar una CLI usable como:
@@ -20,14 +18,13 @@
  *
  * que:
  * - Valide que el directorio actual tenga la estructura esperada
- * - Observe cambios en archivos `.liquid` o dentro de `assets/`
- * - Envíe notificaciones al servidor WebSocket
- * - Ejecute `main.ts` automáticamente para regenerar el HTML
+ * - Observe cambios en archivos `.liquid` o de CSS dentro de `assets/`
+ * - Los cambios que observa mockify, son enviados al servido. Al momento cierta funcionalidad que va ir al servido lo estamos guardando en main.ts
  * - Reciba una URL para previsualizar la tienda y la muestre en consola
  *
  * ✅ Instrucciones:
  *
- * 1. Crea un archivo `mockify.ts` en el directorio superior (`Ejercicios_etapa_2/`).
+ * 1. Crea un archivo `mockify.ts` en el directorio superior (`Ejercicios_etapa_2/typescript`).
  *
  * 2. Implementa una función que valide que el directorio actual tenga:
  *    - Una carpeta `assets/`
@@ -42,11 +39,13 @@
  *
  * 4. Usa `Deno.args` para verificar si el comando recibido es:
  *
+ * 5. Mockify no debe generar el html final. Esta funcionalidad lo puedes poner en main.ts, o crear otro modulo en Ejercicios_etapa_2/typescript/server. Tu dicides de la mejor forma para que los cambios observados en mockify activen esta funcionalidad para este ejercicio.
+ *
  * ```
  * theme dev
  * ```
  *
- * y toma la carpeta actual como contexto.
+ * y toma la carpeta actual como contexto. // elminar esta linea
  *
  * 5. Conéctate al servidor a través de WebSocket.
  *    - Cuando el servidor esté listo, debe enviarte un mensaje como:
@@ -68,15 +67,6 @@
  * { type: "reload-css" }
  * ```
  *
- *    - Si es un archivo `.liquid`, ejecuta automáticamente `main.ts` usando una ruta absoluta:
- *
- * ```ts
- * const rutaMain = new URL("./main.ts", `file://${Deno.cwd()}/`).href;
- * const comando = new Deno.Command("deno", {
- *   args: ["run", "--allow-all", rutaMain],
- * });
- * await comando.output();
- * ```
  *
  *    - Luego, envía al servidor:
  *
@@ -86,9 +76,6 @@
  *
  * para que el navegador recargue.
  *
- * 🧠 Nota:
- * `Mockify` ejecuta `main.ts` como un proceso aparte con Deno. No necesitas importarlo ni modificar rutas.
- * Al usar `new URL(..., import.meta.url).href` o `file://${Deno.cwd()}`, obtienes una ruta absoluta robusta.
  *
  * 📁 Estructura esperada:
  * En la carpeta donde se ejecuta `Mockify`, debe existir:
@@ -98,16 +85,13 @@
  * ├── assets/
  * ├── content_for_index.liquid
  * ├── theme.liquid
- * ├── main.ts
- * └── dist/
  * ```
  *
  * 🧠 ¿Quién hace qué?
  *
  * A partir de este módulo:
  *
- * - `Mockify` se encarga de observar archivos, ejecutar `main.ts` y comunicarse con el servidor.
- * - `main.ts` sigue siendo responsable de generar el HTML e inyectar el script de recarga.
+ * - `Mockify` se encarga de observar archivos, comunicarse con el servidor.
  *
  * En módulos futuros, `main.ts` irá perdiendo responsabilidades hasta desaparecer,
  * y el servidor o el CLI se harán cargo por completo.
@@ -122,3 +106,54 @@
  * Usa este módulo como base para un entorno de desarrollo donde consola, servidor,
  * navegador y archivos estén conectados y reaccionen en tiempo real.
  */
+import { iniciarServidor } from "./server/slightlyLate.ts";
+import { liquidEngine } from "./plantilla_motor/motorDePlantillas.ts";
+import { htmlParser } from "./plantilla_motor/parserDehtml.ts";
+import { renderDOM } from "./plantilla_motor/renderizador.ts";
+import { injector } from "./injector.ts";
+
+const plantillaPath = "./content_for_index.liquid";
+const outputPath = "./dist/index.html";
+
+//  Contexto para la plantilla
+const contexto = {
+    settings: { titulo: "Mi tienda" },
+    producto: { titulo: "Camisa", descripcion: "De algodón" },
+};
+
+
+
+//Para recargar y regenerar el html
+async function recargarYGenerarHTML() {
+    try {
+        console.clear();
+        console.log("✅ Generando HTML desde la plantilla...");
+
+        //  Leer `template.liquid`
+        const entradaLiquid = await Deno.readTextFile(plantillaPath);
+
+        //  Procesar la plantilla con el contexto
+        const plantillaRenderizada = liquidEngine(entradaLiquid, contexto);
+        const arbolDOM = htmlParser(await plantillaRenderizada);
+        const htmlFinal = renderDOM(arbolDOM);
+
+        //  Guardar el HTML en `dist/index.html`
+        await Deno.writeTextFile(outputPath, htmlFinal);
+        console.log("\n✅ Archivo `dist/index.html` generado exitosamente.");
+
+        // Inyectar `hotreload.ts` en el HTML
+        const tsPath = new URL("../server/hotreload.ts", import.meta.url).href
+        await injector(tsPath, outputPath);
+        console.log("\n✅ Hot Reload inyectado correctamente en index.html.");
+
+    } catch (error) {
+        console.error("\n❌ Error al generar el archivo HTML:", error);
+    }
+}
+
+//// Esto es lo que va a ser ejecutado
+
+await recargarYGenerarHTML(); //
+
+//  **Asegurar que el servidor se inicia correctamente**
+iniciarServidor(3000);

@@ -1,3 +1,12 @@
+import { iniciarServidor } from "./server/slightlyLate.ts";
+import { liquidEngine } from "./plantilla_motor/motorDePlantillas.ts";
+import { htmlParser } from "./plantilla_motor/parserDehtml.ts";
+import { renderDOM } from "./plantilla_motor/renderizador.ts";
+import { injector } from "./injector.ts";
+import { notificarReloadCSS } from "./server/wsServer.ts";
+import { notificarRecargaPagina } from "./server/wsServer.ts";
+
+//Para validar la estructura
 function validarEstructura(): boolean {
     const elementos = Array.from(Deno.readDirSync(Deno.cwd()), (entry) => ({
         nombre: entry.name,
@@ -8,6 +17,7 @@ function validarEstructura(): boolean {
         { nombre: "assets", esCarpeta: true },
         { nombre: "content_for_index.liquid", esCarpeta: false },
         { nombre: "theme.liquid", esCarpeta: false },
+        { nombre: "main.ts", esCarpeta: false },
     ];
 
     const faltantes = estructuraEsperada.filter((esperado) => {
@@ -23,7 +33,9 @@ function validarEstructura(): boolean {
     console.log("✅ Estructura correcta. Todos los archivos y carpetas requeridos están presentes.");
     return true;
 }
-
+validarEstructura()
+/*
+//Para observar cambios
 export async function observarCambios() {
     console.log("👀 Observando cambios en archivos importantes...");
 
@@ -37,7 +49,10 @@ export async function observarCambios() {
             notificarReloadCSS();
         } else {
             console.log("🔄 Cambio detectado, regenerando HTML...");
-            await recargarYGenerarHTML();
+
         }
     }
 }
+*/
+
+console.log('existo')
