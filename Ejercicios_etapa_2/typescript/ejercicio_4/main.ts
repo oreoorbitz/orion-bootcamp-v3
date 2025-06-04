@@ -113,3 +113,97 @@
  *
  * Este ejercicio simula **cómo un navegador construye el DOM real**: un proceso de lectura y anidación basado en apertura y cierre de etiquetas.
  */
+
+export enum TipoToken {
+    Apertura = "apertura",
+    Cierre = "cierre",
+    Autocierre = "autocierre",
+    Texto = "texto"
+  }
+  
+  export interface Token {
+    tipo: TipoToken | null;
+    nombre: string | null;
+    contenido: string | null;
+    atributos: Record<string, string> | null;
+  }
+
+  const tokens: Token[] = [
+    { tipo: TipoToken.Apertura, nombre: "div", contenido: null, atributos: {} },
+    { tipo: TipoToken.Texto, nombre: null, contenido: "Hola", atributos: null },
+    { tipo: TipoToken.Apertura, nombre: "span", contenido: null, atributos: {} },
+    { tipo: TipoToken.Texto, nombre: null, contenido: "mundo", atributos: null },
+    { tipo: TipoToken.Cierre, nombre: "span", contenido: null, atributos: null },
+    { tipo: TipoToken.Cierre, nombre: "div", contenido: null, atributos: null }
+ ];
+  
+  interface NodoElemento {
+    tipo: "elemento";
+    nombre: string;
+    atributos: Record<string, string>;
+    hijos: Nodo[];
+  }
+  
+  interface NodoTexto {
+    tipo: "texto";
+    contenido: string;
+  }
+  
+  export type Nodo = NodoElemento | NodoTexto;
+  
+  export function construirArbol(tokens: Token[]): Nodo {
+    const stack: NodoElemento[] = [];
+  
+    let raiz: NodoElemento | null = null;
+  
+    for (const token of tokens) {
+      if (token.tipo === TipoToken.Apertura) {
+        const nuevoNodo: NodoElemento = {
+          tipo: "elemento",
+          nombre: token.nombre!,
+          atributos: token.atributos || {},
+          hijos: []
+        };
+  
+        if (stack.length > 0) {
+          const padre = stack[stack.length - 1];
+          padre.hijos.push(nuevoNodo);
+        } else {
+          raiz = nuevoNodo;
+        }
+  
+        stack.push(nuevoNodo);
+      }
+  
+      else if (token.tipo === TipoToken.Cierre) {
+        stack.pop();
+      }
+  
+      else if (token.tipo === TipoToken.Texto) {
+        const nodoTexto: NodoTexto = {
+          tipo: "texto",
+          contenido: token.contenido!
+        };
+  
+        const padre = stack[stack.length - 1];
+        padre.hijos.push(nodoTexto);
+      }
+  
+      else if (token.tipo === TipoToken.Autocierre) {
+        const nodoAutocierre: NodoElemento = {
+          tipo: "elemento",
+          nombre: token.nombre!,
+          atributos: token.atributos || {},
+          hijos: []
+        };
+  
+        const padre = stack[stack.length - 1];
+        padre.hijos.push(nodoAutocierre);
+      }
+    }
+  
+    return raiz!;
+  }
+  
+  const arbol = construirArbol(tokens);
+  console.log(JSON.stringify(arbol, null, 2));
