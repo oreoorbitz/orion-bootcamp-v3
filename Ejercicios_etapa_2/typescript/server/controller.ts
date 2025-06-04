@@ -1,11 +1,11 @@
 
-import { notificarReloadCSS } from "../server/wsServer.ts";
-import { notificarRecargaPagina } from "../server/wsServer.ts";
 import { liquidEngine } from "../plantilla_motor/motorDePlantillas.ts";
 import { htmlParser } from "../plantilla_motor/parserDehtml.ts";
 import { renderDOM } from "../plantilla_motor/renderizador.ts";
 import { injector } from "../injector.ts";
 import { iniciarServidor } from "./slightlyLate.ts";
+import { decompress } from "https://deno.land/x/zip@v1.2.5/mod.ts";
+
 
 const plantillaPath = "/home/bambiux/code/Bambi-uxx/orion-bootcamp-v3/Ejercicios_etapa_2/typescript/server/themes/dev/content_for_index.liquid";
 const outputPath = "/home/bambiux/code/Bambi-uxx/orion-bootcamp-v3/Ejercicios_etapa_2/typescript/server/themes/dev/dist/index.html";
@@ -16,13 +16,13 @@ const contexto = {
     producto: { titulo: "Camisa", descripcion: "De algodón" },
 };
 
-// **Observar cambios
-async function observarCambios() {
+/* LO DEJO AKI POR SI RROMPO ALGO ESTO HACE RECARGASexport async function observarCambios() {
     const watcher = Deno.watchFs([
-    "themes/dev/content_for_index.liquid",
-    "themes/dev/theme.liquid",
-    "themes/dev/assets"
+        "typescript/ejercicio_26/content_for_index.liquid",
+        "typescript/ejercicio_26/theme.liquid",
+        "typescript/ejercicio_26/assets"
     ]);
+
     for await (const event of watcher) {
         console.log(`🔄 Archivo(s) modificado(s): ${event.paths.join(", ")}`);
 
@@ -35,7 +35,7 @@ async function observarCambios() {
             notificarRecargaPagina();
         }
     }
-}
+} */
 
 export async function recargarYGenerarHTML() {
     try {
@@ -62,8 +62,43 @@ export async function recargarYGenerarHTML() {
     }
 }
 
+async function onThemeUpdate(req: Request) {
+    console.log("📦 Recibiendo nuevo tema...");
 
-await recargarYGenerarHTML(); //Para probar que genera index.html
-observarCambios(); // Monitorea cambios en archivos
-//  **Asegurar que el servidor se inicia correctamente**
-iniciarServidor(3000);
+    // 📌 1️⃣ Extraer el ZIP desde la solicitud
+    const formData = await req.formData();
+    const archivoZip = formData.get("archivo");
+
+    if (!archivoZip) {
+        console.error("❌ No se recibió un archivo ZIP.");
+        return new Response("No se recibió archivo ZIP", { status: 400 });
+    }
+
+    // 📌 2️⃣ Guardar el ZIP en el servidor
+    const rutaZip = "themes/dev/temp_theme.zip";
+    await Deno.writeFile(rutaZip, await archivoZip.arrayBuffer());
+
+    console.log("📦 Archivo ZIP guardado, desempaquetando...");
+
+    // 📌 3️⃣ Limpiar `themes/dev/` antes de extraer
+    await Deno.remove("themes/dev", { recursive: true }).catch(() => {});
+    await Deno.mkdir("themes/dev");
+
+    // 📌 4️⃣ Descomprimir el ZIP en `themes/dev/`
+    await decompress(rutaZip, "themes/dev");
+
+    console.log("🚀 Tema actualizado, generando HTML...");
+
+    // 📌 5️⃣ Generar el HTML y inyectar `hotreload.ts`
+    await recargarYGenerarHTML();
+
+    // 📌 6️⃣ Borrar el ZIP para mantener limpio el servidor
+    await Deno.remove(rutaZip);
+
+    console.log("✅ Tema actualizado correctamente.");
+
+    return new Response("Tema actualizado con éxito", { status: 200 });
+}
+
+// 2️⃣ Activar el servidor para escuchar las solicitudes
+iniciarServidor(3000, onThemeUpdate);

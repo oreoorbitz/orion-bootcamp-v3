@@ -18,9 +18,9 @@
  *    - Una carpeta `assets/`
  *
  * 2. **En `main.ts`:**
- *    - Importa el módulo `zip`:  
+ *    - Importa el módulo `zip`:
  *      ```ts
- *      import { zip } from "https://deno.land/x/zip@v1.2.3/mod.ts";
+ *      import { compress, decompress } from "https://deno.land/x/zip@v1.2.5/mod.ts";
  *      ```
  *
  *    - Extrae la funcionalidad de observar cambios que usaste en módulos anteriores y colócala en `main.ts`.
@@ -76,7 +76,7 @@
  *
  * 📁 Estructura esperada:
  * ```
- * Ejercicios_etapa_2/
+ * typescript/
  * ├── ejercicio_26/
  * │   ├── theme.liquid
  * │   ├── content_for_index.liquid
@@ -100,3 +100,53 @@
  * Además, integraste un mecanismo completo de regeneración de HTML sin usar WebSocket.
  * La comunicación inicial por HTTP es una base esencial para construir el CLI más avanzado en el próximo módulo.
  */
+import { compress } from "https://deno.land/x/zip@v1.2.5/mod.ts";
+
+
+//Observar cambios
+export async function observarCambios() {
+    const watcher = Deno.watchFs([
+        "typescript/ejercicio_26/content_for_index.liquid",
+        "typescript/ejercicio_26/theme.liquid",
+        "typescript/ejercicio_26/assets"
+    ]);
+
+    for await (const event of watcher) {
+        console.log(`🔄 Archivo(s) modificado(s): ${event.paths.join(", ")}`);
+
+        // Cuando se detecta un cambio, empaquetar y enviar
+        await empaquetarYEnviarTema();
+    }
+}
+
+async function empaquetarYEnviarTema() {
+    console.log("📦 Empaquetando tema...");
+
+    // Comprimir archivos
+    const archivos = [
+        "typescript/ejercicio_26/theme.liquid",
+        "typescript/ejercicio_26/content_for_index.liquid",
+        "typescript/ejercicio_26/assets"
+    ];
+    const archivoZip = "typescript/ejercicio_26/temp_theme.zip";
+    await compress(archivos, archivoZip);
+
+    console.log("🚀 Enviando ZIP al servidor...");
+
+    // Crear FormData y adjuntar ZIP
+    const formData = new FormData();
+    const zipData = await Deno.readFile(archivoZip);
+    formData.append("archivo", new Blob([zipData]), "temp_theme.zip");
+
+    // Enviar solicitud POST
+    const response = await fetch("http://localhost:3000/theme-update", {
+        method: "POST",
+        body: formData
+    });
+
+    console.log("📝 Respuesta del servidor:", await response.text());
+
+    // Borrar el archivo ZIP después de enviarlo
+    await Deno.remove(archivoZip);
+    console.log("🗑️ ZIP eliminado.");
+}
