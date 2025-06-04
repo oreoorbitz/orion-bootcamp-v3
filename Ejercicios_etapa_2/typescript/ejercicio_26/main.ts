@@ -20,7 +20,12 @@
  *      - Una carpeta `assets/`
  *
  * 2. **En `main.ts`:**
- *    - Instala y usa el módulo `zip` desde `https://deno.land/x/zip@v1.2.3/mod.ts`.
+- *    - Instala y usa el módulo `zip` desde `https://deno.land/x/zip@v1.2.3/mod.ts`.
++ *    - Importa la función `compress` desde el módulo `zip`:
++ *      ```ts
++ *      import { compress } from "https://deno.land/x/zip@v1.2.3/mod.ts";
++ *      ```
++ *      Este módulo te permite crear archivos ZIP a partir de archivos y carpetas locales.
  *    - Recupera la lógica de observación de cambios que usaste en módulos anteriores.
  *    - Cuando se detecte un cambio en el tema:
  *      - Crea un archivo ZIP que incluya los archivos `theme.liquid`, `content_for_index.liquid` y la carpeta `assets/`.
