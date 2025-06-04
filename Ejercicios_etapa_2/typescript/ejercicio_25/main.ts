@@ -39,7 +39,7 @@
  *    Crea también una carpeta vacía `dist/` dentro de `dev/`.
  *
  * 2. Crea el archivo `controller.ts` en `/Ejercicios_etapa_2/typescript/server/`.
- *    Mueve aquí toda la lógica de generación de HTML que antes estaba en `main.ts`.
+ *    Mueve aquí toda la lógica que antes estaba en `main.ts`.
  *    Asegúrate de que los `readFile` y `writeFile` ahora usen las rutas correctas desde `themes/dev/`.
  *
  * 3. En `slightlyLate.ts` (el servidor), agrega un endpoint:
