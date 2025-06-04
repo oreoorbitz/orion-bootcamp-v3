@@ -40,7 +40,6 @@
  *    - Actualiza tu llamada a `iniciarServidor()` para que reciba un segundo argumento: una función de callback.
  *    - Implementa esa función para:
  *      - Eliminar el contenido actual de `themes/dev/`.
- *      - Descomprimir el ZIP recibido en la carpeta `themes/dev/`.
  *      - Regenerar el HTML final dentro de `themes/dev/dist/index.html`.
  *      - Inyectar el script de hot reload como se hacía en módulos anteriores.
  *

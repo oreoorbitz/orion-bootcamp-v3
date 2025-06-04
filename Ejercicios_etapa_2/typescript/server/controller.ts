@@ -62,38 +62,17 @@ export async function recargarYGenerarHTML() {
     }
 }
 
-async function onThemeUpdate(req: Request) {
-    console.log("📦 Recibiendo nuevo tema...");
+export async function onThemeUpdate(tema) {
+    console.log("📦 Procesando tema actualizado...");
 
-    // 📌 1️⃣ Extraer el ZIP desde la solicitud
-    const formData = await req.formData();
-    const archivoZip = formData.get("archivo");
-
-    if (!archivoZip) {
-        console.error("❌ No se recibió un archivo ZIP.");
-        return new Response("No se recibió archivo ZIP", { status: 400 });
-    }
-
-    // 📌 2️⃣ Guardar el ZIP en el servidor
-    const rutaZip = "themes/dev/temp_theme.zip";
-    await Deno.writeFile(rutaZip, await archivoZip.arrayBuffer());
-
-    console.log("📦 Archivo ZIP guardado, desempaquetando...");
-
-    // 📌 3️⃣ Limpiar `themes/dev/` antes de extraer
+    // 📌 1️⃣ Limpiar `themes/dev/` antes de actualizar
     await Deno.remove("themes/dev", { recursive: true }).catch(() => {});
     await Deno.mkdir("themes/dev");
 
-    // 📌 4️⃣ Descomprimir el ZIP en `themes/dev/`
-    await decompress(rutaZip, "themes/dev");
+    console.log("🚀 Generando HTML desde la plantilla...");
 
-    console.log("🚀 Tema actualizado, generando HTML...");
-
-    // 📌 5️⃣ Generar el HTML y inyectar `hotreload.ts`
+    // 📌 2️⃣ Generar el HTML y aplicar hot reload
     await recargarYGenerarHTML();
-
-    // 📌 6️⃣ Borrar el ZIP para mantener limpio el servidor
-    await Deno.remove(rutaZip);
 
     console.log("✅ Tema actualizado correctamente.");
 
