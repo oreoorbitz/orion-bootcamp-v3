@@ -1,11 +1,9 @@
-
 import { liquidEngine } from "../plantilla_motor/motorDePlantillas.ts";
 import { htmlParser } from "../plantilla_motor/parserDehtml.ts";
 import { renderDOM } from "../plantilla_motor/renderizador.ts";
 import { injector } from "../injector.ts";
 import { iniciarServidor } from "./slightlyLate.ts";
-import { decompress } from "https://deno.land/x/zip@v1.2.5/mod.ts";
-
+import { zip } from "jsr:@deno-library/compress";
 
 const plantillaPath = "/home/bambiux/code/Bambi-uxx/orion-bootcamp-v3/Ejercicios_etapa_2/typescript/server/themes/dev/content_for_index.liquid";
 const outputPath = "/home/bambiux/code/Bambi-uxx/orion-bootcamp-v3/Ejercicios_etapa_2/typescript/server/themes/dev/dist/index.html";
@@ -15,27 +13,6 @@ const contexto = {
     settings: { titulo: "Mi tienda" },
     producto: { titulo: "Camisa", descripcion: "De algodón" },
 };
-
-/* LO DEJO AKI POR SI RROMPO ALGO ESTO HACE RECARGASexport async function observarCambios() {
-    const watcher = Deno.watchFs([
-        "typescript/ejercicio_26/content_for_index.liquid",
-        "typescript/ejercicio_26/theme.liquid",
-        "typescript/ejercicio_26/assets"
-    ]);
-
-    for await (const event of watcher) {
-        console.log(`🔄 Archivo(s) modificado(s): ${event.paths.join(", ")}`);
-
-        if (event.paths.some((path) => path.endsWith(".css"))) {
-            console.log("🔄 Cambios en CSS detectados, recargando estilos...");
-            notificarReloadCSS();
-        } else {
-            console.log("🔄 Cambio en la plantilla detectado, recargando página...");
-            await recargarYGenerarHTML();
-            notificarRecargaPagina();
-        }
-    }
-} */
 
 export async function recargarYGenerarHTML() {
     try {
@@ -62,22 +39,39 @@ export async function recargarYGenerarHTML() {
     }
 }
 
-export async function onThemeUpdate(tema) {
-    console.log("📦 Procesando tema actualizado...");
+export async function onThemeUpdate(rutaBase: string) {
+    console.log("📦 Procesando tema actualizado desde:", rutaBase);
 
-    // 📌 1️⃣ Limpiar `themes/dev/` antes de actualizar
-    await Deno.remove("themes/dev", { recursive: true }).catch(() => {});
-    await Deno.mkdir("themes/dev");
-
-    console.log("🚀 Generando HTML desde la plantilla...");
-
-    // 📌 2️⃣ Generar el HTML y aplicar hot reload
-    await recargarYGenerarHTML();
+    // 🎨 Generar HTML sin volver a tocar el ZIP o eliminar la carpeta
+    console.log("🎨 Generando HTML desde la plantilla...");
+    const resultado = await recargarYGenerarHTML();
 
     console.log("✅ Tema actualizado correctamente.");
-
-    return new Response("Tema actualizado con éxito", { status: 200 });
+    return new Response(resultado, { status: 200 });
 }
 
 // 2️⃣ Activar el servidor para escuchar las solicitudes
 iniciarServidor(3000, onThemeUpdate);
+
+
+/* LO DEJO AKI POR SI RROMPO ALGO ESTO HACE RECARGAS
+export async function observarCambios() {
+    const watcher = Deno.watchFs([
+        "typescript/ejercicio_26/content_for_index.liquid",
+        "typescript/ejercicio_26/theme.liquid",
+        "typescript/ejercicio_26/assets"
+    ]);
+
+    for await (const event of watcher) {
+        console.log(`🔄 Archivo(s) modificado(s): ${event.paths.join(", ")}`);
+
+        if (event.paths.some((path) => path.endsWith(".css"))) {
+            console.log("🔄 Cambios en CSS detectados, recargando estilos...");
+            notificarReloadCSS();
+        } else {
+            console.log("🔄 Cambio en la plantilla detectado, recargando página...");
+            await recargarYGenerarHTML();
+            notificarRecargaPagina();
+        }
+    }
+} */

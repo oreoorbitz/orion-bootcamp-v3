@@ -88,36 +88,69 @@
  *
  * En el siguiente módulo, mejoraremos este flujo para hacerlo aún más dinámico y reactivo.
  */
-import { compress } from "https://deno.land/x/zip@v1.2.5/mod.ts";
+import { zip } from "jsr:@deno-library/compress";
+import { debounce } from "jsr:@std/async/debounce";
 
-
-//Observar cambios
 export async function observarCambios() {
-    const watcher = Deno.watchFs([
-        "typescript/ejercicio_26/content_for_index.liquid",
-        "typescript/ejercicio_26/theme.liquid",
-        "typescript/ejercicio_26/assets"
-    ]);
+    const rutas = [
+        "/home/bambiux/code/Bambi-uxx/orion-bootcamp-v3/Ejercicios_etapa_2/typescript/ejercicio_26/content_for_index.liquid",
+        "/home/bambiux/code/Bambi-uxx/orion-bootcamp-v3/Ejercicios_etapa_2/typescript/ejercicio_26/theme.liquid",
+        "/home/bambiux/code/Bambi-uxx/orion-bootcamp-v3/Ejercicios_etapa_2/typescript/ejercicio_26/assets"
+    ];
+
+    // 🔍 Validar que las rutas existan antes de observar cambios
+    for (const path of rutas) {
+        try {
+            await Deno.stat(path);
+        } catch {
+            console.error(`❌ Error: La ruta ${path} no existe.`);
+            Deno.exit(1); // Salimos del programa si alguna ruta no existe
+        }
+    }
+
+    console.log("✅ Todas las rutas existen, iniciando observación...");
+
+    const watcher = Deno.watchFs(rutas);
+    const procesarCambio = debounce((event: Deno.FsEvent) => {
+        console.log(`🔄 Archivo(s) modificado(s): ${event.paths.join(", ")}`);
+        empaquetarYEnviarTemaConControl();
+    }, 500); // Esperamos 500ms para evitar activaciones múltiples
 
     for await (const event of watcher) {
-        console.log(`🔄 Archivo(s) modificado(s): ${event.paths.join(", ")}`);
-
-        // Cuando se detecta un cambio, empaquetar y enviar
-        await empaquetarYEnviarTema();
+        procesarCambio(event);
     }
 }
 
-async function empaquetarYEnviarTema() {
+let bloqueado = false;
+
+async function empaquetarYEnviarTemaConControl() {
+    if (bloqueado) {
+        console.log("⚠️ Procesamiento en curso, esperando...");
+        return;
+    }
+
+    bloqueado = true;
+    await empaquetarYEnviarTema(); // Llamamos la función original
+    setTimeout(() => bloqueado = false, 1000); // Esperamos 1 segundo antes de permitir otra ejecución
+}
+
+ async function empaquetarYEnviarTema() {
     console.log("📦 Empaquetando tema...");
 
-    // Comprimir archivos
-    const archivos = [
-        "typescript/ejercicio_26/theme.liquid",
-        "typescript/ejercicio_26/content_for_index.liquid",
-        "typescript/ejercicio_26/assets"
-    ];
-    const archivoZip = "typescript/ejercicio_26/temp_theme.zip";
-    await compress(archivos, archivoZip);
+    // 📂 Verificar que la carpeta donde guardaremos el ZIP existe
+    const rutaZipFolder = "typescript/ejercicio_26";
+    const archivoZip = `${rutaZipFolder}/temp_theme.zip`;
+
+    try {
+        await Deno.stat(rutaZipFolder);
+    } catch {
+        console.log("📂 La carpeta no existe, creándola...");
+        await Deno.mkdir(rutaZipFolder, { recursive: true });
+    }
+
+    // 📦 Comprimir la carpeta completa
+    await zip.compress(rutaZipFolder, archivoZip);
+    console.log("✅ Tema comprimido correctamente!");
 
     console.log("🚀 Enviando ZIP al servidor...");
 
@@ -134,7 +167,30 @@ async function empaquetarYEnviarTema() {
 
     console.log("📝 Respuesta del servidor:", await response.text());
 
-    // Borrar el archivo ZIP después de enviarlo
+    // 🗑️ Borrar el archivo ZIP después de enviarlo
     await Deno.remove(archivoZip);
     console.log("🗑️ ZIP eliminado.");
 }
+/* async function probarEnvioSimple() {
+    console.log("📦 Enviando objeto JSON al servidor...");
+
+    // 📝 Crear un objeto de prueba
+    const datosDePrueba = {
+        mensaje: "Hola servidor, probando lógica!",
+        timestamp: new Date().toISOString(),
+    };
+
+    // 📂 Crear FormData y adjuntar JSON
+    const formData = new FormData();
+    formData.append("datos", new Blob([JSON.stringify(datosDePrueba)], { type: "application/json" }));
+
+    // 🚀 Enviar solicitud POST
+    const response = await fetch("http://localhost:3000/theme-update", {
+        method: "POST",
+        body: formData
+    });
+
+    console.log("📝 Respuesta del servidor:", await response.text());
+} */
+
+observarCambios();
