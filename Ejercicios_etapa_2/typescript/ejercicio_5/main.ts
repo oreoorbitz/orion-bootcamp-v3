@@ -37,4 +37,16 @@
  * Consejo:
  * - Usa `.split()` con expresiones regulares o `.match()` con `/({{.*?}}|{%.*?%})/g`
  * - No interpretes aún el significado de los bloques — solo identifícalos.
+ * 
+ * Una PLANTILLA es un texto que contiene contenido dinamico que debe ser rellenado o procesado mas adelante
+ * EJEMPLO: 
+ * "Hola, {{ nombre }} {% if admin %}Eres administrador{% endif %}"
+ * 
+ * {{ nombre }} - tiene una variable.
+ * {% if admin endif %} - directivas, controlan condiciones o bucles, como un if en programación.
+ * Y texto normal.
+ * 
  */
+
+
+
