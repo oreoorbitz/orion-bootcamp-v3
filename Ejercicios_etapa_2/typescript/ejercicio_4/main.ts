@@ -114,14 +114,14 @@
  * Este ejercicio simula **cómo un navegador construye el DOM real**: un proceso de lectura y anidación basado en apertura y cierre de etiquetas.
  */
 
-export enum TipoToken {
+enum TipoToken {
     Apertura = "apertura",
     Cierre = "cierre",
     Autocierre = "autocierre",
     Texto = "texto"
   }
   
-  export interface Token {
+  interface Token {
     tipo: TipoToken | null;
     nombre: string | null;
     contenido: string | null;
@@ -149,9 +149,9 @@ export enum TipoToken {
     contenido: string;
   }
   
-  export type Nodo = NodoElemento | NodoTexto;
+  type Nodo = NodoElemento | NodoTexto;
   
-  export function construirArbol(tokens: Token[]): Nodo {
+  function construirArbol(tokens: Token[]): Nodo {
     const stack: NodoElemento[] = [];
   
     let raiz: NodoElemento | null = null;
