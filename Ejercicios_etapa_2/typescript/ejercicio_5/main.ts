@@ -49,4 +49,15 @@
  */
 
 
-
+function detectarTokensPlantilla(entrada: string): string[] {
+    const regex = /({{.*?}}|{%.+?%})/g;
+  
+    const partes = entrada.split(regex);
+  
+    return partes.filter(parte => parte.length > 0);
+  }
+  
+  const ejemplo = "Hola, {{ nombre }}. {% if admin %}Eres administrador.{% endif %}";
+  const resultado = detectarTokensPlantilla(ejemplo);
+  
+  console.log(resultado);
