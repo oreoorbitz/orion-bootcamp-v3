@@ -4,7 +4,7 @@ async function manejarPeticionThemeUpdate(req: Request, callback: (rutaBase: str
     console.log("✅ Petición recibida en `/theme-update`, procesando ZIP...");
 
     try {
-        // 📥 Leer el cuerpo de la solicitud directamente
+        // 📥 Leer el cuerpo de la solicitud
         const buffer = await req.arrayBuffer();
 
         if (!buffer.byteLength) {
@@ -13,69 +13,58 @@ async function manejarPeticionThemeUpdate(req: Request, callback: (rutaBase: str
         }
 
         const rutaBase = "/home/bambiux/code/Bambi-uxx/orion-bootcamp-v3/Ejercicios_etapa_2/typescript/server/themes/dev";
-        const carpetaEjercicio = `${rutaBase}/ejercicio_26`;
         const rutaZip = `${rutaBase}/temp_theme_upload.zip`;
+        const cleanZip = `${rutaBase}/clean_theme_upload.zip`;
 
-        // 📂 Asegurar que la carpeta `themes/dev/` existe antes de continuar
-        try {
-            await Deno.stat(rutaBase);
-            console.log('siempre corro yo?')
-        } catch {
-            console.log("📂 La carpeta 'themes/dev' no existe, creándola...");
-            await Deno.mkdir(rutaBase, { recursive: true });
-        }
-
-        // 📦 Guardamos el archivo ZIP en la ruta correcta
+        // 📦 Guardar el archivo ZIP original
         await Deno.writeFile(rutaZip, new Uint8Array(buffer));
+        console.log(`📦 ZIP guardado en: ${rutaZip}`);
 
-        console.log("📦 Desempaquetando el ZIP...");
-        await zip.uncompress(rutaZip, rutaBase);
+        // 🛠️ Limpiar los primeros 153 bytes sospechosos antes de descomprimir
+        console.log("🛠️ Corrigiendo el ZIP eliminando los primeros 153 bytes...");
+        const rawZip = await Deno.readFile(rutaZip);
+        const fixedZip = rawZip.slice(153); // Removemos los bytes extra
+        await Deno.writeFile(cleanZip, fixedZip);
+        console.log(`✅ ZIP limpio guardado en: ${cleanZip}`);
 
+        // 📦 Descomprimir el ZIP limpio
+        console.log("📦 Desempaquetando el ZIP limpio...");
+        await zip.uncompress(cleanZip, rutaBase);
 
-        // 🔄 Mover archivos importantes fuera de `ejercicio_26/` antes de eliminarla
+        const carpetaEjercicio = `${rutaBase}/ejercicio_26`;
+        const archivosPermitidos = ["assets/theme.css", "content_for_index.liquid", "theme.liquid"];
 
-        const archivosImportantes = ["content_for_index.liquid", "theme.liquid"];
-        const carpetaAssets = "assets";
+        console.log(`📂 Moviendo archivos específicos desde '${carpetaEjercicio}' a '${rutaBase}'...`);
 
-        for (const archivo of archivosImportantes) {
-            const origen = `${carpetaEjercicio}/${archivo}`;
-            const destino = `${rutaBase}/${archivo}`;
+        for (const archivo of archivosPermitidos) {
+          const origen = `${carpetaEjercicio}/${archivo}`;
+          const destino = `${rutaBase}/${archivo}`;
 
-            try {
-                await Deno.rename(origen, destino);
-                console.log(`📂 Movido: ${archivo} → ${destino}`);
-            } catch {
-                console.log(`⚠️ No se encontró ${archivo} dentro de 'ejercicio_26/', omitiendo.`);
-            }
-        }
-
-        // 🔄 Mover `assets/` fuera de `ejercicio_26/`
         try {
-            await Deno.rename(`${carpetaEjercicio}/${carpetaAssets}`, `${rutaBase}/${carpetaAssets}`);
-            console.log(`📂 Carpeta 'assets/' movida correctamente.`);
-        } catch {
-            console.log(`⚠️ No se encontró la carpeta 'assets/' dentro de 'ejercicio_26/', omitiendo.`);
+          await Deno.rename(origen, destino);
+          console.log(`✅ Movido: ${archivo} → ${destino}`);
+        } catch (error) {
+          console.log(`⚠️ No se pudo mover ${archivo}, puede que no exista:`, error);
+        }
         }
 
-        // 🗑️ Ahora eliminamos `ejercicio_26/`
+        // 🗑️ Eliminamos la carpeta extra después de mover solo los archivos necesarios
         try {
-            await Deno.remove(carpetaEjercicio, { recursive: true });
-            console.log("🗑️ Carpeta 'ejercicio_26' eliminada correctamente.");
+         await Deno.remove(carpetaEjercicio, { recursive: true });
+          console.log("🗑️ Carpeta 'ejercicio_26' eliminada correctamente.");
         } catch {
-            console.log("⚠️ No se pudo eliminar 'ejercicio_26/', tal vez ya no existía.");
+          console.log("⚠️ No se pudo eliminar 'ejercicio_26/', tal vez ya no existía.");
         }
+
 
         console.log("✅ Tema actualizado correctamente.");
 
-        // 🗑️ Eliminar el ZIP después de descomprimirlo
-        try {
-        await Deno.remove(carpetaEjercicio, { recursive: true });
-        console.log("🗑️ Carpeta 'ejercicio_26' eliminada correctamente.");
-        } catch {
-        console.log("⚠️ No se pudo eliminar 'ejercicio_26/', tal vez ya no existía o fue movida previamente.");
-        }
+        // 🗑️ Eliminar los archivos ZIP después de procesarlos
+        await Deno.remove(rutaZip);
+        await Deno.remove(cleanZip);
+        console.log("🗑️ ZIPs eliminados correctamente.");
 
-        // 🔹 Pasamos la ruta base a `onThemeUpdate()` para que solo regenere el HTML
+        // 🔹 Llamar callback para actualizar la plantilla
         return await callback(rutaBase);
 
     } catch (error) {
@@ -84,7 +73,8 @@ async function manejarPeticionThemeUpdate(req: Request, callback: (rutaBase: str
     }
 }
 
-export function iniciarServidor(puerto: number = 3000, callback: (rutaZip: string) => Promise<Response>) {
+
+export function iniciarServidor(puerto: number = 3000, callback: (rutaBase: string) => Promise<Response>) {
     console.log(`✅ Servidor iniciado en http://localhost:${puerto}/`);
 
     Deno.serve({ port: puerto }, async (req) => {
