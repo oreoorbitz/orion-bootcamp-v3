@@ -69,11 +69,10 @@ async function manejarPeticionThemeUpdate(req: Request, callback: (rutaBase: str
 
         // 🗑️ Eliminar el ZIP después de descomprimirlo
         try {
-            await Deno.stat(rutaZip);
-            await Deno.remove(rutaZip);
-            console.log("🗑️ ZIP eliminado correctamente.");
+        await Deno.remove(carpetaEjercicio, { recursive: true });
+        console.log("🗑️ Carpeta 'ejercicio_26' eliminada correctamente.");
         } catch {
-            console.log("⚠️ El archivo ZIP ya no existía, omitiendo eliminación.");
+        console.log("⚠️ No se pudo eliminar 'ejercicio_26/', tal vez ya no existía o fue movida previamente.");
         }
 
         // 🔹 Pasamos la ruta base a `onThemeUpdate()` para que solo regenere el HTML

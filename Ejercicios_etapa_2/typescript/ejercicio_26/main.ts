@@ -134,11 +134,11 @@ async function empaquetarYEnviarTemaConControl() {
     setTimeout(() => bloqueado = false, 1000); // Esperamos 1 segundo antes de permitir otra ejecución
 }
 
- async function empaquetarYEnviarTema() {
+async function empaquetarYEnviarTema() {
     console.log("📦 Empaquetando tema...");
 
-    // 📂 Verificar que la carpeta donde guardaremos el ZIP existe
-    const rutaZipFolder = "typescript/ejercicio_26";
+    // 📂 Convertimos la ruta de `ejercicio_26/` en una ruta absoluta
+    const rutaZipFolder = Deno.realPathSync("ejercicio_26");
     const archivoZip = `${rutaZipFolder}/temp_theme.zip`;
 
     try {
@@ -148,10 +148,18 @@ async function empaquetarYEnviarTemaConControl() {
         await Deno.mkdir(rutaZipFolder, { recursive: true });
     }
 
-    // 📦 Comprimir la carpeta completa
+    // 📦 Comprimir la carpeta completa con ruta corregida
     await zip.compress(rutaZipFolder, archivoZip);
-    console.log("✅ Tema comprimido correctamente!");
 
+    console.log("🔍 Verificando si el archivo ZIP fue creado...");
+    try {
+        await Deno.stat(archivoZip);
+        console.log("✅ ZIP encontrado correctamente!");
+    } catch {
+        console.log("⚠️ No se encontró el ZIP, algo falló en la compresión.");
+    }
+
+    console.log("✅ Tema comprimido correctamente!");
     console.log("🚀 Enviando ZIP al servidor...");
 
     // Crear FormData y adjuntar ZIP
@@ -171,6 +179,9 @@ async function empaquetarYEnviarTemaConControl() {
     await Deno.remove(archivoZip);
     console.log("🗑️ ZIP eliminado.");
 }
+observarCambios();
+
+
 /* async function probarEnvioSimple() {
     console.log("📦 Enviando objeto JSON al servidor...");
 
@@ -192,5 +203,3 @@ async function empaquetarYEnviarTemaConControl() {
 
     console.log("📝 Respuesta del servidor:", await response.text());
 } */
-
-observarCambios();
