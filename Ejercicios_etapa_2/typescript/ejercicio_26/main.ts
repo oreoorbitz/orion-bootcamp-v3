@@ -1,73 +1,91 @@
 /**
- * 🧩 MÓDULO 26: Enviar archivos individuales por HTTP y regenerar HTML desde el servidor
+ * 🧩 MÓDULO 26: Enviar archivos individuales por HTTP y recargar HTML o CSS automáticamente
  *
  * 🧠 Concepto clave:
- * Simulamos cómo una herramienta como Shopify CLI detecta cambios en archivos y sincroniza
- * solo los que han sido modificados. Esto mejora la eficiencia y permite recargar dinámicamente el HTML.
+ * A partir de este módulo, solo enviaremos al servidor **el archivo modificado**, en lugar de comprimir todo el tema.
+ * Además, el servidor decidirá si debe regenerar el HTML completo o simplemente recargar los estilos.
  *
  * 🎯 Objetivo:
- * Detectar cambios en archivos del tema, enviar el archivo modificado al servidor vía HTTP,
- * y hacer que el servidor lo guarde y regenere el HTML.
+ * - Observar archivos del tema
+ * - Enviar solo el archivo que cambió
+ * - Reemplazar el archivo en el servidor
+ * - Regenerar HTML solo si hace falta
+ * - Notificar al navegador por WebSocket para hacer recarga automática
  *
  * ✅ Instrucciones:
  *
- * 1. **Preparación del tema**
- *    - Copia tu tema a `typescript/ejercicio_26/`.
- *    - Asegúrate de incluir:
- *      - Un archivo `theme.liquid`
- *      - Un archivo `content_for_index.liquid`
- *      - Una carpeta `assets/`
- *
- * 2. **En `main.ts`:**
- *    - Implementa `Deno.watchFs()` para observar:
+ * 1. **Prepara tu tema**
+ *    - Asegúrate de que `typescript/ejercicio_26/` contenga:
  *      - `theme.liquid`
  *      - `content_for_index.liquid`
- *      - Todos los archivos dentro de `assets/`
+ *      - Carpeta `assets/` con un archivo `theme.css`
  *
- *    - Cuando se detecte un cambio:
- *      - Usa `FormData` y adjunta el archivo modificado como un `Blob`.
- *      - Incluye también su ruta relativa original, usando `formData.append("path", "assets/theme.css")`, por ejemplo.
- *      - Envía la solicitud `POST` a `http://localhost:3000/theme-update`.
- *      - Imprime en consola la respuesta del servidor.
+ * 2. **En `main.ts`**
+ *    - Usa `Deno.watchFs()` para observar cambios en:
+ *      - `theme.liquid`
+ *      - `content_for_index.liquid`
+ *      - Archivos dentro de `assets/`
  *
- * 3. **En `controller.ts`:**
- *    - Asegúrate de que `controller.ts` se encuentre en `typescript/server/`.
- *    - Actualiza tu llamada a `iniciarServidor()` para aceptar un segundo argumento: un callback.
+ *    - Cuando detectes un cambio:
+ *      - Lee el contenido del archivo modificado
+ *      - Usa `FormData` para enviar:
+ *        - El contenido del archivo como `Blob`
+ *        - La ruta relativa del archivo como campo `"path"`
+ *      - Envía una solicitud `POST` a `http://localhost:3000/theme-update`
+ *      - Imprime en consola la respuesta del servidor
  *
- *    - El callback debe:
- *      - Recibir la ruta relativa y el contenido del archivo modificado.
- *      - Escribir el archivo en la ruta correspondiente dentro de `themes/dev/`.
- *      - Si el archivo es un `.liquid`, regenerar el HTML (`themes/dev/dist/index.html`).
- *      - Si el archivo es un `.css`, no es necesario regenerar, pero puede imprimirse en consola el cambio.
- *      - Inyectar `hotreload.ts` si se regenera HTML.
+ * 3. **En `controller.ts`**
+ *    - Asegúrate de que `controller.ts` esté en `typescript/server/`
+ *    - Llama a `iniciarServidor(3000, callback)` pasando un segundo argumento: una función callback
+ *    - nota: puedes llamar tu funcion de 'callback' como quieras
  *
- * 4. **En `slightlyLate.ts`:**
- *    - Crea una nueva ruta `POST /theme-update` utilizando el objeto `Request`.
+ *    - El callback debe recibir:
+ *      - La ruta del archivo (`path`)
+ *      - Su contenido como `Uint8Array`
  *
+ *    - La función debe:
+ *      - Escribir el archivo en `themes/dev/{path}`
+ *      - Si el archivo termina en `.liquid`, regenerar `themes/dev/dist/index.html` y usar `injector()` para insertar `hotreload.ts`
+ *      - Si el archivo termina en `.css`, no regenerar el HTML
+ *
+ *    - En todos los casos:
+ *      - Importa `notificarClientes` desde `wsServer.ts`
+ *      - Envía una señal WebSocket:
+ *        - `{ type: "reload-css" }` si es `.css`
+ *        - `{ type: "reload" }` si es cualquier otro archivo
+ *
+ * 4. **En `slightlyLate.ts`**
+ *    - Crea una ruta `POST /theme-update`
  *    - Dentro de esa ruta:
- *      - Usa `await request.formData()` para obtener:
- *        - El archivo modificado (`formData.get("file")`)
- *        - La ruta donde debe guardarse (`formData.get("path")`)
- *      - Convierte el archivo a `Uint8Array` y guárdalo en `themes/dev/` usando la ruta proporcionada.
- *      - Llama al callback del `controller.ts`, pasándole:
- *        - La ruta relativa
- *        - El contenido del archivo
- *      - Devuelve una respuesta textual confirmando la actualización.
+ *      - Llama a `await request.formData()` para extraer:
+ *        - `"path"` (la ruta relativa)
+ *        - `"file"` (el archivo como `Blob`)
+ *      - Convierte el `Blob` en `Uint8Array`
+ *      - Llama al callback recibido desde `controller.ts` pasando `path` y el contenido
+ *      - Devuelve una respuesta textual confirmando que se procesó exitosamente
+ *
+ * 5. **Verifica tu configuración de hot reload**
+ *    - Asegúrate de tener estos módulos dentro de `server/`:
+ *      - `hotreload.ts`: el script que se inyecta en el HTML
+ *      - `wsServer.ts`: contiene la función `notificarClientes()` y gestiona los WebSockets
+ *
+ *    - Ya debes haber implementado en `hotreload.ts` lo siguiente:
+ *      - Si recibe `{ type: "reload" }`, se recarga toda la página (`window.location.reload()`)
+ *      - Si recibe `{ type: "reload-css" }`, actualiza el `href` de `<link rel="stylesheet">` usando una marca de tiempo (`Date.now()`)
  *
  * 🧪 Prueba:
- * - Abre una terminal y ejecuta:
+ * - Ejecuta el servidor con:
  *   ```bash
  *   deno run --allow-all typescript/server/controller.ts
  *   ```
- * - En otra terminal, ejecuta:
+ * - Ejecuta el cliente:
  *   ```bash
  *   deno run --allow-all typescript/ejercicio_26/main.ts
  *   ```
- * - Modifica `theme.liquid`, `content_for_index.liquid` o un archivo en `assets/`
- * - Observa cómo:
- *   - Se envía solo el archivo cambiado
- *   - Se guarda correctamente en el servidor
- *   - Se regenera el HTML solo si es necesario
+ * - Abre tu navegador en `localhost:3000`
+ * - Edita:
+ *   - `theme.liquid` → debe regenerar `index.html` y recargar la página
+ *   - `theme.css` → debe actualizarse el estilo sin recargar la página
  *
  * 📁 Estructura esperada:
  * Ejercicios_etapa_2/
@@ -80,6 +98,8 @@
  * │   └── server/
  * │       ├── controller.ts
  * │       ├── slightlyLate.ts
+ * │       ├── wsServer.ts
+ * │       ├── hotreload.ts
  * │       └── themes/
  * │           └── dev/
  * │               ├── theme.liquid
@@ -89,6 +109,9 @@
  * │                   └── index.html
  *
  * 🎯 Resultado esperado:
- * Has implementado un flujo realista donde cada archivo se sincroniza por separado con el servidor.
- * Esto permitirá en el futuro integrar hot reload completo y filtros específicos según el archivo que cambie.
+ * - Detectas qué archivo cambió
+ * - Solo envías ese archivo al servidor
+ * - Se actualiza la carpeta del tema
+ * - Se recarga el navegador automáticamente según el tipo de archivo
+ * - Mantienes el sistema modular y profesional como en entornos reales
  */
