@@ -1,14 +1,13 @@
 /**
- * 🧩 MÓDULO 26: Enviar temas por HTTP y regenerar HTML desde el servidor
+ * 🧩 MÓDULO 26: Enviar archivos individuales por HTTP y regenerar HTML desde el servidor
  *
  * 🧠 Concepto clave:
- * En esta etapa, simulamos cómo una herramienta como Shopify CLI empaqueta y envía un tema al servidor,
- * donde se desempaqueta, se interpreta y se regenera el HTML en tiempo real.
+ * Simulamos cómo una herramienta como Shopify CLI detecta cambios en archivos y sincroniza
+ * solo los que han sido modificados. Esto mejora la eficiencia y permite recargar dinámicamente el HTML.
  *
  * 🎯 Objetivo:
- * Lograr que `main.ts` empaquete y envíe tu tema al servidor mediante una solicitud HTTP.
- * El servidor recibirá el contenido, lo desempaquetará, lo copiará a la carpeta de trabajo
- * y regenerará automáticamente el archivo HTML.
+ * Detectar cambios en archivos del tema, enviar el archivo modificado al servidor vía HTTP,
+ * y hacer que el servidor lo guarde y regenere el HTML.
  *
  * ✅ Instrucciones:
  *
@@ -20,49 +19,55 @@
  *      - Una carpeta `assets/`
  *
  * 2. **En `main.ts`:**
-- *    - Instala y usa el módulo `zip` desde `https://deno.land/x/zip@v1.2.3/mod.ts`.
-+ *    - Importa la función `compress` desde el módulo `zip`:
-+ *      ```ts
-+ *      import { compress } from "https://deno.land/x/zip@v1.2.3/mod.ts";
-+ *      ```
-+ *      Este módulo te permite crear archivos ZIP a partir de archivos y carpetas locales.
- *    - Recupera la lógica de observación de cambios que usaste en módulos anteriores.
- *    - Cuando se detecte un cambio en el tema:
- *      - Crea un archivo ZIP que incluya los archivos `theme.liquid`, `content_for_index.liquid` y la carpeta `assets/`.
- *      - Crea un `FormData` e inserta el archivo ZIP como un `Blob` bajo el campo `theme`.
- *      - Envía una solicitud HTTP tipo `POST` al servidor en la URL `http://localhost:3000/theme-update`.
- *      - Imprime la respuesta del servidor en la consola para confirmar la operación.
- *      - Elimina el archivo ZIP después de enviarlo.
+ *    - Implementa `Deno.watchFs()` para observar:
+ *      - `theme.liquid`
+ *      - `content_for_index.liquid`
+ *      - Todos los archivos dentro de `assets/`
+ *
+ *    - Cuando se detecte un cambio:
+ *      - Usa `FormData` y adjunta el archivo modificado como un `Blob`.
+ *      - Incluye también su ruta relativa original, usando `formData.append("path", "assets/theme.css")`, por ejemplo.
+ *      - Envía la solicitud `POST` a `http://localhost:3000/theme-update`.
+ *      - Imprime en consola la respuesta del servidor.
  *
  * 3. **En `controller.ts`:**
- *    - Asegúrate de importar la función `decompress` del módulo `zip`.
- *    - Verifica que `controller.ts` se encuentre en `typescript/server/`.
- *    - Actualiza tu llamada a `iniciarServidor()` para que reciba un segundo argumento: una función de callback.
- *    - Implementa esa función para:
- *      - Eliminar el contenido actual de `themes/dev/`.
- *      - Descomprimir el ZIP recibido en la carpeta `themes/dev/`.
- *      - Regenerar el HTML final dentro de `themes/dev/dist/index.html`.
- *      - Inyectar el script de hot reload como se hacía en módulos anteriores.
+ *    - Asegúrate de que `controller.ts` se encuentre en `typescript/server/`.
+ *    - Actualiza tu llamada a `iniciarServidor()` para aceptar un segundo argumento: un callback.
+ *
+ *    - El callback debe:
+ *      - Recibir la ruta relativa y el contenido del archivo modificado.
+ *      - Escribir el archivo en la ruta correspondiente dentro de `themes/dev/`.
+ *      - Si el archivo es un `.liquid`, regenerar el HTML (`themes/dev/dist/index.html`).
+ *      - Si el archivo es un `.css`, no es necesario regenerar, pero puede imprimirse en consola el cambio.
+ *      - Inyectar `hotreload.ts` si se regenera HTML.
  *
  * 4. **En `slightlyLate.ts`:**
- *    - Utiliza el módulo `multiparser` (`https://deno.land/x/multiparser@v2.0.1/mod.ts`) para procesar formularios HTTP.
- *    - Crea una nueva ruta `POST /theme-update`.
+ *    - Crea una nueva ruta `POST /theme-update` utilizando el objeto `Request`.
+ *
  *    - Dentro de esa ruta:
- *      - Extrae el archivo ZIP enviado bajo el campo `theme`.
- *      - Escribe el contenido de ese archivo en el disco como `temp_theme_upload.zip`.
- *      - Llama a la función de callback proporcionada por `controller.ts`, pasándole la ruta del ZIP.
- *      - Devuelve una respuesta HTTP textual indicando éxito o error.
+ *      - Usa `await request.formData()` para obtener:
+ *        - El archivo modificado (`formData.get("file")`)
+ *        - La ruta donde debe guardarse (`formData.get("path")`)
+ *      - Convierte el archivo a `Uint8Array` y guárdalo en `themes/dev/` usando la ruta proporcionada.
+ *      - Llama al callback del `controller.ts`, pasándole:
+ *        - La ruta relativa
+ *        - El contenido del archivo
+ *      - Devuelve una respuesta textual confirmando la actualización.
  *
  * 🧪 Prueba:
- * - En una terminal, ejecuta el servidor con:
- *   `deno run --allow-all typescript/server/controller.ts`
+ * - Abre una terminal y ejecuta:
+ *   ```bash
+ *   deno run --allow-all typescript/server/controller.ts
+ *   ```
  * - En otra terminal, ejecuta:
- *   `deno run --allow-all typescript/ejercicio_26/main.ts`
- * - El servidor debe:
- *   - Recibir y guardar el archivo ZIP
- *   - Reemplazar el contenido de `themes/dev/`
- *   - Regenerar el HTML en `themes/dev/dist/index.html`
- *   - Confirmar el resultado con un mensaje por consola
+ *   ```bash
+ *   deno run --allow-all typescript/ejercicio_26/main.ts
+ *   ```
+ * - Modifica `theme.liquid`, `content_for_index.liquid` o un archivo en `assets/`
+ * - Observa cómo:
+ *   - Se envía solo el archivo cambiado
+ *   - Se guarda correctamente en el servidor
+ *   - Se regenera el HTML solo si es necesario
  *
  * 📁 Estructura esperada:
  * Ejercicios_etapa_2/
@@ -84,8 +89,6 @@
  * │                   └── index.html
  *
  * 🎯 Resultado esperado:
- * Simulaste cómo una herramienta CLI puede observar archivos, empaquetarlos,
- * enviarlos al servidor, y regenerar el HTML automáticamente.
- *
- * En el siguiente módulo, mejoraremos este flujo para hacerlo aún más dinámico y reactivo.
+ * Has implementado un flujo realista donde cada archivo se sincroniza por separado con el servidor.
+ * Esto permitirá en el futuro integrar hot reload completo y filtros específicos según el archivo que cambie.
  */
