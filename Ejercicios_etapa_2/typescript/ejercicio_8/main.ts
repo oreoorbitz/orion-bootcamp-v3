@@ -16,7 +16,7 @@
  * - `renderizarVariables()` tomó un arreglo de tokens y los transformó en texto final,
  *   reemplazando `{{ variable }}` por valores reales del contexto
  *
- * Pero hay un detalle: `renderizarVariables()` probablemente recorre **todo** el arreglo de tokens.  
+ * Pero hay un detalle: `renderizarVariables()` probablemente recorre **todo** el arreglo de tokens.
  * Ahora vamos a introducir una etapa intermedia, donde se filtran los tokens antes de renderizar.
  *
  * ✅ Ejemplo de plantilla original:
@@ -135,10 +135,10 @@
  *
  * Si quieres acercarte más a la sintaxis real de Liquid, puedes implementar operadores lógicos simples:
  *
- * - Comparaciones con `==`  
+ * - Comparaciones con `==`
  *   Ejemplo: `{% if producto == 'camisa' %}`
  *
- * - Palabras clave `and` / `or`  
+ * - Palabras clave `and` / `or`
  *   Ejemplo: `{% if admin and activo %}`
  *
  * ✅ Esto implicaría:
@@ -153,7 +153,7 @@
  * }
  * ```
  *
- * Este comportamiento no será usado en los próximos módulos,  
+ * Este comportamiento no será usado en los próximos módulos,
  * pero si decides implementarlo, obtendrás más práctica con la lógica real de Shopify.
  */
 
@@ -176,7 +176,7 @@
  * 2. Agruparlos en una estructura lógica
  * 3. Evaluar las condiciones en orden y retornar solo la rama activa
  *
- * Puedes hacer esto con un bucle que, una vez que encuentra un `if`,  
+ * Puedes hacer esto con un bucle que, una vez que encuentra un `if`,
  * recopila todos los tokens hasta el `endif`, separando las ramas por sus directivas.
  *
  * Sugerencia de estructura interna para analizar:
