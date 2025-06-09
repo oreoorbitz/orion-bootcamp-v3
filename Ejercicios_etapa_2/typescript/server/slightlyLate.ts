@@ -1,22 +1,44 @@
 import { zip } from "jsr:@deno-library/compress";
 
+const rutaBase = Deno.realPathSync("./server/themes/dev");
+const rutaZip = `${rutaBase}/temp_theme_upload.zip`;
+const archivosPermitidos = ["content_for_index.liquid", "theme.liquid"];
+const carpetasPermitidas = ["assets"];
+
 async function manejarPeticionThemeUpdate(req: Request, callback: (rutaBase: string) => Promise<Response>) {
     console.log("✅ Petición recibida en `/theme-update`, procesando ZIP...");
 
     try {
-        // 📥 Leer el cuerpo de la solicitud
-        const buffer = await req.arrayBuffer();
+        
+        const form = await req.formData();
 
-        if (!buffer.byteLength) {
-            console.error("❌ No se recibió archivo ZIP.");
-            return new Response("No se recibió archivo ZIP", { status: 400 });
+        const file = form.get("archivo") as File;
+
+        if (!file) {
+        console.error("❌ No se recibió archivo ZIP.");
+        return new Response("No se recibió archivo ZIP", { status: 400 });
         }
 
-        const rutaBase = Deno.realPathSync("./server/themes/dev");
-        const rutaZip = `${rutaBase}/temp_theme_upload.zip`;
-        const cleanZip = `${rutaBase}/clean_theme_upload.zip`;
+        const originalName = file.name;
 
-        // 📦 Guardar el archivo ZIP original
+        const buffer = await file.arrayBuffer();
+        const uint8Array = new Uint8Array(buffer);
+
+        // Verificar si el archivo es un ZIP válido
+        if (uint8Array[0] !== 0x50 || uint8Array[1] !== 0x4b) {
+            console.error("❌ El archivo no es un ZIP válido.");
+            return new Response("El archivo no es un ZIP válido", { status: 400 });
+        }
+
+        await Deno.writeFile(rutaZip, uint8Array);
+
+        await zip.uncompress(rutaZip, rutaBase);
+
+        await Deno.remove(rutaZip);
+
+        return new Response("Archivo ZIP recibido correctamente", { status: 200 });
+
+/*         // 📦 Guardar el archivo ZIP original
         await Deno.writeFile(rutaZip, new Uint8Array(buffer));
         console.log(`📦 ZIP guardado en: ${rutaZip}`);
 
@@ -37,23 +59,23 @@ async function manejarPeticionThemeUpdate(req: Request, callback: (rutaBase: str
         console.log(`📂 Moviendo archivos específicos desde '${carpetaEjercicio}' a '${rutaBase}'...`);
 
         for (const archivo of archivosPermitidos) {
-          const origen = `${carpetaEjercicio}/${archivo}`;
-          const destino = `${rutaBase}/${archivo}`;
+            const origen = `${carpetaEjercicio}/${archivo}`;
+            const destino = `${rutaBase}/${archivo}`;
 
-        try {
-          await Deno.rename(origen, destino);
-          console.log(`✅ Movido: ${archivo} → ${destino}`);
-        } catch (error) {
-          console.log(`⚠️ No se pudo mover ${archivo}, puede que no exista:`, error);
-        }
+            try {
+                await Deno.rename(origen, destino);
+                console.log(`✅ Movido: ${archivo} → ${destino}`);
+            } catch (error) {
+                console.log(`⚠️ No se pudo mover ${archivo}, puede que no exista:`, error);
+            }
         }
 
         // 🗑️ Eliminamos la carpeta extra después de mover solo los archivos necesarios
         try {
-         await Deno.remove(carpetaEjercicio, { recursive: true });
-          console.log("🗑️ Carpeta 'ejercicio_26' eliminada correctamente.");
+            await Deno.remove(carpetaEjercicio, { recursive: true });
+            console.log("🗑️ Carpeta 'ejercicio_26' eliminada correctamente.");
         } catch {
-          console.log("⚠️ No se pudo eliminar 'ejercicio_26/', tal vez ya no existía.");
+            console.log("⚠️ No se pudo eliminar 'ejercicio_26/', tal vez ya no existía.");
         }
 
 
@@ -65,7 +87,7 @@ async function manejarPeticionThemeUpdate(req: Request, callback: (rutaBase: str
         console.log("🗑️ ZIPs eliminados correctamente.");
 
         // 🔹 Llamar callback para actualizar la plantilla
-        return await callback(rutaBase);
+        return await callback(rutaBase); */
 
     } catch (error) {
         console.error("❌ Error procesando el tema:", error);
