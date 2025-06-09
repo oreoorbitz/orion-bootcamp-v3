@@ -3,11 +3,15 @@ import { htmlParser } from "../plantilla_motor/parserDehtml.ts";
 import { renderDOM } from "../plantilla_motor/renderizador.ts";
 import { injector } from "../injector.ts";
 import { iniciarServidor } from "./slightlyLate.ts";
+import { caminoExiste, crearDirectorioSiNoExiste } from "./utils/utils.ts";
 
-const plantillaPath = "/home/bambiux/code/Bambi-uxx/orion-bootcamp-v3/Ejercicios_etapa_2/typescript/server/themes/dev/content_for_index.liquid";
-const outputPath = "/home/bambiux/code/Bambi-uxx/orion-bootcamp-v3/Ejercicios_etapa_2/typescript/server/themes/dev/dist/index.html";
+const plantillaPath = new URL("./themes/dev/content_for_index.liquid", import.meta.url).pathname;
+const outputPath = new URL('./themes/dev/dist/', import.meta.url).pathname;
 
-//  Contexto para la plantilla
+const fileMap: Record<string, string> = {
+    [plantillaPath]: `${outputPath}/index.html`,
+};
+
 const contexto = {
     settings: { titulo: "Mi tienda" },
     producto: { titulo: "Camisa", descripcion: "De algodón" },
@@ -15,8 +19,37 @@ const contexto = {
 
 export async function recargarYGenerarHTML() {
     try {
-        console.clear();
+        if( !(await caminoExiste(plantillaPath))) {
+            console.error("❌ Plantilla no encontrada, abortando.");
+            return new Response("Plantilla no encontrada", { status: 404 });
+        }
+
+        const liquidTemplate = await Deno.readTextFile(plantillaPath);
+        if(liquidTemplate?.trim === "") {
+            console.error("❌ Plantilla vacía, abortando.");
+            return new Response("Plantilla vacía", { status: 400 });
+        }
+            
+        const renderedTemplate =  await liquidEngine(liquidTemplate, contexto);
+        
+        const domTree = await htmlParser(renderedTemplate);
+        const finalHTML = await renderDOM(domTree);
+
+        const outputFilePath = fileMap[plantillaPath];
+
+        await crearDirectorioSiNoExiste(outputPath);
+
+        await Deno.writeTextFile(outputFilePath, finalHTML);
+
+        return new Response("Recargando y generando HTML...", { status: 200 });
+    } catch (error) {
+
+    }
+
+    /*
         console.log("✅ Generando HTML desde la plantilla...");
+
+        console.log( await caminoExiste(plantillaPath) ? "✅ Plantilla encontrada." : "❌ Plantilla no encontrada, abortando.");
 
         const entradaLiquid = await Deno.readTextFile(plantillaPath);
         const plantillaRenderizada = liquidEngine(entradaLiquid, contexto);
@@ -32,10 +65,7 @@ export async function recargarYGenerarHTML() {
         console.log("\n✅ Hot Reload inyectado correctamente en index.html.");
 
         return "HTML generado correctamente";
-    } catch (error) {
-        console.error("\n❌ Error al generar el archivo HTML:", error);
-        return "Error al generar HTML";
-    }
+    */
 }
 
 export async function onThemeUpdate(rutaBase: string) {
@@ -50,7 +80,7 @@ export async function onThemeUpdate(rutaBase: string) {
 }
 
 // 2️⃣ Activar el servidor para escuchar las solicitudes
-iniciarServidor(3000, onThemeUpdate);
+iniciarServidor(3002, onThemeUpdate);
 
 
 /* LO DEJO AKI POR SI RROMPO ALGO ESTO HACE RECARGAS

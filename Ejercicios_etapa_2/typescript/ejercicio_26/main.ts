@@ -120,9 +120,9 @@ import { debounce } from "jsr:@std/async/debounce";
 
 export async function observarCambios() {
     const rutas = [
-        "/home/bambiux/code/Bambi-uxx/orion-bootcamp-v3/Ejercicios_etapa_2/typescript/ejercicio_26/content_for_index.liquid",
-        "/home/bambiux/code/Bambi-uxx/orion-bootcamp-v3/Ejercicios_etapa_2/typescript/ejercicio_26/theme.liquid",
-        "/home/bambiux/code/Bambi-uxx/orion-bootcamp-v3/Ejercicios_etapa_2/typescript/ejercicio_26/assets"
+        "content_for_index.liquid",
+        "theme.liquid",
+        "assets"
     ];
 
     // 🔍 Validar que las rutas existan antes de observar cambios
@@ -165,7 +165,7 @@ async function empaquetarYEnviarTema() {
     console.log("📦 Empaquetando tema...");
 
     // 📂 Convertimos la ruta de `ejercicio_26/` en una ruta absoluta
-    const rutaZipFolder = Deno.realPathSync("ejercicio_26");
+    const rutaZipFolder = Deno.realPathSync(".");
     const archivoZip = `${rutaZipFolder}/temp_theme.zip`;
 
     try {
@@ -195,7 +195,7 @@ async function empaquetarYEnviarTema() {
     formData.append("archivo", new Blob([zipData]), "temp_theme.zip");
 
     // Enviar solicitud POST
-    const response = await fetch("http://localhost:3000/theme-update", {
+    const response = await fetch("http://localhost:3002/theme-update", {
         method: "POST",
         body: formData
     });

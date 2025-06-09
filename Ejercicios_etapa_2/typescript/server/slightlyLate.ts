@@ -12,7 +12,7 @@ async function manejarPeticionThemeUpdate(req: Request, callback: (rutaBase: str
             return new Response("No se recibió archivo ZIP", { status: 400 });
         }
 
-        const rutaBase = "/home/bambiux/code/Bambi-uxx/orion-bootcamp-v3/Ejercicios_etapa_2/typescript/server/themes/dev";
+        const rutaBase = Deno.realPathSync("./server/themes/dev");
         const rutaZip = `${rutaBase}/temp_theme_upload.zip`;
         const cleanZip = `${rutaBase}/clean_theme_upload.zip`;
 
