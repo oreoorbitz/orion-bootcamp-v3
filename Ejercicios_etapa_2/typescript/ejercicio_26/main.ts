@@ -123,8 +123,8 @@ const path = (str: string) => new URL(str, import.meta.url).pathname;
 
 export async function observarCambios() {
     const rutas = [
-        "content_for_index.liquid",
-        "theme.liquid", 
+        "templates",
+        "layout", 
         "assets"
     ].map(path);
 
@@ -168,6 +168,7 @@ async function empaquetarYEnviarTemaConControl(pathModified: string ) {
 async function empaquetarYEnviarTema(pathModified: string ) {
     console.log("📦 Empaquetando tema...");
 
+    const folder = pathModified.split("/").slice(0, -1).pop() ?? '';
     const fileModified = pathModified.split("/").pop() ?? ''
     const fileModifiedName = fileModified.split(".")[0] ?? '';
     const rutaZipFolder = Deno.realPathSync(".");
@@ -198,6 +199,7 @@ async function empaquetarYEnviarTema(pathModified: string ) {
     const formData = new FormData();
     const zipData = await Deno.readFile(archivoZip);
     formData.append("archivo", new Blob([zipData]), fileModified);
+    formData.append('carpeta', folder); 
 
     // Enviar solicitud POST
     const response = await fetch("http://localhost:3002/theme-update", {

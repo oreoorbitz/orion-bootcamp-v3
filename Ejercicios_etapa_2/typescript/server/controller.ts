@@ -5,7 +5,7 @@ import { injector } from "../injector.ts";
 import { iniciarServidor } from "./slightlyLate.ts";
 import { caminoExiste, crearDirectorioSiNoExiste } from "./utils/utils.ts";
 
-const plantillaPath = new URL("./themes/dev/content_for_index.liquid", import.meta.url).pathname;
+const plantillaPath = new URL("./themes/dev/templates/content_for_index.liquid", import.meta.url).pathname;
 const outputPath = new URL('./themes/dev/dist/', import.meta.url).pathname;
 
 const fileMap: Record<string, string> = {
