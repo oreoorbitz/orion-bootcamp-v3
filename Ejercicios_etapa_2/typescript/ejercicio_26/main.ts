@@ -118,12 +118,15 @@
 import { zip } from "jsr:@deno-library/compress";
 import { debounce } from "jsr:@std/async/debounce";
 
+
+const path = (str: string) => new URL(str, import.meta.url).pathname;
+
 export async function observarCambios() {
     const rutas = [
         "content_for_index.liquid",
-        "theme.liquid",
+        "theme.liquid", 
         "assets"
-    ];
+    ].map(path);
 
     // 🔍 Validar que las rutas existan antes de observar cambios
     for (const path of rutas) {
@@ -140,7 +143,8 @@ export async function observarCambios() {
     const watcher = Deno.watchFs(rutas);
     const procesarCambio = debounce((event: Deno.FsEvent) => {
         console.log(`🔄 Archivo(s) modificado(s): ${event.paths.join(", ")}`);
-        empaquetarYEnviarTemaConControl();
+        const pathModified = event.paths[0];
+        empaquetarYEnviarTemaConControl(pathModified);
     }, 500); // Esperamos 500ms para evitar activaciones múltiples
 
     for await (const event of watcher) {
@@ -150,23 +154,24 @@ export async function observarCambios() {
 
 let bloqueado = false;
 
-async function empaquetarYEnviarTemaConControl() {
+async function empaquetarYEnviarTemaConControl(pathModified: string ) {
     if (bloqueado) {
         console.log("⚠️ Procesamiento en curso, esperando...");
         return;
     }
 
     bloqueado = true;
-    await empaquetarYEnviarTema(); // Llamamos la función original
+    await empaquetarYEnviarTema(pathModified); // Llamamos la función original
     setTimeout(() => bloqueado = false, 1000); // Esperamos 1 segundo antes de permitir otra ejecución
 }
 
-async function empaquetarYEnviarTema() {
+async function empaquetarYEnviarTema(pathModified: string ) {
     console.log("📦 Empaquetando tema...");
 
-    // 📂 Convertimos la ruta de `ejercicio_26/` en una ruta absoluta
+    const fileModified = pathModified.split("/").pop() ?? ''
+    const fileModifiedName = fileModified.split(".")[0] ?? '';
     const rutaZipFolder = Deno.realPathSync(".");
-    const archivoZip = `${rutaZipFolder}/temp_theme.zip`;
+    const archivoZip = `${rutaZipFolder}/${fileModifiedName}.zip`;
 
     try {
         await Deno.stat(rutaZipFolder);
@@ -176,7 +181,7 @@ async function empaquetarYEnviarTema() {
     }
 
     // 📦 Comprimir la carpeta completa con ruta corregida
-    await zip.compress(rutaZipFolder, archivoZip);
+    await zip.compress(pathModified, archivoZip);
 
     console.log("🔍 Verificando si el archivo ZIP fue creado...");
     try {
@@ -192,7 +197,7 @@ async function empaquetarYEnviarTema() {
     // Crear FormData y adjuntar ZIP
     const formData = new FormData();
     const zipData = await Deno.readFile(archivoZip);
-    formData.append("archivo", new Blob([zipData]), "temp_theme.zip");
+    formData.append("archivo", new Blob([zipData]), fileModified);
 
     // Enviar solicitud POST
     const response = await fetch("http://localhost:3002/theme-update", {
