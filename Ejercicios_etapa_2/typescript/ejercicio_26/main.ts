@@ -117,8 +117,8 @@ function path(stl: string) {
 
 export async function observarCambios() {
     const rutas = [
-        "content_for_index.liquid",
-        "theme.liquid",
+        "templates",
+        "layout",
         "assets"
     ].map(path)
 
