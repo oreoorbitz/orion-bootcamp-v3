@@ -137,7 +137,8 @@ export async function observarCambios() {
     const watcher = Deno.watchFs(rutas);
     const procesarCambio = debounce((event: Deno.FsEvent) => {
         console.log(`🔄 Archivo(s) modificado(s): ${event.paths.join(", ")}`);
-        empaquetarYEnviarTemaConControl();
+        const pathModificado = event.paths[0]
+        empaquetarYEnviarTemaConControl(pathModificado);
     }, 500); // Esperamos 500ms para evitar activaciones múltiples
 
     for await (const event of watcher) {
@@ -147,18 +148,19 @@ export async function observarCambios() {
 
 let bloqueado = false;
 
-async function empaquetarYEnviarTemaConControl() {
-    if (bloqueado) {
+async function empaquetarYEnviarTemaConControl(pathModificado: string) {
+  console.log(pathModificado)
+  if (bloqueado) {
         console.log("⚠️ Procesamiento en curso, esperando...");
         return;
     }
 
     bloqueado = true;
-    await empaquetarYEnviarTema(); // Llamamos la función original
+    await empaquetarYEnviarTema(pathModificado); // Llamamos la función original
     setTimeout(() => bloqueado = false, 1000); // Esperamos 1 segundo antes de permitir otra ejecución
 }
 
-async function empaquetarYEnviarTema() {
+async function empaquetarYEnviarTema(pathModificado: string) {
     console.log("📦 Empaquetando tema...");
 
     // 📂 Convertimos la ruta de `ejercicio_26/` en una ruta absoluta
