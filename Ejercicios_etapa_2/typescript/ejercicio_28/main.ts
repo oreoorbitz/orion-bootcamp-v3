@@ -14,11 +14,11 @@
  * ✅ Instrucciones:
  *
  * 1. **Prepara tu carpeta de ejercicio**
- *    - Copia tu tema a `typescript/ejercicio_28/`.
- *    - Asegúrate de incluir:
- *      - `theme.liquid`
- *      - `content_for_index.liquid`
- *      - Una carpeta `assets/`
+ *    - Copia tu tema a `typescript/ejercicio_28/`
+ *    - Asegúrate de que tenga esta estructura:
+ *      - `layout/theme.liquid`
+ *      - `templates/content_for_index.liquid`
+ *      - `assets/theme.css`
  *
  * 2. **Crea y configura `contextPlease.ts`**
  *    - Este módulo será responsable de **todo el modelo (M de MVC)**.
@@ -55,13 +55,13 @@
  *      ```
  *
  * 7. **No modifiques `controller.ts`**
- *    - `controller.ts` debe seguir importando el contexto de contextPlease
- *    - El resto de tu pipeline (renderizado, dist/, hotreload) no necesita cambiar.
+ *    - `controller.ts` debe seguir importando el contexto de `contextPlease.ts`
+ *    - El resto del pipeline (renderizado, dist/, hotreload) no necesita cambiar
  *
  * 🧪 Prueba:
  * - Inicia el servidor con:
  *   ```bash
- *   deno run --allow-all typescript/server/controller.ts
+ *   deno run --allow-all Ejercicios_etapa_2/typescript/server/controller.ts
  *   ```
  * - Asegúrate de que:
  *   - El HTML generado muestra productos y colecciones correctos
@@ -69,22 +69,32 @@
  *   - El filtro `money` sigue funcionando (lo agregaste en el módulo anterior)
  *
  * 📁 Estructura esperada:
- * ```
  * Ejercicios_etapa_2/
  * ├── typescript/
  * │   ├── ejercicio_28/
- * │   │   ├── theme.liquid
- * │   │   ├── content_for_index.liquid
+ * │   │   ├── layout/
+ * │   │   │   └── theme.liquid
+ * │   │   ├── templates/
+ * │   │   │   └── content_for_index.liquid
  * │   │   ├── assets/
+ * │   │   │   └── theme.css
  * │   │   └── main.ts
- * │   └── server/
- * │       ├── controller.ts
- * │       ├── contextPlease.ts   ← contiene todo el modelo y consultas
- * │       ├── seedData.ts
- * │       ├── slightlyLate.ts
- * │       └── themes/
- * │           └── dev/
- * │               └── dist/
+ * │   ├── server/
+ * │   │   ├── controller.ts
+ * │   │   ├── contextPlease.ts   ← contiene todo el modelo y consultas
+ * │   │   ├── seedData.ts
+ * │   │   ├── slightlyLate.ts
+ * │   │   ├── wsServer.ts
+ * │   │   └── themes/
+ * │   │       └── dev/
+ * │   │           ├── layout/
+ * │   │           │   └── theme.liquid
+ * │   │           ├── templates/
+ * │   │           │   └── content_for_index.liquid
+ * │   │           ├── assets/
+ * │   │           │   └── theme.css
+ * │   │           └── dist/
+ * │   │               └── index.html
  *
  * 🧠 Recomendación:
  * No te compliques con joins complejos. Si necesitas, usa múltiples consultas
