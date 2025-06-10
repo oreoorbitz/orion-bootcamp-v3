@@ -96,3 +96,125 @@
  * - Consolidaste tu modelo en un solo módulo (`contextPlease.ts`), lo cual
  *   simplifica el patrón MVC que usarás de aquí en adelante.
  */
+import { zip } from "jsr:@deno-library/compress";
+import { debounce } from "jsr:@std/async/debounce";
+
+
+const path = (str: string) => new URL(str, import.meta.url).pathname;
+
+export async function observarCambios() {
+    const rutas = [
+        "templates",
+        "layout", 
+        "assets"
+    ].map(path);
+
+    // 🔍 Validar que las rutas existan antes de observar cambios
+    for (const path of rutas) {
+        try {
+            await Deno.stat(path);
+        } catch {
+            console.error(`❌ Error: La ruta ${path} no existe.`);
+            Deno.exit(1); // Salimos del programa si alguna ruta no existe
+        }
+    }
+
+    console.log("✅ Todas las rutas existen, iniciando observación...");
+
+    const watcher = Deno.watchFs(rutas);
+    const procesarCambio = debounce((event: Deno.FsEvent) => {
+        console.log(`🔄 Archivo(s) modificado(s): ${event.paths.join(", ")}`);
+        const pathModified = event.paths[0];
+        empaquetarYEnviarTemaConControl(pathModified);
+    }, 500); // Esperamos 500ms para evitar activaciones múltiples
+
+    for await (const event of watcher) {
+        procesarCambio(event);
+    }
+}
+
+let bloqueado = false;
+
+async function empaquetarYEnviarTemaConControl(pathModified: string ) {
+    if (bloqueado) {
+        console.log("⚠️ Procesamiento en curso, esperando...");
+        return;
+    }
+
+    bloqueado = true;
+    await empaquetarYEnviarTema(pathModified); // Llamamos la función original
+    setTimeout(() => bloqueado = false, 1000); // Esperamos 1 segundo antes de permitir otra ejecución
+}
+
+async function empaquetarYEnviarTema(pathModified: string ) {
+    console.log("📦 Empaquetando tema...");
+
+    const folder = pathModified.split("/").slice(0, -1).pop() ?? '';
+    const fileModified = pathModified.split("/").pop() ?? ''
+    const fileModifiedName = fileModified.split(".")[0] ?? '';
+    const rutaZipFolder = Deno.realPathSync(".");
+    const archivoZip = `${rutaZipFolder}/${fileModifiedName}.zip`;
+
+    try {
+        await Deno.stat(rutaZipFolder);
+    } catch {
+        console.log("📂 La carpeta no existe, creándola...");
+        await Deno.mkdir(rutaZipFolder, { recursive: true });
+    }
+
+    // 📦 Comprimir la carpeta completa con ruta corregida
+    await zip.compress(pathModified, archivoZip);
+
+    console.log("🔍 Verificando si el archivo ZIP fue creado...");
+    try {
+        await Deno.stat(archivoZip);
+        console.log("✅ ZIP encontrado correctamente!");
+    } catch {
+        console.log("⚠️ No se encontró el ZIP, algo falló en la compresión.");
+    }
+
+    console.log("✅ Tema comprimido correctamente!");
+    console.log("🚀 Enviando ZIP al servidor...");
+
+    // Crear FormData y adjuntar ZIP
+    const formData = new FormData();
+    const zipData = await Deno.readFile(archivoZip);
+    formData.append("archivo", new Blob([zipData]), fileModified);
+    formData.append('carpeta', folder); 
+
+    // Enviar solicitud POST
+    const response = await fetch("http://localhost:3002/theme-update", {
+        method: "POST",
+        body: formData
+    });
+
+    console.log("📝 Respuesta del servidor:", await response.text());
+
+    // 🗑️ Borrar el archivo ZIP después de enviarlo
+    await Deno.remove(archivoZip);
+    console.log("🗑️ ZIP eliminado.");
+}
+observarCambios();
+
+
+/* async function probarEnvioSimple() {
+    console.log("📦 Enviando objeto JSON al servidor...");
+
+    // 📝 Crear un objeto de prueba
+    const datosDePrueba = {
+        mensaje: "Hola servidor, probando lógica!",
+        timestamp: new Date().toISOString(),
+    };
+
+    // 📂 Crear FormData y adjuntar JSON
+    const formData = new FormData();
+    formData.append("datos", new Blob([JSON.stringify(datosDePrueba)], { type: "application/json" }));
+
+    // 🚀 Enviar solicitud POST
+    const response = await fetch("http://localhost:3000/theme-update", {
+        method: "POST",
+        body: formData
+    });
+
+    console.log("📝 Respuesta del servidor:", await response.text());
+} */
