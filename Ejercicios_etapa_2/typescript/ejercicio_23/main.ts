@@ -21,7 +21,7 @@
  *    - Mueve `slightlyLate.ts` a `server/slightlyLate.ts`
  *    - Crea un nuevo archivo: `server/hotreload.ts`. Este archivo será inyectado en el HTML final como `<script>`
  *
- * 2. En `server/hotreload.ts`, escribe el siguiente código:
+ * 2. En `server/hotreload.ts`, puedes escribir un código similar a:
  *
  * ```ts
  * const socket = new WebSocket("ws://localhost:3001");
@@ -68,7 +68,8 @@
  * }
  * ```
  *
- * 4. En tu archivo `server/wsServer.ts`, crea un servidor WebSocket que mantenga la lista de conexiones abiertas:
+ * 4. En tu archivo `server/wsServer.ts`, crea un servidor WebSocket que mantenga la lista de conexiones abiertas
+ * con un código similar a este:
  *
  * ```ts
  * import { serve } from "https://deno.land/std/http/server.ts";
