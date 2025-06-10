@@ -162,10 +162,13 @@ async function empaquetarYEnviarTemaConControl(pathModificado: string) {
 
 async function empaquetarYEnviarTema(pathModificado: string) {
     console.log("📦 Empaquetando tema...");
+    const nombreArchivoModificado = pathModificado.split("/").pop()
+    const nombreCarpeta = pathModificado.split("/").slice(0,-1).pop() ?? ""
+    const nombreLimpio = nombreArchivoModificado?.split(".")[0]
 
-    // 📂 Convertimos la ruta de `ejercicio_26/` en una ruta absoluta
-    const rutaZipFolder = Deno.realPathSync("ejercicio_26");
-    const archivoZip = `${rutaZipFolder}/temp_theme.zip`;
+    // Ruta para el archivo zip
+    const rutaZipFolder = path(".")
+    const archivoZip = `${rutaZipFolder}/${nombreLimpio}.zip`;
 
     try {
         await Deno.stat(rutaZipFolder);
@@ -174,9 +177,8 @@ async function empaquetarYEnviarTema(pathModificado: string) {
         await Deno.mkdir(rutaZipFolder, { recursive: true });
     }
 
-    // 📦 Comprimir la carpeta completa con ruta corregida
-    await zip.compress(rutaZipFolder, archivoZip);
-
+    // 📦 Comprimir la carpeta
+    await zip.compress(pathModificado, archivoZip);
     console.log("🔍 Verificando si el archivo ZIP fue creado...");
     try {
         await Deno.stat(archivoZip);
@@ -191,8 +193,8 @@ async function empaquetarYEnviarTema(pathModificado: string) {
     // Crear FormData y adjuntar ZIP
     const formData = new FormData();
     const zipData = await Deno.readFile(archivoZip);
-    formData.append("archivo", new Blob([zipData]), "temp_theme.zip");
-
+    formData.append("archivo", new Blob([zipData]), nombreLimpio);
+    formData.append("carpeta",nombreCarpeta)
     // Enviar solicitud POST
     const response = await fetch("http://localhost:3000/theme-update", {
         method: "POST",

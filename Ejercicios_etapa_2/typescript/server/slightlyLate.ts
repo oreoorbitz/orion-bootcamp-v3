@@ -1,10 +1,54 @@
 import { zip } from "jsr:@deno-library/compress";
 
-async function manejarPeticionThemeUpdate(req: Request, callback: (rutaBase: string) => Promise<Response>) {
+async function manejarPeticionThemeUpdate(req: Request, callback:() => Promise<Response>) {
     console.log("✅ Petición recibida en `/theme-update`, procesando ZIP...");
-
+    const rutaTema = `./server/themes/dev`
     try {
-      return new Response("hola", {status:200})
+      const formulario = await req.formData()
+      console.log(formulario)
+      const archivo = formulario.get("archivo") as File
+      console.log(archivo)
+      const carpetaGuardado = formulario.get("carpeta") as String
+      console.log(carpetaGuardado)
+
+      const buffer = await archivo.arrayBuffer()
+      const uint = new Uint8Array(buffer)
+      const nombre = archivo.name
+      console.log(nombre)
+      const rutaZip = `${rutaTema}/${nombre}.zip`;
+      console.log(rutaZip)
+      await Deno.writeFile(rutaZip, uint)
+
+      // 📂 Asegurar que la carpeta `themes/` existe antes de continuar
+        try {
+            await Deno.stat(`${rutaTema}/${carpetaGuardado}`);
+        } catch {
+            console.log(`📂 La carpeta ${rutaTema}/${carpetaGuardado} no existe, creándola...`);
+            await Deno.mkdir(`${rutaTema}/${carpetaGuardado}`, { recursive: true });
+        }
+
+        //Descomprimiendo
+         //  Guardamos el archivo ZIP en la ruta
+        console.log("📦 Desempaquetando el ZIP...");
+        await zip.uncompress(rutaZip,`${rutaTema}/${carpetaGuardado}`);
+
+        // 🗑️ Ahora eliminamos zip
+        try {
+            await Deno.remove(rutaZip, { recursive: true });
+            console.log(`La carpeta ${rutaZip} ha sido eliminada correctamente.`);
+        } catch {
+            console.log(`La carpeta ${rutaZip} no ha podido ser eliminada o no existía`);
+        }
+
+        return await callback();
+
+
+
+
+
+
+      return new Response("hola es el mes gay", {status:200})
+
       /*   // 📥 Leer el cuerpo de la solicitud directamente
         const buffer = await req.arrayBuffer();
 

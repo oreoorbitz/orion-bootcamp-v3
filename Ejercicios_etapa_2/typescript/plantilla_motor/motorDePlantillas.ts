@@ -291,7 +291,7 @@ function renderizarVariables(tokens: TokenPlantilla[], contexto: Record<string, 
 
 
 async function procesarConLayout(htmlRenderizado: string, contexto: Record<string, any>): Promise<string> {
-    const rutaLayout = new URL("../server/themes/dev/theme.liquid", import.meta.url).pathname;
+    const rutaLayout = new URL("../server/themes/dev/layout/theme.liquid", import.meta.url).pathname;
 
     // Verificar si el archivo `theme.liquid` existe
     try {

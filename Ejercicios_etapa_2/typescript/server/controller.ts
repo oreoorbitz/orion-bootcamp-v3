@@ -4,7 +4,7 @@ import { renderDOM } from "../plantilla_motor/renderizador.ts";
 import { injector } from "../injector.ts";
 import { iniciarServidor } from "./slightlyLate.ts";
 
-const plantillaPath = "/home/bambiux/code/Bambi-uxx/orion-bootcamp-v3/Ejercicios_etapa_2/typescript/server/themes/dev/content_for_index.liquid";
+const plantillaPath = "/home/bambiux/code/Bambi-uxx/orion-bootcamp-v3/Ejercicios_etapa_2/typescript/server/themes/dev/templates/content_for_index.liquid";
 const outputPath = "/home/bambiux/code/Bambi-uxx/orion-bootcamp-v3/Ejercicios_etapa_2/typescript/server/themes/dev/dist/index.html";
 
 //  Contexto para la plantilla
@@ -38,9 +38,7 @@ export async function recargarYGenerarHTML() {
     }
 }
 
-export async function onThemeUpdate(rutaBase: string) {
-    console.log("📦 Procesando tema actualizado desde:", rutaBase);
-
+export async function onThemeUpdate() {
     // 🎨 Generar HTML sin volver a tocar el ZIP o eliminar la carpeta
     console.log("🎨 Generando HTML desde la plantilla...");
     const resultado = await recargarYGenerarHTML();
