@@ -110,12 +110,17 @@
 import { zip } from "jsr:@deno-library/compress";
 import { debounce } from "jsr:@std/async/debounce";
 
+function path(stl: string) {
+  return new URL(stl, import.meta.url).pathname
+
+}
+
 export async function observarCambios() {
     const rutas = [
-        "/home/bambiux/code/Bambi-uxx/orion-bootcamp-v3/Ejercicios_etapa_2/typescript/ejercicio_26/content_for_index.liquid",
-        "/home/bambiux/code/Bambi-uxx/orion-bootcamp-v3/Ejercicios_etapa_2/typescript/ejercicio_26/theme.liquid",
-        "/home/bambiux/code/Bambi-uxx/orion-bootcamp-v3/Ejercicios_etapa_2/typescript/ejercicio_26/assets"
-    ];
+        "content_for_index.liquid",
+        "theme.liquid",
+        "assets"
+    ].map(path)
 
     // 🔍 Validar que las rutas existan antes de observar cambios
     for (const path of rutas) {

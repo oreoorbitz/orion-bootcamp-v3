@@ -4,7 +4,8 @@ async function manejarPeticionThemeUpdate(req: Request, callback: (rutaBase: str
     console.log("✅ Petición recibida en `/theme-update`, procesando ZIP...");
 
     try {
-        // 📥 Leer el cuerpo de la solicitud directamente
+      return new Response("hola", {status:200})
+      /*   // 📥 Leer el cuerpo de la solicitud directamente
         const buffer = await req.arrayBuffer();
 
         if (!buffer.byteLength) {
@@ -76,7 +77,7 @@ async function manejarPeticionThemeUpdate(req: Request, callback: (rutaBase: str
         }
 
         // 🔹 Pasamos la ruta base a `onThemeUpdate()` para que solo regenere el HTML
-        return await callback(rutaBase);
+        return await callback(rutaBase); */
 
     } catch (error) {
         console.error("❌ Error procesando el tema:", error);
