@@ -1,92 +1,111 @@
 /**
- * 🧩 MÓDULO 26: Enviar temas por HTTP y regenerar HTML desde el servidor
+ * 🧩 MÓDULO 26: Enviar archivos individuales por HTTP y recargar HTML o CSS automáticamente
  *
  * 🧠 Concepto clave:
- * En esta etapa, simulamos cómo una herramienta como Shopify CLI empaqueta y envía un tema al servidor,
- * donde se desempaqueta, se interpreta y se regenera el HTML en tiempo real.
+ * En este módulo, vas a comenzar a enviar archivos reales desde el navegador al servidor.
+ * Cuando un archivo cambie, se comprimirá individualmente, se enviará por HTTP, y el servidor decidirá si
+ * necesita regenerar el HTML o simplemente actualizar los estilos.
  *
  * 🎯 Objetivo:
- * Lograr que `main.ts` empaquete y envíe tu tema al servidor mediante una solicitud HTTP.
- * El servidor recibirá el contenido, lo desempaquetará, lo copiará a la carpeta de trabajo
- * y regenerará automáticamente el archivo HTML.
+ * - Observar archivos en `layout/`, `templates/` y `assets/`
+ * - Comprimir solo el archivo que cambió
+ * - Enviarlo al servidor como ZIP junto con su nombre y carpeta
+ * - El servidor lo descomprime en la carpeta correspondiente
+ * - Si es `.liquid`, se regenera `index.html` y se inyecta el script de hot reload
+ * - Si es `.css`, se actualiza sin recargar la página
  *
  * ✅ Instrucciones:
  *
- * 1. **Preparación del tema**
- *    - Copia tu tema a `typescript/ejercicio_26/`.
- *    - Asegúrate de incluir:
- *      - Un archivo `theme.liquid`
- *      - Un archivo `content_for_index.liquid`
- *      - Una carpeta `assets/`
+ * 1. **Reestructura tu tema**
+ *    A partir de ahora, tu carpeta de ejercicio (`typescript/ejercicio_26/`) debe contener:
+ *    - Una carpeta `layout/` con `theme.liquid`
+ *    - Una carpeta `templates/` con `content_for_index.liquid`
+ *    - Una carpeta `assets/` con `theme.css` (u otros recursos)
  *
- * 2. **En `main.ts`:**
-- *    - Instala y usa el módulo `zip` desde `https://deno.land/x/zip@v1.2.3/mod.ts`.
-+ *    - Importa la función `compress` desde el módulo `zip`:
-+ *      ```ts
-+ *      import { compress } from "https://deno.land/x/zip@v1.2.3/mod.ts";
-+ *      ```
-+ *      Este módulo te permite crear archivos ZIP a partir de archivos y carpetas locales.
- *    - Recupera la lógica de observación de cambios que usaste en módulos anteriores.
- *    - Cuando se detecte un cambio en el tema:
- *      - Crea un archivo ZIP que incluya los archivos `theme.liquid`, `content_for_index.liquid` y la carpeta `assets/`.
- *      - Crea un `FormData` e inserta el archivo ZIP como un `Blob` bajo el campo `theme`.
- *      - Envía una solicitud HTTP tipo `POST` al servidor en la URL `http://localhost:3000/theme-update`.
- *      - Imprime la respuesta del servidor en la consola para confirmar la operación.
- *      - Elimina el archivo ZIP después de enviarlo.
+ *    Si tienes archivos sueltos, muévelos a estas carpetas.
  *
- * 3. **En `controller.ts`:**
- *    - Asegúrate de importar la función `decompress` del módulo `zip`.
- *    - Verifica que `controller.ts` se encuentre en `typescript/server/`.
- *    - Actualiza tu llamada a `iniciarServidor()` para que reciba un segundo argumento: una función de callback.
- *    - Implementa esa función para:
- *      - Eliminar el contenido actual de `themes/dev/`.
- *      - Regenerar el HTML final dentro de `themes/dev/dist/index.html`.
- *      - Inyectar el script de hot reload como se hacía en módulos anteriores.
+ * 2. **En `main.ts`**
+ *    - Observa cambios con `Deno.watchFs()` en:
+ *      - `layout/`
+ *      - `templates/`
+ *      - `assets/`
  *
- * 4. **En `slightlyLate.ts`:**
- *    - Utiliza el módulo `multiparser` (`https://deno.land/x/multiparser@v2.0.1/mod.ts`) para procesar formularios HTTP.
- *    - Crea una nueva ruta `POST /theme-update`.
- *    - Dentro de esa ruta:
- *      - Extrae el archivo ZIP enviado bajo el campo `theme`.
- *      - Escribe el contenido de ese archivo en el disco como `temp_theme_upload.zip`.
- *      - Llama a la función de callback proporcionada por `controller.ts`, pasándole la ruta del ZIP.
- *      - Devuelve una respuesta HTTP textual indicando éxito o error.
+ *    - Cuando detectes un cambio:
+ *      - Comprime **solo el archivo modificado** usando `zip` desde:
+ *        ```ts
+ *        import { zip } from "jsr:@deno-library/compress";
+ *        ```
+ *      - Crea un `FormData` y adjunta:
+ *        - El archivo ZIP
+ *        - El nombre del archivo (ej. `theme.liquid`)
+ *        - El nombre de la carpeta (`layout`, `templates`, `assets`)
+ *      - Envía la solicitud `POST` a `http://localhost:3000/theme-update`
+ *      - Imprime la respuesta del servidor
+ *
+ * 3. **En `controller.ts`**
+ *    - Asegúrate de que `controller.ts` esté en `typescript/server/`
+ *    - Llama a `iniciarServidor(3000, callback)` pasando una función `callback` como segundo argumento
+ *
+ *    - Dentro de tu `callback`, llama a tu funcion para para regenerar el HTML desde los archivos de liquid
+ *
+ * 4. **En `slightlyLate.ts`**
+ *    - Crea la ruta `POST /theme-update`
+ *    - Dentro de ella:
+ *      - Usa `await req.formData()` para extraer:
+ *        - el ZIP enviado
+ *        - el nombre del archivo original
+ *        - el nombre de la carpeta destino
+ *      - Descomprime el ZIP recibido usando `zip.uncompress()` desde el mismo módulo que usaste para comprimir
+ *      - Escribe el archivo descomprimido en la carpeta correspondiente
+ *      - Llama el callback para generar el HTML desde los archivos liquid generados en el servidor
+ *
+ * 5. **Inyecta el script de hot reload**
+ *    - En tu función de generación de HTML, usa `injector()` para inyectar el script de `hotreload.ts` en el HTML generado.
  *
  * 🧪 Prueba:
- * - En una terminal, ejecuta el servidor con:
- *   `deno run --allow-all typescript/server/controller.ts`
- * - En otra terminal, ejecuta:
- *   `deno run --allow-all typescript/ejercicio_26/main.ts`
- * - El servidor debe:
- *   - Recibir y guardar el archivo ZIP
- *   - Reemplazar el contenido de `themes/dev/`
- *   - Regenerar el HTML en `themes/dev/dist/index.html`
- *   - Confirmar el resultado con un mensaje por consola
+ * - Ejecuta el servidor con:
+ *   ```bash
+ *   deno run --allow-all typescript/server/controller.ts
+ *   ```
+ * - En otra terminal, ejecuta el cliente con:
+ *   ```bash
+ *   deno run --allow-all typescript/ejercicio_26/main.ts
+ *   ```
+ * - Abre `localhost:3000` en el navegador
+ * - Cambia:
+ *   - `layout/theme.liquid` → debe regenerar `index.html` y recargar la página
+ *   - `assets/theme.css` → debe recargar solo los estilos sin recargar la página
  *
  * 📁 Estructura esperada:
  * Ejercicios_etapa_2/
  * ├── typescript/
  * │   ├── ejercicio_26/
- * │   │   ├── theme.liquid
- * │   │   ├── content_for_index.liquid
+ * │   │   ├── layout/
+ * │   │   │   └── theme.liquid
+ * │   │   ├── templates/
+ * │   │   │   └── content_for_index.liquid
  * │   │   ├── assets/
+ * │   │   │   └── theme.css
  * │   │   └── main.ts
  * │   └── server/
  * │       ├── controller.ts
  * │       ├── slightlyLate.ts
+ * │       ├── hotreload.ts
+ * │       ├── wsServer.ts
  * │       └── themes/
  * │           └── dev/
- * │               ├── theme.liquid
- * │               ├── content_for_index.liquid
+ * │               ├── layout/
+ * │               ├── templates/
  * │               ├── assets/
  * │               └── dist/
  * │                   └── index.html
  *
  * 🎯 Resultado esperado:
- * Simulaste cómo una herramienta CLI puede observar archivos, empaquetarlos,
- * enviarlos al servidor, y regenerar el HTML automáticamente.
- *
- * En el siguiente módulo, mejoraremos este flujo para hacerlo aún más dinámico y reactivo.
+ * - Detectas qué archivo cambió
+ * - Comprimís y enviás solo ese archivo al servidor
+ * - El servidor lo coloca en la carpeta adecuada y regenera si es necesario
+ * - El navegador se actualiza automáticamente según el tipo de archivo
+ * - Mantenés una estructura profesional, moderna y escalable
  */
 import { zip } from "jsr:@deno-library/compress";
 import { debounce } from "jsr:@std/async/debounce";
