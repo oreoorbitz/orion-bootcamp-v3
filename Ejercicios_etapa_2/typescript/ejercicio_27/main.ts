@@ -13,13 +13,13 @@
  * ✅ Instrucciones:
  *
  * 1. **Copia el contenido base a `Ejercicios_etapa_2/typescript/ejercicio_27/`**
- *    Asegúrate de tener estos archivos dentro de la carpeta:
- *
- *    - `theme.liquid`
- *    - `content_for_index.liquid`
+ *    Asegúrate de que la estructura de carpetas sea como sigue:
+ *    - `layout/theme.liquid`
+ *    - `templates/content_for_index.liquid`
  *    - `assets/theme.css`
+ *    - `main.ts`
  *
- *    Puedes copiar el contenido base desde el ejercicio anterior (`ejercicio_26`).
+ *    Puedes copiar el contenido base desde `ejercicio_26`, que ya tiene este formato.
  *
  * 2. **En `contextPlease.ts`:**
  *    - Crea un archivo nuevo en:
@@ -46,7 +46,7 @@
  *      ```
  *    - Reemplaza cualquier dato que antes estaba definido directamente en `controller.ts`
  *      por el uso del objeto `context`.
- *
+
  * 4. **Agrega un filtro de dinero:**
  *    - En el lugar donde registras filtros de Liquid, agrega un filtro llamado `money` que:
  *      - Recibe un número como argumento
@@ -59,9 +59,9 @@
 
  * 5. **Renderiza la plantilla con datos reales:**
  *    - Asegúrate de que el motor Liquid reciba `context` como contexto al momento de renderizar.
- *
+
  * 6. **En tu ejercicio (`ejercicio_27`)**
- *    - Abre el archivo `content_for_index.liquid` y reemplaza su contenido con el snippet:
+ *    - Abre el archivo `templates/content_for_index.liquid` y reemplaza su contenido con el snippet:
  *      Copia desde:
  *      ```
  *      Ejercicios_etapa_2/typescript/liquid_snippets/27_content_for_index.liquid
@@ -78,7 +78,7 @@
  *   ```bash
  *   deno run --allow-all Ejercicios_etapa_2/typescript/server/controller.ts
  *   ```
- * - Envía el tema desde:
+ * - Envía el archivo actualizado desde:
  *   ```bash
  *   deno run --allow-all Ejercicios_etapa_2/typescript/ejercicio_27/main.ts
  *   ```
@@ -94,12 +94,13 @@
  * Este patrón te permitirá escalar y modificar tu sitio fácilmente en los próximos módulos.
  *
  * 📁 Estructura esperada:
- * ```
  * Ejercicios_etapa_2/
  * ├── typescript/
  * │   ├── ejercicio_27/
- * │   │   ├── theme.liquid
- * │   │   ├── content_for_index.liquid
+ * │   │   ├── layout/
+ * │   │   │   └── theme.liquid
+ * │   │   ├── templates/
+ * │   │   │   └── content_for_index.liquid
  * │   │   ├── assets/
  * │   │   │   └── theme.css
  * │   │   └── main.ts
@@ -107,11 +108,15 @@
  * │   │   ├── contextPlease.ts
  * │   │   ├── controller.ts
  * │   │   ├── slightlyLate.ts
+ * │   │   ├── wsServer.ts
  * │   │   └── themes/
  * │   │       └── dev/
- * │   │           ├── theme.liquid
- * │   │           ├── content_for_index.liquid
+ * │   │           ├── layout/
+ * │   │           │   └── theme.liquid
+ * │   │           ├── templates/
+ * │   │           │   └── content_for_index.liquid
  * │   │           ├── assets/
+ * │   │           │   └── theme.css
  * │   │           └── dist/
  * │   │               └── index.html
  * │   ├── seedData.ts
@@ -119,7 +124,6 @@
  * │   │   └── 27_content_for_index.liquid
  * │   └── css_snippets/
  * │       └── 27_theme.css
- * ```
  *
  * 🎯 Resultado esperado:
  * Has dividido correctamente tu app en Modelo (context), Vista (Liquid) y Controlador (render).
