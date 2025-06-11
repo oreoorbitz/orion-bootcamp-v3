@@ -33,7 +33,7 @@ export function notificarReloadCSS() {
         try {
             const mensaje = JSON.stringify({ type: "reload-css" });
             client.send(mensaje);
-            console.log(`📤 Señal enviada a un cliente WebSocket: ${mensaje}`);
+            console.log(` Señal enviada a un cliente WebSocket: ${mensaje}`);
         } catch (error) {
             console.error("❌ Error al enviar mensaje de recarga CSS:", error);
         }
@@ -52,7 +52,7 @@ export function notificarRecargaPagina() {
         try {
             const mensaje = JSON.stringify({ type: "reload" });
             client.send(mensaje);
-            console.log(`📤 Señal de recarga enviada a un cliente WebSocket: ${mensaje}`);
+            console.log(` Señal de recarga enviada a un cliente WebSocket: ${mensaje}`);
         } catch (error) {
             console.error("❌ Error al enviar mensaje de recarga:", error);
         }

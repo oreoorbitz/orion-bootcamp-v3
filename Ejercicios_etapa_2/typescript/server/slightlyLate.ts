@@ -1,36 +1,44 @@
 import { zip } from "jsr:@deno-library/compress";
+import { notificarReloadCSS } from "./wsServer.ts";
 
 async function manejarPeticionThemeUpdate(req: Request, callback:() => Promise<Response>) {
     console.log("✅ Petición recibida en `/theme-update`, procesando ZIP...");
-    const rutaTema = `./server/themes/dev`
+    const rutaTema = `./server/themes/dev`;
+
+
     try {
       const formulario = await req.formData()
-      console.log(formulario)
       const archivo = formulario.get("archivo") as File
-      console.log(archivo)
       const carpetaGuardado = formulario.get("carpeta") as String
-      console.log(carpetaGuardado)
-
       const buffer = await archivo.arrayBuffer()
       const uint = new Uint8Array(buffer)
       const nombre = archivo.name
-      console.log(nombre)
+      const tipoExtension = formulario.get("tipoExtension")
       const rutaZip = `${rutaTema}/${nombre}.zip`;
-      console.log(rutaZip)
+      const rutaDestino = carpetaGuardado === "assets"
+       ? `${rutaTema}/dist/${carpetaGuardado}`
+       : `${rutaTema}/${carpetaGuardado}`;
+
       await Deno.writeFile(rutaZip, uint)
 
-      // 📂 Asegurar que la carpeta `themes/` existe antes de continuar
+        // 📂 Asegurar que la carpeta existe antes de continuar
         try {
-            await Deno.stat(`${rutaTema}/${carpetaGuardado}`);
+          await Deno.stat(rutaDestino);
         } catch {
-            console.log(`📂 La carpeta ${rutaTema}/${carpetaGuardado} no existe, creándola...`);
-            await Deno.mkdir(`${rutaTema}/${carpetaGuardado}`, { recursive: true });
+         console.log(`📂 La carpeta ${rutaDestino} no existe, creándola...`);
+         await Deno.mkdir(rutaDestino, { recursive: true });
         }
 
-        //Descomprimiendo
-         //  Guardamos el archivo ZIP en la ruta
-        console.log("📦 Desempaquetando el ZIP...");
-        await zip.uncompress(rutaZip,`${rutaTema}/${carpetaGuardado}`);
+        // 📦 Descomprimiendo el ZIP en la ruta correcta
+        console.log(`📦 Desempaquetando el ZIP en: ${rutaDestino}`);
+        await zip.uncompress(rutaZip, rutaDestino);
+
+        //Si el archivo es `.css`, enviamos la señal de recarga de estilos
+        if (tipoExtension == "css") {
+        notificarReloadCSS();
+        console.log("📤 Señal de recarga de CSS enviada a los clientes WebSocket.");
+        }
+
 
         // 🗑️ Ahora eliminamos zip
         try {
@@ -40,88 +48,8 @@ async function manejarPeticionThemeUpdate(req: Request, callback:() => Promise<R
             console.log(`La carpeta ${rutaZip} no ha podido ser eliminada o no existía`);
         }
 
+        console.log("antes del callback")
         return await callback();
-
-
-
-
-
-
-      return new Response("hola es el mes gay", {status:200})
-
-      /*   // 📥 Leer el cuerpo de la solicitud directamente
-        const buffer = await req.arrayBuffer();
-
-        if (!buffer.byteLength) {
-            console.error("❌ No se recibió archivo ZIP.");
-            return new Response("No se recibió archivo ZIP", { status: 400 });
-        }
-
-        const rutaBase = "/home/bambiux/code/Bambi-uxx/orion-bootcamp-v3/Ejercicios_etapa_2/typescript/server/themes/dev";
-        const carpetaEjercicio = `${rutaBase}/ejercicio_26`;
-        const rutaZip = `${rutaBase}/temp_theme_upload.zip`;
-
-        // 📂 Asegurar que la carpeta `themes/dev/` existe antes de continuar
-        try {
-            await Deno.stat(rutaBase);
-            console.log('siempre corro yo?')
-        } catch {
-            console.log("📂 La carpeta 'themes/dev' no existe, creándola...");
-            await Deno.mkdir(rutaBase, { recursive: true });
-        }
-
-        // 📦 Guardamos el archivo ZIP en la ruta correcta
-        await Deno.writeFile(rutaZip, new Uint8Array(buffer));
-
-        console.log("📦 Desempaquetando el ZIP...");
-        await zip.uncompress(rutaZip, rutaBase);
-
-
-        // 🔄 Mover archivos importantes fuera de `ejercicio_26/` antes de eliminarla
-
-        const archivosImportantes = ["content_for_index.liquid", "theme.liquid"];
-        const carpetaAssets = "assets";
-
-        for (const archivo of archivosImportantes) {
-            const origen = `${carpetaEjercicio}/${archivo}`;
-            const destino = `${rutaBase}/${archivo}`;
-
-            try {
-                await Deno.rename(origen, destino);
-                console.log(`📂 Movido: ${archivo} → ${destino}`);
-            } catch {
-                console.log(`⚠️ No se encontró ${archivo} dentro de 'ejercicio_26/', omitiendo.`);
-            }
-        }
-
-        // 🔄 Mover `assets/` fuera de `ejercicio_26/`
-        try {
-            await Deno.rename(`${carpetaEjercicio}/${carpetaAssets}`, `${rutaBase}/${carpetaAssets}`);
-            console.log(`📂 Carpeta 'assets/' movida correctamente.`);
-        } catch {
-            console.log(`⚠️ No se encontró la carpeta 'assets/' dentro de 'ejercicio_26/', omitiendo.`);
-        }
-
-        // 🗑️ Ahora eliminamos `ejercicio_26/`
-        try {
-            await Deno.remove(carpetaEjercicio, { recursive: true });
-            console.log("🗑️ Carpeta 'ejercicio_26' eliminada correctamente.");
-        } catch {
-            console.log("⚠️ No se pudo eliminar 'ejercicio_26/', tal vez ya no existía.");
-        }
-
-        console.log("✅ Tema actualizado correctamente.");
-
-        // 🗑️ Eliminar el ZIP después de descomprimirlo
-        try {
-        await Deno.remove(carpetaEjercicio, { recursive: true });
-        console.log("🗑️ Carpeta 'ejercicio_26' eliminada correctamente.");
-        } catch {
-        console.log("⚠️ No se pudo eliminar 'ejercicio_26/', tal vez ya no existía o fue movida previamente.");
-        }
-
-        // 🔹 Pasamos la ruta base a `onThemeUpdate()` para que solo regenere el HTML
-        return await callback(rutaBase); */
 
     } catch (error) {
         console.error("❌ Error procesando el tema:", error);
@@ -129,7 +57,7 @@ async function manejarPeticionThemeUpdate(req: Request, callback:() => Promise<R
     }
 }
 
-export function iniciarServidor(puerto: number = 3000, callback: (rutaZip: string) => Promise<Response>) {
+export function iniciarServidor(puerto: number = 3000, callback: () => Promise<Response>) {
     console.log(`✅ Servidor iniciado en http://localhost:${puerto}/`);
 
     Deno.serve({ port: puerto }, async (req) => {
@@ -139,12 +67,12 @@ export function iniciarServidor(puerto: number = 3000, callback: (rutaZip: strin
             return await manejarPeticionThemeUpdate(req, callback);
         }
 
-        let path = url.pathname === "/" ? "themes/dev/dist/index.html" : `themes/dev/dist${url.pathname}`;
+        let path = url.pathname === "/" ? "server/themes/dev/dist/index.html" : `server/themes/dev/dist/${url.pathname}`;
         console.log(`📂 Intentando servir archivo: ${path}`);
 
         try {
             if (url.pathname.startsWith("/assets")) {
-                path = `themes/dev${url.pathname}`;
+              path = `server/themes/dev/dist${url.pathname}`;
             }
 
             const archivo = await Deno.readTextFile(path);

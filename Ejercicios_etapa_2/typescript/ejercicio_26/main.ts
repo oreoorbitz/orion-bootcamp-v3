@@ -164,8 +164,8 @@ async function empaquetarYEnviarTema(pathModificado: string) {
     console.log("📦 Empaquetando tema...");
     const nombreArchivoModificado = pathModificado.split("/").pop()
     const nombreCarpeta = pathModificado.split("/").slice(0,-1).pop() ?? ""
-    const nombreLimpio = nombreArchivoModificado?.split(".")[0]
-
+    const nombreLimpio = nombreArchivoModificado?.split(".")[0] ?? ""
+    const tipoExtension = nombreArchivoModificado?.split(".")[1] ?? ""
     // Ruta para el archivo zip
     const rutaZipFolder = path(".")
     const archivoZip = `${rutaZipFolder}/${nombreLimpio}.zip`;
@@ -194,6 +194,7 @@ async function empaquetarYEnviarTema(pathModificado: string) {
     const formData = new FormData();
     const zipData = await Deno.readFile(archivoZip);
     formData.append("archivo", new Blob([zipData]), nombreLimpio);
+    formData.append("tipoExtension", tipoExtension)
     formData.append("carpeta",nombreCarpeta)
     // Enviar solicitud POST
     const response = await fetch("http://localhost:3000/theme-update", {

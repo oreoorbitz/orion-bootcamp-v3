@@ -3,19 +3,20 @@ import { htmlParser } from "../plantilla_motor/parserDehtml.ts";
 import { renderDOM } from "../plantilla_motor/renderizador.ts";
 import { injector } from "../injector.ts";
 import { iniciarServidor } from "./slightlyLate.ts";
+import { notificarRecargaPagina } from "./wsServer.ts";
 
 const plantillaPath = "/home/bambiux/code/Bambi-uxx/orion-bootcamp-v3/Ejercicios_etapa_2/typescript/server/themes/dev/templates/content_for_index.liquid";
 const outputPath = "/home/bambiux/code/Bambi-uxx/orion-bootcamp-v3/Ejercicios_etapa_2/typescript/server/themes/dev/dist/index.html";
 
 //  Contexto para la plantilla
 const contexto = {
-    settings: { titulo: "Mi tienda" },
-    producto: { titulo: "Camisa", descripcion: "De algodón" },
+    settings: { titulo: "Mi tiendota" },
+    producto: { titulo: "Kewpie", descripcion: "De algodón" },
 };
 
 export async function recargarYGenerarHTML() {
     try {
-        console.clear();
+        //console.clear();
         console.log("✅ Generando HTML desde la plantilla...");
 
         const entradaLiquid = await Deno.readTextFile(plantillaPath);
@@ -26,10 +27,14 @@ export async function recargarYGenerarHTML() {
         await Deno.writeTextFile(outputPath, htmlFinal);
         console.log("\n✅ Archivo `dist/index.html` generado exitosamente.");
 
-        // Inyectar `hotreload.ts` en el HTML
+        // 🛠️ Inyectar `hotreload.ts` en el HTML antes de recargar
         const tsPath = new URL("./hotreload.ts", import.meta.url).pathname;
         await injector(tsPath, outputPath);
         console.log("\n✅ Hot Reload inyectado correctamente en index.html.");
+
+        // Notificamos a los clientes WebSocket que deben recargar la página
+        notificarRecargaPagina();
+        console.log(" Señal de recarga enviada a los clientes WebSocket.");
 
         return "HTML generado correctamente";
     } catch (error) {
