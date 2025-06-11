@@ -53,3 +53,48 @@
  * - Usa `.startsWith()` y `.endsWith()` para clasificar cada string
  * - Recorta los delimitadores (`{{ }}`, `{% %}`) usando `.slice()` o `.replace()` para extraer solo el contenido
  */
+
+
+const entrada = [
+   "Hola, ",
+   "{{ Nancy }}",
+   ". ",
+  "{% if admin %}",
+   "Eres administrador.",
+   "{% endif %}"
+]
+
+
+type TipoTokenPlantilla = 'texto' | 'variable' | 'directiva';
+
+interface TokenPlantilla {
+  tipo: TipoTokenPlantilla;
+  contenido: string;
+}
+
+function clasificarTokensPlantilla(tokens: string[]): TokenPlantilla[] {
+  return tokens.map(token => {
+    const trimmed = token.trim();
+
+    if (trimmed.startsWith('{{') && trimmed.endsWith('}}')) {
+      return {
+        tipo: 'variable',
+        contenido: trimmed.slice(2, -2).trim()
+      };
+    }
+
+    if (trimmed.startsWith('{%') && trimmed.endsWith('%}')) {
+      return {
+        tipo: 'directiva',
+        contenido: trimmed.slice(2, -2).trim()
+      };
+    }
+
+    return {
+      tipo: 'texto',
+      contenido: token
+    };
+  });
+}
+
+console.log(clasificarTokensPlantilla(entrada));
