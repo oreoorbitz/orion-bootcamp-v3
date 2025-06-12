@@ -10,7 +10,8 @@ let filtrosRegistrados: {} = {
   upcase: (x) => x.toUpperCase(),
   reverse: (x) => x.split('').reverse().join(''),
   asset_url: (x: string) => `./assets/${x}`,
-  stylesheet_tag: (x: string) => `<link rel="stylesheet" href="${x}"></link>`
+  stylesheet_tag: (x: string) => `<link rel="stylesheet" href="${x}"></link>`,
+  money: (x: number) => (x/100).toFixed(2)
 }
 
 

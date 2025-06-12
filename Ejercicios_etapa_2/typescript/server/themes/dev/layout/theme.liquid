@@ -2,6 +2,7 @@
    <head>
       <meta charset="UTF-8"></meta>
       <title>{{ settings.titulo }}</title>
+      {{ "theme.css" | asset_url | stylesheet_tag }}
    </head>
    <body>
       {{ content_for_index }}

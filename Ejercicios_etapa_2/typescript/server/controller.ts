@@ -9,19 +9,13 @@ import { context } from "./contextPlease.ts";
 const plantillaPath = "/home/bambiux/code/Bambi-uxx/orion-bootcamp-v3/Ejercicios_etapa_2/typescript/server/themes/dev/templates/content_for_index.liquid";
 const outputPath = "/home/bambiux/code/Bambi-uxx/orion-bootcamp-v3/Ejercicios_etapa_2/typescript/server/themes/dev/dist/index.html";
 
-//  Contexto para la plantilla
-const contexto = {
-    settings: { titulo: "Mi tiendota" },
-    producto: { titulo: "Kewpie", descripcion: "De algodón" },
-};
-
 export async function recargarYGenerarHTML() {
     try {
         //console.clear();
         console.log("✅ Generando HTML desde la plantilla...");
 
         const entradaLiquid = await Deno.readTextFile(plantillaPath);
-        const plantillaRenderizada = liquidEngine(entradaLiquid, contexto);
+        const plantillaRenderizada = liquidEngine(entradaLiquid, context);
         const arbolDOM = htmlParser(await plantillaRenderizada);
         const htmlFinal = renderDOM(arbolDOM);
 
