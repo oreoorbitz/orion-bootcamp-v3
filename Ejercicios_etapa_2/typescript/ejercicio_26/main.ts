@@ -117,7 +117,7 @@
  */
 import { zip } from "jsr:@deno-library/compress";
 import { debounce } from "jsr:@std/async/debounce";
-
+import { notificarReloadCSS, notificarRecargaPagina } from "../server/wsServer.ts";
 
 const path = (str: string) => new URL(str, import.meta.url).pathname;
 
@@ -214,26 +214,3 @@ async function empaquetarYEnviarTema(pathModified: string ) {
     console.log("🗑️ ZIP eliminado.");
 }
 observarCambios();
-
-
-/* async function probarEnvioSimple() {
-    console.log("📦 Enviando objeto JSON al servidor...");
-
-    // 📝 Crear un objeto de prueba
-    const datosDePrueba = {
-        mensaje: "Hola servidor, probando lógica!",
-        timestamp: new Date().toISOString(),
-    };
-
-    // 📂 Crear FormData y adjuntar JSON
-    const formData = new FormData();
-    formData.append("datos", new Blob([JSON.stringify(datosDePrueba)], { type: "application/json" }));
-
-    // 🚀 Enviar solicitud POST
-    const response = await fetch("http://localhost:3000/theme-update", {
-        method: "POST",
-        body: formData
-    });
-
-    console.log("📝 Respuesta del servidor:", await response.text());
-} */
