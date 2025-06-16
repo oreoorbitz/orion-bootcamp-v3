@@ -55,3 +55,42 @@
  * - Recuerda que en esta etapa aún **no debes interpretar las directivas** (`{% %}`)
  * - Concatenar los resultados con `.join('')` al final puede ayudarte a construir la cadena completa
  */
+
+
+const tokensEjemplo = [
+    { tipo: "texto", contenido: "Hola, " },
+    { tipo: "variable", contenido: "nombre" },
+    { tipo: "texto", contenido: ". Bienvenido a " },
+    { tipo: "variable", contenido: "ciudad" },
+    { tipo: "texto", contenido: "." }
+  ];
+  
+  const contextoEjemplo = {
+    nombre: "Carlos",
+    ciudad: "Madrid"
+  };
+
+  type TokenPlantilla = {
+    tipo: "texto" | "variable" | "directiva";
+    contenido: string;
+  };
+  
+  function renderizarVariables(
+    tokens: TokenPlantilla[],
+    contexto: Record<string, any>
+  ): string {
+    return tokens
+      .map((token) => {
+        if (token.tipo === "variable") {
+          return contexto[token.contenido] ?? "";
+        } else {
+          return token.contenido;
+        }
+      })
+      .join("");
+  }
+  
+  
+  const resultado = renderizarVariables(tokensEjemplo, contextoEjemplo);
+  console.log(resultado);
+  
