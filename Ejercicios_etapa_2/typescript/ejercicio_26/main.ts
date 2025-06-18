@@ -171,7 +171,7 @@ async function empaquetarYEnviarTema(pathModified: string ) {
     const folder = pathModified.split("/").slice(0, -1).pop() ?? '';
     const fileModified = pathModified.split("/").pop() ?? ''
     const fileModifiedName = fileModified.split(".")[0] ?? '';
-    const rutaZipFolder = Deno.realPathSync(".");
+    const rutaZipFolder = path(".");
     const archivoZip = `${rutaZipFolder}/${fileModifiedName}.zip`;
 
     try {
