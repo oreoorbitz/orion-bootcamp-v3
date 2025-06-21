@@ -2,7 +2,7 @@
  * MÓDULO 2: CLASIFICACIÓN DE ETIQUETAS
  *
  * 🧠 Concepto clave:
- * Los navegadores no solo leen las etiquetas HTML — también interpretan si están *abriendo* algo (`<div>`),
+ * Los navegadores no solo leen las etiquetas HTML; también interpretan si están *abriendo* algo (`<div>`),
  * *cerrando* algo (`</div>`), o si son *autocontenidas* (`<img />`).
  * Antes de poder construir una estructura similar al DOM (el árbol que representa una página),
  * necesitamos clasificar los tokens generados en el módulo anterior.

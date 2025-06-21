@@ -88,6 +88,7 @@
  * - Recorta espacios usando `.trim()` en cada parte del filtro
  * - Puedes lanzar un error si el filtro no está definido
  * - Reutiliza el motor completo: primero bucles, luego condiciones, luego filtros → orden importa
+ *
  */
 
 /**

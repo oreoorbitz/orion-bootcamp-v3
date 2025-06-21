@@ -22,11 +22,13 @@
  * En nuestros ejercicios, los strings de entrada son escritos dentro de código JavaScript
  * y usamos comillas dobles (`"`) como delimitador externo.
  * Por eso, si el contenido del string también contiene comillas dobles,
- * **debes escaparlas con una barra invertida (`\"`)** para evitar errores de sintaxis.
+ * debes escaparlas con una barra invertida (`\"`)** para evitar errores de sintaxis.
+ * Si no quieres usar los escapes con la barra invertida puedes usar comillas simples; pero
+ * debes asegurarte de que las utilices adecuadamente.
  *
  * Ejemplo:
  * ```ts
- * const entrada = "{% assign mensaje = \\\"Fruta disponible:\\\" %}";
+ * const entrada = "{% assign mensaje = \"Fruta disponible:\" %}";
  * ```
  * Esto es lo que permite que el parser lea el contenido correctamente como parte de la plantilla Liquid.
  *

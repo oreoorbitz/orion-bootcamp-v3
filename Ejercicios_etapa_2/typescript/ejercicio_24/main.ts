@@ -61,7 +61,9 @@
  * <link rel="stylesheet" href="./assets/theme.css" />
  * ```
  *
- * 5. Crea o edita el archivo `server/hotreload.ts` para agregar soporte a recarga de CSS sin recargar toda la página:
+ * 5. Edita el archivo `server/hotreload.ts` para agregar soporte a recarga de CSS sin recargar toda la página, recuerda
+ * que hotreload.ts debe seguir monitoreando los cambios y recargar si encuentra cambios en los archivos liquid, esta es
+ * una sugerencia de código o guia:
  *
  * ```ts
  * const link = document.querySelector('link[rel="stylesheet"]');
@@ -78,7 +80,8 @@
  * ```
  *
  * 6. Modifica tu servidor WebSocket (`server/wsServer.ts`) para enviar `{ type: 'reload-css' }`
- *    cuando detecte cambios en archivos `.css` dentro de la carpeta `assets/`:
+ *    cuando detecte cambios en archivos `.css` dentro de la carpeta `assets/` y debe de seguir monitoreando cambios
+ *    en los archivos liquid, código de ejemplo:
  *
  * ```ts
  * if (eventoDetectado.endsWith(".css")) {
@@ -110,6 +113,7 @@
  * - Tu HTML contiene una hoja de estilos enlazada
  * - Si editas `theme.css`, la hoja se vuelve a aplicar automáticamente sin recargar toda la página
  * - Puedes ver cambios visuales como colores o fuentes en tiempo real
+ * - Si editas los archivos liquid se recarga toda la página
  *
  * 📌 Consejo:
  * - El filtro `asset_url` es una convención útil para mantener rutas organizadas
