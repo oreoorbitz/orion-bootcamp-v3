@@ -294,20 +294,23 @@ function renderizarVariables(tokens: TokenPlantilla[], contexto: Record<string, 
 async function procesarConLayout(htmlRenderizado: string, contexto: Record<string, any>): Promise<string> {
     const rutaLayout = new URL("../server/themes/dev/layout/theme.liquid", import.meta.url).pathname;
 
-    // Verificar si el archivo `theme.liquid` existe
     try {
         await Deno.stat(rutaLayout);
     } catch {
         throw new Error(`Error: El layout '${rutaLayout}' no existe. Verifica que esté en la carpeta correcta.`);
     }
 
-    // Leer el contenido del layout
-    let contenidoLayout = await Deno.readTextFile(rutaLayout);
+    const contenidoLayout = await Deno.readTextFile(rutaLayout);
 
-    // Reemplazar `{{ content_for_index }}` con el HTML renderizado
-    let layoutConContenido = contenidoLayout.replace("{{ content_for_index }}", htmlRenderizado);
+    console.log('test0r1', contenidoLayout)
 
-    // Procesar el layout con `liquidEngine()` para aplicar variables globales
+    if (!contenidoLayout.includes("{{ content_for_layout }}")) {
+        throw new Error("Error: el layout no contiene '{{ content_for_layout }}'. Debes actualizar tu theme.liquid.");
+    }
+
+    // Sustituimos de forma estricta
+    const layoutConContenido = contenidoLayout.replace("{{ content_for_layout }}", htmlRenderizado);
+
     return liquidEngine(layoutConContenido, contexto, false);
 }
 

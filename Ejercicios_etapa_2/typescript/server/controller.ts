@@ -8,27 +8,33 @@ import { context } from "./contextPlease.ts";
 
 
 const plantillaPath = new URL("./themes/dev/templates/content_for_index.liquid", import.meta.url).pathname;
+const layoutPath = new URL("./themes/dev/layout/theme.liquid", import.meta.url).pathname;
 const outputPath = new URL("./themes/dev/dist/index.html", import.meta.url).pathname;
 
 export async function recargarYGenerarHTML() {
     try {
-        //console.clear();
         console.log("✅ Generando HTML desde la plantilla...");
 
-        const entradaLiquid = await Deno.readTextFile(plantillaPath);
-        const plantillaRenderizada = liquidEngine(entradaLiquid, context);
-        const arbolDOM = htmlParser(await plantillaRenderizada);
-        const htmlFinal = renderDOM(arbolDOM);
+        // 🔁 Aquí podemos cambiar dinámicamente la ruta del template
+        const rutaTemplate = new URL("./themes/dev/templates/content_for_index.liquid", import.meta.url).pathname;
+        const entradaLiquid = await Deno.readTextFile(rutaTemplate);
 
-        await Deno.writeTextFile(outputPath, htmlFinal);
+        // 👇 Renderizamos sin layout (solo el contenido de la página)
+        const contenidoRenderizado = await liquidEngine(entradaLiquid, context, false);
+
+        // 👇 Lo pasamos al layout usando la nueva variable estándar
+        const htmlFinal = await liquidEngine(contenidoRenderizado, { ...context, content_for_layout: contenidoRenderizado }, true);
+
+        const arbolDOM = htmlParser(htmlFinal);
+        const htmlRenderizado = renderDOM(arbolDOM);
+
+        await Deno.writeTextFile(outputPath, htmlRenderizado);
         console.log("\n✅ Archivo `dist/index.html` generado exitosamente.");
 
-        // 🛠️ Inyectar `hotreload.ts` en el HTML antes de recargar
         const tsPath = new URL("./hotreload.ts", import.meta.url).pathname;
         await injector(tsPath, outputPath);
         console.log("\n✅ Hot Reload inyectado correctamente en index.html.");
 
-        // Notificamos a los clientes WebSocket que deben recargar la página
         notificarRecargaPagina();
         console.log(" Señal de recarga enviada a los clientes WebSocket.");
 
