@@ -6,6 +6,7 @@ import { iniciarServidor } from "./slightlyLate.ts";
 import { notificarRecargaPagina } from "./wsServer.ts";
 import { context } from "./contextPlease.ts";
 
+
 const plantillaPath = new URL("./themes/dev/templates/content_for_index.liquid", import.meta.url).pathname;
 const outputPath = new URL("./themes/dev/dist/index.html", import.meta.url).pathname;
 

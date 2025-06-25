@@ -1,72 +1,43 @@
 import { DatabaseSync } from "node:sqlite";
-import { seedProducts, seedCollections, seedProductCollections } from "../seedData.ts";
 
-const db = new DatabaseSync("test.db");
+const normalizeObject = (obj: any) => {
+    return Object.fromEntries(
+        Object.entries(obj).map(([key, value]) => [key, value === null ? undefined : value])
+    );
+};
 
-// Crear tablas si no existen
-db.exec(`
-  CREATE TABLE IF NOT EXISTS products (
-    id INTEGER PRIMARY KEY,
-    title TEXT,
-    handle TEXT,
-    precio INTEGER
-  );
-  
-  CREATE TABLE IF NOT EXISTS collections (
-    id INTEGER PRIMARY KEY,
-    title TEXT,
-    handle TEXT
-  );
+const db = new DatabaseSync("data.db"); // ← use the same DB name as planter.ts
 
-  CREATE TABLE IF NOT EXISTS product_collections (
-    productId INTEGER,
-    collectionId INTEGER
-  );
-`);
+// Obtener productos
+const products = db.prepare("SELECT id, title, handle, precio FROM products").all()
+  .map((row) => ({ ...row }));
 
-// Insertar datos solo si la tabla está vacía
-function isTableEmpty(tableName: string): boolean {
-  const result = db.prepare(`SELECT COUNT(*) as count FROM ${tableName}`).get();
-  return result.count === 0;
-}
+// Obtener colecciones
+const collectionsRaw = db.prepare("SELECT id, title, handle FROM collections").all()
+  .map((row) => ({ ...row }));
 
-if (isTableEmpty("products")) {
-  const stmt = db.prepare("INSERT INTO products (id, title, handle, precio) VALUES (?, ?, ?, ?)");
-  for (const p of seedProducts) {
-    stmt.run(p.id, p.title, p.handle, p.precio);
-  }
-}
+// Obtener relaciones producto-colección
+const productCollections = db.prepare("SELECT productId, collectionId FROM product_collections").all()
+  .map((row) => ({ ...row }));
 
-if (isTableEmpty("collections")) {
-  const stmt = db.prepare("INSERT INTO collections (id, title, handle) VALUES (?, ?, ?)");
-  for (const c of seedCollections) {
-    stmt.run(c.id, c.title, c.handle);
-  }
-}
+// Asociar productos a colecciones
+const collections = collectionsRaw.map((collection) => {
+  const productosDeLaColeccion = productCollections
+    .filter((pc) => pc.collectionId === collection.id)
+    .map((pc) => products.find((p) => p.id === pc.productId))
+    .filter(Boolean); // elimina posibles undefined si hay inconsistencias
 
-if (isTableEmpty("product_collections")) {
-  const stmt = db.prepare("INSERT INTO product_collections (productId, collectionId) VALUES (?, ?)");
-  for (const pc of seedProductCollections) {
-    stmt.run(pc.productId, pc.collectionId);
-  }
-}
+  return {
+    ...collection,
+    products: productosDeLaColeccion,
+  };
+});
 
-// ✅ Verificar que los datos fueron insertados correctamente
-console.log("🛍️ Productos:");
-console.table(db.prepare("SELECT * FROM products").all());
-
-console.log("🗂️ Colecciones:");
-console.table(db.prepare("SELECT * FROM collections").all());
-
-console.log("🔗 Relaciones producto/colección:");
-console.table(db.prepare("SELECT * FROM product_collections").all());
-
+// Exportar el contexto
 export const context = {
   settings: {
-    titulo: "Rosita",
+    titulo: "Rojito",
   },
-  // Este objeto se reemplazará más adelante por una consulta real
-  products: seedProducts,
-  collections: seedCollections,
-  productCollections: seedProductCollections,
+  products,
+  collections,
 };
