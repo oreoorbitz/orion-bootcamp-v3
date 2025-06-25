@@ -1,15 +1,15 @@
 /**
- * 🧩 MÓDULO 28: Reemplazar datos estáticos con una base de datos SQLite usando Drizzle
+ * 🧩 MÓDULO 28: Reemplazar datos estáticos con una base de datos SQLite
  *
  * 🧠 Concepto clave:
  * En sistemas reales como Shopify, los datos como productos y colecciones viven en una base de datos.
  * En este módulo, vas a reemplazar tu `context.ts` estático por una versión conectada a una base de datos real.
- * Usarás Drizzle ORM con SQLite para crear, poblar y consultar tu modelo de datos.
+ * Usarás SQLite y consultas SQL simples para obtener los datos.
  *
  * 🎯 Objetivo:
- * - Construir un modelo funcional usando SQLite y Drizzle
- * - Definir la estructura de datos (tablas) y poblarla con `seedData.ts`
- * - Generar el objeto `context` directamente desde la base de datos
+ * - Consultar datos de una base de datos SQLite
+ * - Generar el objeto `context` dinámicamente desde esas consultas
+ * - Usar TypeScript para combinar esos datos en un objeto estructurado
  *
  * ✅ Instrucciones:
  *
@@ -20,43 +20,43 @@
  *      - `templates/content_for_index.liquid`
  *      - `assets/theme.css`
  *
- * 2. **Crea y configura `contextPlease.ts`**
- *    - Este módulo será responsable de **todo el modelo (M de MVC)**.
- *    - Ubícalo en: `typescript/server/contextPlease.ts`
+ * 2. **Ejecuta el script de plantado**
+ *    - En la carpeta `typescript/`, encontrarás un script llamado `planter.ts`.
+ *    - Este script crea un archivo `data.db` con datos de ejemplo para productos, colecciones y relaciones.
+ *    - Lógralo ejecutando:
+ *      ```bash
+ *      deno run --allow-read --allow-write Ejercicios_etapa_2/typescript/planter.ts
+ *      ```
+ *    - Puedes abrir el archivo para ver cómo se insertan los datos si quieres entender cómo funcionan las sentencias SQL `INSERT`.
  *
- * 3. **Importa Drizzle y SQLite directamente**
- *    Dentro de `contextPlease.ts`, importa los módulos necesarios:
+ * 3. **Actualiza `contextPlease.ts` para leer desde la base de datos**
+ *    - Este módulo ya existe desde el módulo anterior.
+ *    - Conéctate a `data.db` usando `DatabaseSync` del módulo `node:sqlite`.
+ *    - Investiga cómo escribir sentencias SQL simples: `SELECT`, `WHERE`, `JOIN`, etc.
+ *    - Usa `db.prepare(...).all()` para realizar **tres consultas separadas**:
+ *      - Una para obtener todos los productos (`id`, `title`, `handle`, `precio`)
+ *      - Una para obtener todas las colecciones (`id`, `title`, `handle`)
+ *      - Una para obtener las relaciones entre productos y colecciones (`productId`, `collectionId`)
+ *
+ * 4. **Construye el objeto `context`**
+ *    - Usa la lógica de TypeScript para unir los productos y las colecciones.
+ *    - Piensa cómo podrías combinar estas tres listas para que cada colección tenga un array de productos dentro.
+ *    - No necesitas una sola gran consulta SQL — puedes hacerlo desde JavaScript con `.map()` y `.filter()`.
+ *
+ *    Tu objeto `context` final debería verse así:
  *    ```ts
- *    import { drizzle } from "https://deno.land/x/drizzle_orm@0.30.7/mod.ts";
- *    import { sqliteTable, integer, text } from "https://deno.land/x/drizzle_orm@0.30.7/sqlite/mod.ts";
- *    import { DB } from "https://deno.land/x/sqlite/mod.ts";
+ *    export const context = {
+ *      settings: {
+ *        titulo: "titulo",
+ *      },
+ *      products: [...],      // todos los productos
+ *      collections: [...],   // cada una con sus productos correspondientes
+ *    };
  *    ```
  *
- * 4. **Define las tablas directamente en `contextPlease.ts`**
- *    - `products`: columnas `id`, `title`, `handle`, `precio`
- *    - `collections`: columnas `id`, `title`, `handle`
- *    - `productCollections`: columnas `productId`, `collectionId`
- *    - Usa `sqliteTable(...)` para cada una
- *
- * 5. **Importa `seedData.ts` y pobla las tablas**
- *    - Importa desde: `./seedData.ts`
- *    - Usa `.insert(...)` para agregar productos, colecciones y asociaciones
- *    - Este paso solo debe ejecutarse si la tabla está vacía
- *
- * 6. **Construye el objeto `context`**
- *    - Haz consultas con Drizzle para obtener todos los productos y colecciones
- *    - Recorre `productCollections` para asociar productos a cada colección
- *    - Arma un objeto final con:
- *      ```ts
- *      export const context = {
- *        products: [...],
- *        collections: [...], // cada una con sus productos
- *      };
- *      ```
- *
- * 7. **No modifiques `controller.ts`**
- *    - `controller.ts` debe seguir importando el contexto de `contextPlease.ts`
- *    - El resto del pipeline (renderizado, dist/, hotreload) no necesita cambiar
+ * 5. **No modifiques `controller.ts`**
+ *    - `controller.ts` debe seguir importando el contexto desde `contextPlease.ts`.
+ *    - El resto del pipeline (renderizado, dist/, hotreload) no necesita cambiar.
  *
  * 🧪 Prueba:
  * - Inicia el servidor con:
@@ -79,30 +79,27 @@
  * │   │   ├── assets/
  * │   │   │   └── theme.css
  * │   │   └── main.ts
- * │   ├── server/
- * │   │   ├── controller.ts
- * │   │   ├── contextPlease.ts   ← contiene todo el modelo y consultas
- * │   │   ├── seedData.ts
- * │   │   ├── slightlyLate.ts
- * │   │   ├── wsServer.ts
- * │   │   └── themes/
- * │   │       └── dev/
- * │   │           ├── layout/
- * │   │           │   └── theme.liquid
- * │   │           ├── templates/
- * │   │           │   └── content_for_index.liquid
- * │   │           ├── assets/
- * │   │           │   └── theme.css
- * │   │           └── dist/
- * │   │               └── index.html
+ * │   ├── planter.ts             ← Proporcionado para crear la base de datos
+ * │   └── server/
+ * │       ├── controller.ts
+ * │       ├── contextPlease.ts   ← contiene todo el modelo y consultas
+ * │       ├── slightlyLate.ts
+ * │       ├── wsServer.ts
+ * │       └── themes/
+ * │           └── dev/
+ * │               ├── layout/
+ * │               ├── templates/
+ * │               ├── dist/
+ * │               │   ├── assets/
+ * │               │   │   └── theme.css
+ * │               │   └── index.html
  *
  * 🧠 Recomendación:
- * No te compliques con joins complejos. Si necesitas, usa múltiples consultas
- * y combínalas tú mismo desde JavaScript para construir la relación muchos-a-muchos.
+ * No te compliques con joins complejos. Usa TypeScript para unir los datos después de consultarlos.
  *
  * 🎯 Resultado esperado:
  * - Los datos de productos y colecciones ahora provienen de SQLite
- * - El objeto `context` se construye dinámicamente desde el modelo
+ * - El objeto `context` se construye dinámicamente desde la base de datos
  * - Consolidaste tu modelo en un solo módulo (`contextPlease.ts`), lo cual
  *   simplifica el patrón MVC que usarás de aquí en adelante.
  */
