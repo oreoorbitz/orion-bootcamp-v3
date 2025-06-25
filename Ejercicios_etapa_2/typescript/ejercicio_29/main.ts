@@ -21,27 +21,38 @@
  *    - `assets/theme.css`
  *    - `main.ts`
  *
- *    Si vienes del ejercicio anterior (`ejercicio_28`), esta estructura ya debe existir.
+ *    Puedes copiar el contenido de tu tema desde `ejercicio_28`, incluyendo las carpetas `layout/`, `templates/` y `assets/`.
  *
  * 2. **Actualiza tu archivo `layout/theme.liquid`**
  *
  *    - Reemplaza el uso de `{{ content_for_index }}` por `{{ content_for_layout }}`
  *    - Este marcador actuará como punto de entrada dinámico para el contenido de cualquier plantilla.
  *
- * 3. **Actualiza `controller.ts` para combinar layout + template**
+ * 3. **Actualiza tu motor de plantillas**
+ *
+ *    - Debes asegurarte de que tu motor de plantillas (no importa cómo lo hayas nombrado o dividido en funciones)
+ *      valide **que exista la variable `content_for_layout`** en el contexto.
+ *    - Ya **no debe haber ninguna lógica dentro del motor de plantillas que busque `content_for_index` directamente**.
+ *    - La única variable que debe usarse para inyectar contenido en el layout es `{{ content_for_layout }}`.
+ *
+ *    Esta separación es importante para que en el futuro puedas reutilizar la misma estructura de layout
+ *    con múltiples plantillas sin cambiar la lógica del motor.
+ *
+ * 4. **Actualiza `controller.ts` para combinar layout + template**
  *
  *    Dentro de tu función de renderizado:
  *
  *    - Lee el archivo `templates/content_for_index.liquid` como plantilla base de contenido.
  *    - Luego, renderízalo con el contexto actual.
- *    - Usa el resultado como valor de `content_for_layout` y pasa ese dato al procesar `layout/theme.liquid`.
+ *    - Usa el resultado como valor de `content_for_layout` y pásalo al motor de plantillas para procesar `layout/theme.liquid`.
  *    - Escribe el HTML final resultante dentro de `themes/dev/dist/index.html`.
  *
- *    También debes asegurarte de que tu lógica de lectura de archivos `.liquid` sea robusta:
- *    - Verifica rutas con cuidado, ya que en el próximo módulo se agregarán plantillas adicionales.
- *    - El nombre del archivo (`content_for_index.liquid`) será reemplazado dinámicamente más adelante.
+ *    El `controller.ts` debe ser el único lugar donde decides **qué archivo de plantilla se va a usar**.
+ *    Esto te prepara para poder asociar diferentes archivos `.liquid` a diferentes rutas más adelante.
  *
- * 4. **Prueba el flujo completo**
+ *    ⚠️ **Asegúrate de que tu motor no tenga ninguna ruta hardcoded ni que lea `content_for_index` directamente.**
+ *
+ * 5. **Prueba el flujo completo**
  *
  *    - Verifica que `layout/theme.liquid` y `templates/content_for_index.liquid` se combinen correctamente
  *      y que el archivo `dist/index.html` contenga ambos resultados.
