@@ -50,13 +50,20 @@
  *        titulo: "titulo",
  *      },
  *      products: [...],      // todos los productos
- *      collections: [...],   // cada una con sus productos correspondientes
+ *      collections: [...],   // cada colección con su propiedad `products`: un array de productos relacionados
  *    };
  *    ```
  *
- * 5. **No modifiques `controller.ts`**
- *    - `controller.ts` debe seguir importando el contexto desde `contextPlease.ts`.
- *    - El resto del pipeline (renderizado, dist/, hotreload) no necesita cambiar.
+ * 5. **Usa la plantilla Liquid proporcionada**
+ *    - Copia el archivo `liquid_snippets/28_content_for_index.liquid` y colócalo dentro de `templates/content_for_index.liquid`.
+ *    - Esta plantilla recorre todas las colecciones, muestra sus productos, y luego muestra todos los productos disponibles.
+ *    - Sirve como prueba para verificar que tu `context` está correctamente construido.
+ *
+ * 6. **Actualiza tu motor Liquid si es necesario**
+ *    - Esta plantilla usa `for` dentro de `for` (bucles anidados) y accede a propiedades profundamente anidadas.
+ *    - Si tu motor Liquid no soporta esto aún, modifícalo hasta que la plantilla funcione correctamente.
+ *    - Puedes empezar usando un objeto `context` con datos estáticos para validar que la plantilla funciona,
+ *      y luego reemplazarlo por los datos extraídos dinámicamente desde la base de datos.
  *
  * 🧪 Prueba:
  * - Inicia el servidor con:
