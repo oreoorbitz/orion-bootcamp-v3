@@ -21,7 +21,7 @@
  *    - `assets/theme.css`
  *    - `main.ts`
  *
- *    Si vienes del ejercicio anterior (`ejercicio_28`), esta estructura ya debe existir.
+ *    Puedes copiar el contenido de tu tema desde `ejercicio_28`, incluyendo las carpetas `layout/`, `templates/` y `assets/`.
  *
  * 2. **Actualiza tu archivo `layout/theme.liquid`**
  *
