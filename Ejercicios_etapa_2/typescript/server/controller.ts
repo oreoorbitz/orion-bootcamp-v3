@@ -6,8 +6,8 @@ import { iniciarServidor } from "./slightlyLate.ts";
 import { notificarRecargaPagina } from "./wsServer.ts";
 import { context } from "./contextPlease.ts";
 
-const plantillaPath = "/home/bambiux/code/Bambi-uxx/orion-bootcamp-v3/Ejercicios_etapa_2/typescript/server/themes/dev/templates/content_for_index.liquid";
-const outputPath = "/home/bambiux/code/Bambi-uxx/orion-bootcamp-v3/Ejercicios_etapa_2/typescript/server/themes/dev/dist/index.html";
+const plantillaPath = new URL("./themes/dev/templates/content_for_index.liquid", import.meta.url).pathname;
+const outputPath = new URL("./themes/dev/dist/index.html", import.meta.url).pathname;
 
 export async function recargarYGenerarHTML() {
     try {
