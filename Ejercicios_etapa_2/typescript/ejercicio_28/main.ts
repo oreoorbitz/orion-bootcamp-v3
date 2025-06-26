@@ -110,3 +110,105 @@
  * - Consolidaste tu modelo en un solo módulo (`contextPlease.ts`), lo cual
  *   simplifica el patrón MVC que usarás de aquí en adelante.
  */
+import { zip } from "jsr:@deno-library/compress";
+import { debounce } from "jsr:@std/async/debounce";
+
+function path(stl: string) {
+  return new URL(stl, import.meta.url).pathname
+
+}
+
+export async function observarCambios() {
+    const rutas = [
+        "templates",
+        "layout",
+        "assets"
+    ].map(path)
+
+    // 🔍 Validar que las rutas existan antes de observar cambios
+    for (const path of rutas) {
+        try {
+            await Deno.stat(path);
+        } catch {
+            console.error(`❌ Error: La ruta ${path} no existe.`);
+            Deno.exit(1); // Salimos del programa si alguna ruta no existe
+        }
+    }
+
+    console.log("✅ Todas las rutas existen, iniciando observación...");
+
+    const watcher = Deno.watchFs(rutas);
+    const procesarCambio = debounce((event: Deno.FsEvent) => {
+        console.log(`🔄 Archivo(s) modificado(s): ${event.paths.join(", ")}`);
+        const pathModificado = event.paths[0]
+        empaquetarYEnviarTemaConControl(pathModificado);
+    }, 500); // Esperamos 500ms para evitar activaciones múltiples
+
+    for await (const event of watcher) {
+        procesarCambio(event);
+    }
+}
+
+let bloqueado = false;
+
+async function empaquetarYEnviarTemaConControl(pathModificado: string) {
+  console.log(pathModificado)
+  if (bloqueado) {
+        console.log("⚠️ Procesamiento en curso, esperando...");
+        return;
+    }
+
+    bloqueado = true;
+    await empaquetarYEnviarTema(pathModificado); // Llamamos la función original
+    setTimeout(() => bloqueado = false, 1000); // Esperamos 1 segundo antes de permitir otra ejecución
+}
+
+async function empaquetarYEnviarTema(pathModificado: string) {
+    console.log("📦 Empaquetando tema...");
+    const nombreArchivoModificado = pathModificado.split("/").pop()
+    const nombreCarpeta = pathModificado.split("/").slice(0,-1).pop() ?? ""
+    const nombreLimpio = nombreArchivoModificado?.split(".")[0] ?? ""
+    const tipoExtension = nombreArchivoModificado?.split(".")[1] ?? ""
+    // Ruta para el archivo zip
+    const rutaZipFolder = path(".")
+    const archivoZip = `${rutaZipFolder}/${nombreLimpio}.zip`;
+
+    try {
+        await Deno.stat(rutaZipFolder);
+    } catch {
+        console.log("📂 La carpeta no existe, creándola...");
+        await Deno.mkdir(rutaZipFolder, { recursive: true });
+    }
+
+    // 📦 Comprimir la carpeta
+    await zip.compress(pathModificado, archivoZip);
+    console.log("🔍 Verificando si el archivo ZIP fue creado...");
+    try {
+        await Deno.stat(archivoZip);
+        console.log("✅ ZIP encontrado correctamente!");
+    } catch {
+        console.log("⚠️ No se encontró el ZIP, algo falló en la compresión.");
+    }
+
+    console.log("✅ Tema comprimido correctamente!");
+    console.log("🚀 Enviando ZIP al servidor...");
+
+    // Crear FormData y adjuntar ZIP
+    const formData = new FormData();
+    const zipData = await Deno.readFile(archivoZip);
+    formData.append("archivo", new Blob([zipData]), nombreLimpio);
+    formData.append("tipoExtension", tipoExtension)
+    formData.append("carpeta",nombreCarpeta)
+    // Enviar solicitud POST
+    const response = await fetch("http://localhost:3000/theme-update", {
+        method: "POST",
+        body: formData
+    });
+
+    console.log("📝 Respuesta del servidor:", await response.text());
+
+    // 🗑️ Borrar el archivo ZIP después de enviarlo
+    await Deno.remove(archivoZip);
+    console.log("🗑️ ZIP eliminado.");
+}
+observarCambios();
