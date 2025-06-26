@@ -66,3 +66,32 @@
  * - Haz un bucle externo para recorrer los tokens y detectar el inicio y fin del `for`
  * - Asegúrate de mantener el orden de ejecución: primero condicionales, luego variables
  */
+
+
+interface TokenPlantilla {
+    tipo: "texto" | "variable" | "directiva";
+    contenido: string;
+  }
+  
+  export function procesarBucles(tokens: TokenPlantilla[], contexto: Record<string, any>): TokenPlantilla[] {
+    const resultado: TokenPlantilla[] = [];
+    let i = 0;
+  
+    while (i < tokens.length) {
+      const token = tokens[i];
+  
+      if (token.tipo === "directiva" && token.contenido.startsWith("for ")) {
+        // Extraer datos del for
+        const match = token.contenido.match(/^for (\w+) in (\w+)$/);
+        if (!match) {
+          throw new Error("Directiva for mal formada: " + token.contenido);
+        }
+  
+        const [, nombreItem, nombreLista] = match;
+        const lista = contexto[nombreLista];
+  
+        if (!Array.isArray(lista)) {
+          
+        }
+    }
+  }  
