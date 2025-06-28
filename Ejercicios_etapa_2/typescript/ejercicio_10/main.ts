@@ -82,3 +82,27 @@
  * - Puedes lanzar un error si el filtro no está definido
  * - Reutiliza el motor completo: primero bucles, luego condiciones, luego filtros → orden importa
  */
+
+
+function aplicarFiltros(
+    nombreVariable: string,
+    filtros: string[],
+    contexto: Record<string, any>,
+    filtrosRegistrados: Record<string, Function>
+  ): string {
+    
+    let valor = contexto[nombreVariable];
+  
+    
+    for (let filtro of filtros) {
+      filtro = filtro.trim();
+      const funcionFiltro = filtrosRegistrados[filtro];
+      if (!funcionFiltro) {
+        throw new Error(`Filtro no definido: ${filtro}`);
+      }
+      valor = funcionFiltro(valor);
+    }
+  
+    return valor;
+  }
+  
