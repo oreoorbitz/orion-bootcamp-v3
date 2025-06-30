@@ -12,5 +12,8 @@ export const products = [
   export const productCollections = [
     { productId: 1, collectionId: 1 },
     { productId: 2, collectionId: 1 },
-    { productId: 3, collectionId: 2 }
+    { productId: 3, collectionId: 2 },
+    { productId: 3, collectionId: 3 }, // none existing collection, to verify the code won't break if prsent
+    { productId: 4, collectionId: 1 }, // none existing product, to verify the code won't break if prsent
+    { productId: 1, collectionId: 1 }, // duplicate, to verify the code won't break if prsent
   ];
