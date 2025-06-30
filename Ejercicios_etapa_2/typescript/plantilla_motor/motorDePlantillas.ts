@@ -184,7 +184,7 @@ function sustituirVariables(token: TokenPlantilla, contexto: Record<string, any>
 
         // Acceder a propiedades anidadas en el contexto
         let valorVariable = nombreVariable.split('.').reduce((obj, key) => {
-            return obj && obj.hasOwnProperty(key) ? obj[key] : undefined;
+            return obj && Object.prototype.hasOwnProperty.call(obj, key) ? obj[key] : undefined;
         }, contexto);
 
         // **Eliminar comillas antes de procesar la variable**
@@ -312,12 +312,12 @@ async function procesarConLayout(htmlRenderizado: string, contexto: Record<strin
 }
 
  export async function liquidEngine(entradaInicial: string, contexto: Record<string, any>, aplicarLayout: boolean = true): Promise<string> {
-    //console.log("Entrada inicial en liquidEngine:\n", entradaInicial);
+    console.log("Entrada inicial en liquidEngine:\n", entradaInicial);
     //console.log('contextopasado', contexto)
 
     // Paso 1: Tokenización
     const entradaTokenizada = detectarTokensPlantilla(entradaInicial);
-    //console.log("Tokens de Liquid:\n", entradaTokenizada);
+    console.log("Tokens de Liquid:\n", entradaTokenizada);
 
     // Paso 2: Clasificación de tokens
     const entradaClasificada = clasificarTokensPlantilla(entradaTokenizada);

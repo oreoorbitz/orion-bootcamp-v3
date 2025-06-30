@@ -15,6 +15,7 @@ export async function recargarYGenerarHTML() {
         console.log("✅ Generando HTML desde la plantilla...");
 
         const entradaLiquid = await Deno.readTextFile(plantillaPath);
+        console.log('llamada de liquidengine')
         const plantillaRenderizada = liquidEngine(entradaLiquid, context);
         const arbolDOM = htmlParser(await plantillaRenderizada);
         const htmlFinal = renderDOM(arbolDOM);
