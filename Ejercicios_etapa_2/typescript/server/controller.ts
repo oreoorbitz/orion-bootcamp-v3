@@ -6,28 +6,50 @@ import { iniciarServidor } from "./slightlyLate.ts";
 import { notificarRecargaPagina } from "./wsServer.ts";
 import { context } from "./contextPlease.ts";
 
-const plantillaPath = "/home/bambiux/code/Bambi-uxx/orion-bootcamp-v3/Ejercicios_etapa_2/typescript/server/themes/dev/templates/content_for_index.liquid";
-const outputPath = "/home/bambiux/code/Bambi-uxx/orion-bootcamp-v3/Ejercicios_etapa_2/typescript/server/themes/dev/dist/index.html";
+function path(stl: string) {
+  return new URL(stl, import.meta.url).pathname
+
+}
+
+const templatePath = path("../server/themes/dev/templates/content_for_index.liquid");
+const layoutPath = path("../server/themes/dev/layout/theme.liquid");
+const outputPath = path("../server/themes/dev/dist/index.html");
 
 export async function recargarYGenerarHTML() {
     try {
-        //console.clear();
         console.log("✅ Generando HTML desde la plantilla...");
+        // 1. Leer la plantilla de contenido
+        const templateContent = await Deno.readTextFile(templatePath);
 
-        const entradaLiquid = await Deno.readTextFile(plantillaPath);
-        const plantillaRenderizada = liquidEngine(entradaLiquid, context);
-        const arbolDOM = htmlParser(await plantillaRenderizada);
+        // 2. Renderizar la plantilla de contenido con el contexto actual
+        const renderedContent = await liquidEngine(templateContent, context); // false = no aplicar layout todavía
+
+        // 3. Crear un nuevo contexto que incluya el contenido renderizado
+        const layoutContext = {
+            ...context,
+            content_for_layout: renderedContent
+        };
+
+        // 4. Leer el layout
+        const layoutContent = await Deno.readTextFile(layoutPath);
+
+        // 5. Renderizar el layout con el contexto que incluye content_for_layout
+        const finalTemplate = await liquidEngine(layoutContent, layoutContext);
+
+        // 6. Procesar el HTML final
+        const arbolDOM = htmlParser(finalTemplate);
         const htmlFinal = renderDOM(arbolDOM);
 
+        // 7. Escribir el archivo final
         await Deno.writeTextFile(outputPath, htmlFinal);
         console.log("\n✅ Archivo `dist/index.html` generado exitosamente.");
 
-        // 🛠️ Inyectar `hotreload.ts` en el HTML antes de recargar
+        // 8. Inyectar `hotreload.ts` en el HTML antes de recargar
         const tsPath = new URL("./hotreload.ts", import.meta.url).pathname;
         await injector(tsPath, outputPath);
         console.log("\n✅ Hot Reload inyectado correctamente en index.html.");
 
-        // Notificamos a los clientes WebSocket que deben recargar la página
+        // 9. Notificar a los clientes WebSocket que deben recargar la página
         notificarRecargaPagina();
         console.log(" Señal de recarga enviada a los clientes WebSocket.");
 
@@ -39,8 +61,8 @@ export async function recargarYGenerarHTML() {
 }
 
 export async function onThemeUpdate() {
-    // 🎨 Generar HTML sin volver a tocar el ZIP o eliminar la carpeta
-    console.log("🎨 Generando HTML desde la plantilla...");
+    // 🎨 Generar HTML combinando template + layout
+    console.log("🎨 Generando HTML combinando template + layout...");
     const resultado = await recargarYGenerarHTML();
 
     console.log("✅ Tema actualizado correctamente.");

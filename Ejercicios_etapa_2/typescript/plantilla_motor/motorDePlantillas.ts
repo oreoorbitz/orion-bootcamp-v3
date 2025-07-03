@@ -6,9 +6,9 @@ interface TokenPlantilla {
   directiva?: TipoDirectiva;
 }
 
-let filtrosRegistrados: {} = {
-  upcase: (x) => x.toUpperCase(),
-  reverse: (x) => x.split('').reverse().join(''),
+let filtrosRegistrados: Record<string, Function> = {
+  upcase: (x: string) => x.toUpperCase(),
+  reverse: (x: string) => x.split('').reverse().join(''),
   asset_url: (x: string) => `./assets/${x}`,
   stylesheet_tag: (x: string) => `<link rel="stylesheet" href="${x}"></link>`,
   money: (x: number) => (x/100).toFixed(2)
@@ -91,21 +91,34 @@ function procesarAsignaciones(tokens: TokenPlantilla[], contexto: Record<string,
 }
 
 
-// ✅ FUNCIÓN AUXILIAR: Procesa variables con filtros (igual que renderizarVariables pero para un solo token)
+// ✅ FUNCIÓN AUXILIAR: Procesa variables con filtros
 function procesarVariableConFiltros(token: TokenPlantilla, contexto: Record<string, any>): TokenPlantilla {
     if (token.tipo === "variable") {
         let partes = token.contenido.split('|').map(p => p.trim());
         let nombreVariable = partes.shift() ?? '';
         let filtros = partes;
 
-        // Obtener el valor de la variable del contexto
-        let valorVariable = nombreVariable.split('.').reduce((obj, key) => {
-            return obj && Object.prototype.hasOwnProperty.call(obj, key) ? obj[key] : undefined;
-        }, contexto);
+        // Obtener el valor inicial
+        let valorFinal: any;
 
-        let valorFinal = valorVariable !== undefined ? valorVariable : nombreVariable;
+        // Si es una cadena literal (entre comillas), usar el valor literal
+        if (nombreVariable.startsWith("'") && nombreVariable.endsWith("'")) {
+            valorFinal = nombreVariable.slice(1, -1); // Quitar las comillas
+        } else if (nombreVariable.startsWith('"') && nombreVariable.endsWith('"')) {
+            valorFinal = nombreVariable.slice(1, -1); // Quitar las comillas
+        } else {
+            // Obtener el valor de la variable del contexto
+            valorFinal = nombreVariable.split('.').reduce((obj, key) => {
+                return obj && Object.prototype.hasOwnProperty.call(obj, key) ? obj[key] : undefined;
+            }, contexto);
 
-        // Aplicar filtros si existen
+            // Si no está en el contexto, usar el nombre tal como está
+            if (valorFinal === undefined) {
+                valorFinal = nombreVariable;
+            }
+        }
+
+        // Aplicar filtros secuencialmente
         for (let filtro of filtros) {
             let filtroLimpio = filtro.trim();
             if (!filtrosRegistrados[filtroLimpio]) {
@@ -114,7 +127,7 @@ function procesarVariableConFiltros(token: TokenPlantilla, contexto: Record<stri
             valorFinal = filtrosRegistrados[filtroLimpio](valorFinal);
         }
 
-        return { tipo: "texto", contenido: valorFinal };
+        return { tipo: "texto", contenido: String(valorFinal) };
     }
 
     return token;
@@ -282,18 +295,30 @@ function renderizarVariables(tokens: TokenPlantilla[], contexto: Record<string, 
         if (token.tipo === "variable") {
             // Separar variable y filtros
             let partes = token.contenido.split('|').map(p => p.trim());
-            let nombreVariable = partes.shift() ?? ''; // Nombre de la variable
-            let filtros = partes; // Los filtros restantes
+            let nombreVariable = partes.shift() ?? '';
+            let filtros = partes;
 
-            // Obtener el valor de la variable del contexto
-            let valorVariable = nombreVariable.split('.').reduce((obj, key) => {
-                return obj && Object.prototype.hasOwnProperty.call(obj, key) ? obj[key] : undefined;
-            }, contexto);
+            // Obtener el valor inicial
+            let valorFinal: any;
 
-            // Si no está en el contexto, usar el nombre tal como está
-            let valorFinal = valorVariable !== undefined ? valorVariable : nombreVariable;
+            // Si es una cadena literal (entre comillas), usar el valor literal
+            if (nombreVariable.startsWith("'") && nombreVariable.endsWith("'")) {
+                valorFinal = nombreVariable.slice(1, -1); // Quitar las comillas
+            } else if (nombreVariable.startsWith('"') && nombreVariable.endsWith('"')) {
+                valorFinal = nombreVariable.slice(1, -1); // Quitar las comillas
+            } else {
+                // Obtener el valor de la variable del contexto
+                valorFinal = nombreVariable.split('.').reduce((obj, key) => {
+                    return obj && Object.prototype.hasOwnProperty.call(obj, key) ? obj[key] : undefined;
+                }, contexto);
 
-            // Aplicar filtros si existen
+                // Si no está en el contexto, usar el nombre tal como está
+                if (valorFinal === undefined) {
+                    valorFinal = nombreVariable;
+                }
+            }
+
+            // Aplicar filtros secuencialmente
             for (let filtro of filtros) {
                 let filtroLimpio = filtro.trim();
                 if (!filtrosRegistrados[filtroLimpio]) {
@@ -302,7 +327,7 @@ function renderizarVariables(tokens: TokenPlantilla[], contexto: Record<string, 
                 valorFinal = filtrosRegistrados[filtroLimpio](valorFinal);
             }
 
-            return valorFinal;
+            return String(valorFinal);
         }
 
         // Para tokens de texto, devolver el contenido tal como está
@@ -310,49 +335,8 @@ function renderizarVariables(tokens: TokenPlantilla[], contexto: Record<string, 
     }).join('');
 }
 
-// ✅ FUNCIÓN SIMPLIFICADA: Sin recursión, solo procesa variables simples del layout
-async function procesarConLayout(htmlRenderizado: string, contexto: Record<string, any>): Promise<string> {
-    const rutaLayout = new URL("../server/themes/dev/layout/theme.liquid", import.meta.url).pathname;
 
-    try {
-        await Deno.stat(rutaLayout);
-    } catch {
-        throw new Error(`Error: El layout '${rutaLayout}' no existe. Verifica que esté en la carpeta correcta.`);
-    }
-
-    let contenidoLayout = await Deno.readTextFile(rutaLayout);
-
-    // Reemplazar el contenido principal
-    let layoutConContenido = contenidoLayout.replace("{{ content_for_index }}", htmlRenderizado);
-
-    // Procesar solo las variables simples del layout (como {{ settings.titulo }})
-    layoutConContenido = layoutConContenido.replace(/\{\{\s*([^|}]+(?:\|[^}]*)?)\s*\}\}/g, (match, variable) => {
-        let partes = variable.split('|').map(p => p.trim());
-        let nombreVariable = partes.shift() ?? '';
-        let filtros = partes;
-
-        // Obtener valor de la variable
-        let valorVariable = nombreVariable.split('.').reduce((obj, key) => {
-            return obj && Object.prototype.hasOwnProperty.call(obj, key) ? obj[key] : undefined;
-        }, contexto);
-
-        let valorFinal = valorVariable !== undefined ? valorVariable : nombreVariable;
-
-        // Aplicar filtros si existen
-        for (let filtro of filtros) {
-            let filtroLimpio = filtro.trim();
-            if (filtrosRegistrados[filtroLimpio]) {
-                valorFinal = filtrosRegistrados[filtroLimpio](valorFinal);
-            }
-        }
-
-        return valorFinal;
-    });
-
-    return layoutConContenido;
-}
-
-export async function liquidEngine(entradaInicial: string, contexto: Record<string, any>, aplicarLayout: boolean = true): Promise<string> {
+export async function liquidEngine(entradaInicial: string, contexto: Record<string, any>): Promise<string> {
     console.log("Entrada inicial en liquidEngine:\n", entradaInicial);
     console.log("contexto pasado", contexto);
 
@@ -380,12 +364,7 @@ export async function liquidEngine(entradaInicial: string, contexto: Record<stri
     const entradaRenderizada = renderizarVariables(entradaProcesada, contexto, filtrosRegistrados);
     console.log("Resultado final de Liquid:\n", entradaRenderizada);
 
-    // Paso 7: Aplicar layout si es necesario
     let resultadoFinal = entradaRenderizada;
-    if (aplicarLayout) {
-        resultadoFinal = await procesarConLayout(entradaRenderizada, contexto);
-    }
-    console.log("Resultado final con layout aplicado:\n", resultadoFinal);
 
     return String(resultadoFinal);
 }
