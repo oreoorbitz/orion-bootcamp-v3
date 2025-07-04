@@ -1,5 +1,6 @@
 import { zip } from "jsr:@deno-library/compress";
 import { notificarReloadCSS } from "./wsServer.ts";
+import { ThemeUpdateData } from "./types.ts";
 
 async function manejarPeticionThemeUpdate(req: Request, callback:() => Promise<Response>) {
     console.log("✅ Petición recibida en `/theme-update`, procesando ZIP...");
@@ -9,11 +10,11 @@ async function manejarPeticionThemeUpdate(req: Request, callback:() => Promise<R
     try {
       const formulario = await req.formData()
       const archivo = formulario.get("archivo") as File
-      const carpetaGuardado = formulario.get("carpeta") as String
+      const carpetaGuardado = formulario.get("carpeta") as string
       const buffer = await archivo.arrayBuffer()
       const uint = new Uint8Array(buffer)
       const nombre = archivo.name
-      const tipoExtension = formulario.get("tipoExtension")
+      const tipoExtension = formulario.get("tipoExtension") as string
       const rutaZip = `${rutaTema}/${nombre}.zip`;
       const rutaDestino = carpetaGuardado === "assets"
        ? `${rutaTema}/dist/${carpetaGuardado}`
@@ -48,8 +49,15 @@ async function manejarPeticionThemeUpdate(req: Request, callback:() => Promise<R
             console.log(`La carpeta ${rutaZip} no ha podido ser eliminada o no existía`);
         }
 
+
+        const data: ThemeUpdateData = {
+            carpetaGuardado,
+            tipoExtension,
+            nombre
+        }
+
         console.log("antes del callback")
-        return await callback();
+        return await callback(data);
 
     } catch (error) {
         console.error("❌ Error procesando el tema:", error);

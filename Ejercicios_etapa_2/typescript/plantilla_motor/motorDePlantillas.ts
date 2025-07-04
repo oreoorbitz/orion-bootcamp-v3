@@ -337,32 +337,23 @@ function renderizarVariables(tokens: TokenPlantilla[], contexto: Record<string, 
 
 
 export async function liquidEngine(entradaInicial: string, contexto: Record<string, any>): Promise<string> {
-    console.log("Entrada inicial en liquidEngine:\n", entradaInicial);
-    console.log("contexto pasado", contexto);
-
     // Paso 1: Tokenización
     const entradaTokenizada = detectarTokensPlantilla(entradaInicial);
-    console.log("Tokens de Liquid:\n", entradaTokenizada);
 
     // Paso 2: Clasificación de tokens
     const entradaClasificada = clasificarTokensPlantilla(entradaTokenizada);
-    console.log("Tokens clasificados:\n", entradaClasificada);
 
     // Paso 3: Procesar asignaciones
     const entradaProcesadaAsignacion = procesarAsignaciones(entradaClasificada, contexto);
-    console.log("Después de procesar asignaciones:\n", entradaProcesadaAsignacion);
 
     // Paso 4: Procesar bucles PRIMERO (antes que condicionales)
     const buclesProcesados = procesarBucles(entradaProcesadaAsignacion, contexto);
-    console.log("Después de procesar bucles:\n", buclesProcesados);
 
     // Paso 5: Procesar condicionales (después de bucles)
     const entradaProcesada = procesarCondicionales(buclesProcesados, contexto);
-    console.log("Después de procesar condicionales:\n", entradaProcesada);
 
     // Paso 6: Renderizar variables finales
     const entradaRenderizada = renderizarVariables(entradaProcesada, contexto, filtrosRegistrados);
-    console.log("Resultado final de Liquid:\n", entradaRenderizada);
 
     let resultadoFinal = entradaRenderizada;
 
