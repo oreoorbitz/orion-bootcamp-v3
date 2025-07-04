@@ -38,7 +38,7 @@
  *    Esta separación es importante para que en el futuro puedas reutilizar la misma estructura de layout
  *    con múltiples plantillas sin cambiar la lógica del motor.
  *
- * 4. **Actualiza `controller.ts` para combinar layout + template**
+ * 4. **Actualiza `controller.ts` para combinar layout + template** LAYOUT EN CONTROLLER
  *
  *    Dentro de tu función de renderizado:
  *
@@ -92,7 +92,6 @@
  *
  * Este patrón te preparará para manejar múltiples plantillas y rutas en el siguiente módulo.
  */
-
 import { zip } from "jsr:@deno-library/compress";
 import { debounce } from "jsr:@std/async/debounce";
 

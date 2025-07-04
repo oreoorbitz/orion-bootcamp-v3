@@ -2,15 +2,29 @@
 
 {% for collection in collections %}
   <h2>{{ collection.title }}</h2>
-{% endfor %}
+  <p>ID: {{ collection.id }}</p>
+  <p>Handle: {{ collection.handle }}</p>
 
-<hr></hr>
+  <ul>
+    {% for producto in collection.products %}
+      <li>
+        <h3>{{ producto.title }}</h3>
+        <p>ID: {{ producto.id }}</p>
+        <p>Handle: {{ producto.handle }}</p>
+        <p>Precio: ${{ producto.precio | money }}</p>
+      </li>
+    {% endfor %}
+  </ul>
+  <hr></hr>
+{% endfor %}
 
 <h2>Todos los productos:</h2>
 <ul>
   {% for producto in products %}
-    <li class="producto">
+    <li>
       <h3>{{ producto.title }}</h3>
+      <p>ID: {{ producto.id }}</p>
+      <p>Handle: {{ producto.handle }}</p>
       <p>Precio: ${{ producto.precio | money }}</p>
     </li>
   {% endfor %}

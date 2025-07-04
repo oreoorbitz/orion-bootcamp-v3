@@ -1,7 +1,11 @@
 body {
     font-family: sans-serif;
     padding: 2rem;
+<<<<<<< HEAD
     background-color: #ff0707;
+=======
+    background-color: #00dff3;
+>>>>>>> Paola
   }
 
   h1 {
@@ -10,7 +14,11 @@ body {
   }
 
   h2 {
+<<<<<<< HEAD
     color: #23f4ff;
+=======
+    color: #000000;
+>>>>>>> Paola
     margin-top: 2rem;
     font-size: 1.5rem;
   }
@@ -39,7 +47,11 @@ body {
   .producto a {
     display: inline-block;
     margin-top: 0.5rem;
+<<<<<<< HEAD
     color: #0066cc;
+=======
+    color: #0381ff;
+>>>>>>> Paola
     text-decoration: none;
   }
 
