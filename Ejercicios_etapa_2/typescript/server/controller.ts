@@ -23,12 +23,15 @@ function liquidToHtmlPath(templateName: string) {
     return templatePath;
 }
 
-const templatePath = getTemplatePath("content_for_index");
 const layoutPath = path("../server/themes/dev/layout/theme.liquid");
 
 export async function recargarYGenerarHTML(data: ThemeUpdateData) {
     try {
         const { carpetaGuardado, tipoExtension, nombre } = data;
+
+        const templatePath = getTemplatePath(nombre);
+
+
         console.log("✅ Generando HTML desde la plantilla...");
         // 1. Leer la plantilla de contenido
         const templateContent = await Deno.readTextFile(templatePath);
@@ -52,7 +55,6 @@ export async function recargarYGenerarHTML(data: ThemeUpdateData) {
         const arbolDOM = htmlParser(finalTemplate);
         const htmlFinal = renderDOM(arbolDOM);
 
-        console.log('test0r1', nombre) 
         const outputHtmlPath = liquidToHtmlPath(nombre);
 
         // 7. Escribir el archivo final
