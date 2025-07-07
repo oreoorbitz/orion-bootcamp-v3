@@ -24,7 +24,7 @@
  *
  * 2. **Actualiza `router.ts` para soportar handles**
  *
- *    En `typescript/server/router.ts`, modifica la función `resolve(path: string)` para que detecte rutas dinámicas.
+ *    En `typescript/server/router.ts`, modifica la función `resolve(path: string, context: any)` para que detecte rutas dinámicas.
  *
  *    - Para rutas que coincidan con `/products/:handle`, debe devolver información que indique que se usará el template `product` y el objeto correspondiente del contexto.
  *    - Para rutas que coincidan con `/collections/:handle`, debe devolver el template `collection` junto con su objeto.
@@ -33,11 +33,11 @@
  *
  *    ✅ Utiliza los datos que provienen del objeto `context`, generado por `contextPlease.ts`. Este archivo ya se encarga de consultar la base de datos SQLite y devolver un objeto con las propiedades `products`, `collections`, y `productCollections`, entre otras.
  *
- *    El objeto que devuelve `resolve(path)` debe tener al menos estas propiedades:
+ *    El objeto que devuelve `resolve(path, context)` debe tener al menos estas propiedades:
  *    ```ts
  *    {
  *      template: "product" | "collection" | "content_for_index",
- *      object?: any // objeto relevante que se pasa al template
+ *      object?: any // objeto relevante que se pasa al template, en este caso, el producto o la colección
  *    }
  *    ```
  *
@@ -60,9 +60,9 @@
  *
  * 5. **Actualiza tu lógica de renderizado**
  *
- *    Cuando llames a `resolve(path)`:
+ *    Cuando llames a `resolve(path, context)`:
  *    - Determina el nombre del template adecuado desde la respuesta del router.
- *    - Combina el contexto global (desde `contextPlease.ts`) con el objeto específico (`product` o `collection`) si está presente.
+ *    - Combina el contexto global con el objeto específico (`product` o `collection`) si está presente.
  *    - Si `resolve()` devuelve `undefined`, renderiza `404.liquid` usando `layout/theme.liquid` e insértalo como `content_for_layout`.
  *
  * 6. **Organiza tu salida en carpetas por tipo**
