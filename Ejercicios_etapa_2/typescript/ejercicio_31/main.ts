@@ -26,14 +26,20 @@
  *
  *    En `typescript/server/router.ts`, modifica la función `resolve(path: string)` para que detecte rutas dinámicas.
  *
- *    - Para rutas que coincidan con `/products/:handle`, debe devolver información que indique que se usará el template correspondiente y el objeto relacionado.
- *    - Para rutas que coincidan con `/collections/:handle`, lo mismo.
+ *    - Para rutas que coincidan con `/products/:handle`, debe devolver información que indique que se usará el template `product` y el objeto correspondiente del contexto.
+ *    - Para rutas que coincidan con `/collections/:handle`, debe devolver el template `collection` junto con su objeto.
  *    - Para `/`, debe seguir devolviendo lo necesario para renderizar el template de inicio.
  *    - Si no hay coincidencia, debe devolver `undefined`.
  *
- *    Puedes obtener los datos desde `context.products` y `context.collections`, o importarlos desde `seedData.ts`.
+ *    ✅ Utiliza los datos que provienen del objeto `context`, generado por `contextPlease.ts`. Este archivo ya se encarga de consultar la base de datos SQLite y devolver un objeto con las propiedades `products`, `collections`, y `productCollections`, entre otras.
  *
- *    El objeto de retorno debe incluir tanto el nombre del template como el objeto que será parte del contexto para la renderización.
+ *    El objeto que devuelve `resolve(path)` debe tener al menos estas propiedades:
+ *    ```ts
+ *    {
+ *      template: "product" | "collection" | "content_for_index",
+ *      object?: any // objeto relevante que se pasa al template
+ *    }
+ *    ```
  *
  * 3. **Agrega las nuevas plantillas `product.liquid` y `collection.liquid`**
  *
@@ -54,11 +60,10 @@
  *
  * 5. **Actualiza tu lógica de renderizado**
  *
- *    Cuando llames a `resolve(path)`, asegúrate de que:
- *    - Se determine el nombre del template correcto.
- *    - Se combine el contexto global con el objeto específico si corresponde.
- *
- *    Si `resolve()` devuelve `undefined`, asegúrate de usar la plantilla `404`.
+ *    Cuando llames a `resolve(path)`:
+ *    - Determina el nombre del template adecuado desde la respuesta del router.
+ *    - Combina el contexto global (desde `contextPlease.ts`) con el objeto específico (`product` o `collection`) si está presente.
+ *    - Si `resolve()` devuelve `undefined`, renderiza `404.liquid` usando `layout/theme.liquid` e insértalo como `content_for_layout`.
  *
  * 6. **Organiza tu salida en carpetas por tipo**
  *
