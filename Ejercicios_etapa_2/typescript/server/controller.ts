@@ -5,65 +5,144 @@ import { injector } from "../injector.ts";
 import { iniciarServidor } from "./slightlyLate.ts";
 import { notificarRecargaPagina } from "./wsServer.ts";
 import { context } from "./contextPlease.ts";
+import { router } from "./router.ts";
 
 function path(stl: string) {
   return new URL(stl, import.meta.url).pathname
-
 }
 
-const templatePath = path("../server/themes/dev/templates/content_for_index.liquid");
-const layoutPath = path("../server/themes/dev/layout/theme.liquid");
-const outputPath = path("../server/themes/dev/dist/index.html");
+// Función para ubicar templates fácilmente
+function getTemplatePath(nombre: string): string {
+  const templatesDir = path("../server/themes/dev/templates/");
+  return `${templatesDir}${nombre}.liquid`;
+}
 
-export async function recargarYGenerarHTML() {
+const templatesDir = path("../server/themes/dev/templates/");
+const layoutPath = path("../server/themes/dev/layout/theme.liquid");
+const outputDir = path("../server/themes/dev/dist/");
+
+// Función para generar HTML de un template específico
+async function generarHTMLDeTemplate(templateName: string): Promise<string> {
     try {
-        console.log("✅ Generando HTML desde la plantilla...");
-        // 1. Leer la plantilla de contenido
+        console.log(`✅ Generando HTML para template: ${templateName}`);
+
+        // 1. Obtener la ruta del template
+        const templatePath = getTemplatePath(templateName);
+
+        // 2. Verificar que el template existe
+        try {
+            await Deno.stat(templatePath);
+        } catch {
+            if (templateName === "404") {
+                console.log(`❌ Template 404 no encontrado`);
+                return "Template 404 no encontrado";
+            }
+            console.log(`❌ Template ${templateName} no encontrado, usando 404`);
+            return await generarHTMLDeTemplate("404");
+        }
+
+        // 3. Leer la plantilla de contenido
         const templateContent = await Deno.readTextFile(templatePath);
 
-        // 2. Renderizar la plantilla de contenido con el contexto actual
-        const renderedContent = await liquidEngine(templateContent, context); // false = no aplicar layout todavía
+        // 4. Renderizar la plantilla de contenido con el contexto actual
+        const renderedContent = await liquidEngine(templateContent, context);
 
-        // 3. Crear un nuevo contexto que incluya el contenido renderizado
+        // 5. Crear un nuevo contexto que incluya el contenido renderizado
         const layoutContext = {
             ...context,
             content_for_layout: renderedContent
         };
 
-        // 4. Leer el layout
+        // 6. Leer el layout
         const layoutContent = await Deno.readTextFile(layoutPath);
 
-        // 5. Renderizar el layout con el contexto que incluye content_for_layout
+        // 7. Renderizar el layout con el contexto que incluye content_for_layout
         const finalTemplate = await liquidEngine(layoutContent, layoutContext);
 
-        // 6. Procesar el HTML final
+        // 8. Procesar el HTML final
         const arbolDOM = htmlParser(finalTemplate);
         const htmlFinal = renderDOM(arbolDOM);
 
-        // 7. Escribir el archivo final
-        await Deno.writeTextFile(outputPath, htmlFinal);
-        console.log("\n✅ Archivo `dist/index.html` generado exitosamente.");
+        // 9. Determinar el nombre del archivo de salida
+        const outputFileName = templateName === "content_for_index" ? "content_for_index.html" : `${templateName}.html`;
+        const outputPath = `${outputDir}${outputFileName}`;
 
-        // 8. Inyectar `hotreload.ts` en el HTML antes de recargar
+        // 10. Escribir el archivo final
+        await Deno.writeTextFile(outputPath, htmlFinal);
+        console.log(`✅ Archivo ${outputFileName} generado exitosamente.`);
+
+        // 11. Inyectar `hotreload.ts` en el HTML
         const tsPath = new URL("./hotreload.ts", import.meta.url).pathname;
         await injector(tsPath, outputPath);
-        console.log("\n✅ Hot Reload inyectado correctamente en index.html.");
+        console.log(`✅ Hot Reload inyectado correctamente en ${outputFileName}.`);
 
-        // 9. Notificar a los clientes WebSocket que deben recargar la página
-        notificarRecargaPagina();
-        console.log(" Señal de recarga enviada a los clientes WebSocket.");
-
-        return "HTML generado correctamente";
+        return `HTML generado correctamente para ${templateName}`;
     } catch (error) {
-        console.error("\n❌ Error al generar el archivo HTML:", error);
-        return "Error al generar HTML";
+        console.error(`❌ Error al generar HTML para ${templateName}:`, error);
+        return `Error al generar HTML para ${templateName}`;
     }
 }
 
-export async function onThemeUpdate() {
-    // 🎨 Generar HTML combinando template + layout
-    console.log("🎨 Generando HTML combinando template + layout...");
-    const resultado = await recargarYGenerarHTML();
+// 🎯 Función para regenerar los templates básicos (content_for_index y 404)
+async function regenerarTodosLosTemplates(): Promise<string> {
+    try {
+        console.log("🔄 Regenerando templates básicos...");
+
+        // 1. Regenerar content_for_index (template principal)
+        const resultados = [];
+        console.log("📋 Regenerando content_for_index...");
+        const resultadoIndex = await generarHTMLDeTemplate("content_for_index");
+        resultados.push(resultadoIndex);
+
+        // 2. Regenerar 404 si existe
+        try {
+            const template404Path = getTemplatePath("404");
+            await Deno.stat(template404Path);
+            console.log("📄 Regenerando template 404...");
+            const resultado404 = await generarHTMLDeTemplate("404");
+            resultados.push(resultado404);
+        } catch {
+            console.log("⚠️ No se encontró template 404.liquid");
+        }
+
+        // 3. Notificar recarga de página
+        notificarRecargaPagina();
+        console.log("📤 Señal de recarga enviada a los clientes WebSocket.");
+
+        return `Templates regenerados: content_for_index, 404`;
+    } catch (error) {
+        console.error("❌ Error al regenerar templates:", error);
+        return "Error al regenerar templates";
+    }
+}
+
+//  Función legacy para mantener compatibilidad
+export async function recargarYGenerarHTML() {
+    // Usar el router para obtener el template de la ruta raíz
+    const templateName = router.resolve("/") || "content_for_index";
+    return await generarHTMLDeTemplate(templateName);
+}
+
+export async function onThemeUpdate(changedTemplate?: string) {
+    let resultado: string;
+
+    if (changedTemplate) {
+        // 🎯 Se cambió un template específico, regenerar solo ese
+        const templateName = changedTemplate.replace('.liquid', '');
+
+        // Solo procesamos content_for_index o 404
+        if (templateName === "content_for_index" || templateName === "404") {
+            console.log(`🎨 Regenerando template específico: ${templateName}`);
+            resultado = await generarHTMLDeTemplate(templateName);
+        } else {
+            console.log(`⚠️ Template ${templateName} no reconocido, regenerando todos`);
+            resultado = await regenerarTodosLosTemplates();
+        }
+    } else {
+        // 🎯 Cambios generales (layout, assets, etc), regenerar todos
+        console.log("🎨 Regenerando todos los templates...");
+        resultado = await regenerarTodosLosTemplates();
+    }
 
     console.log("✅ Tema actualizado correctamente.");
     return new Response(resultado, { status: 200 });
@@ -71,7 +150,6 @@ export async function onThemeUpdate() {
 
 // 2️⃣ Activar el servidor para escuchar las solicitudes
 iniciarServidor(3000, onThemeUpdate);
-
 
 /* LO DEJO AKI POR SI RROMPO ALGO ESTO HACE RECARGAS
 export async function observarCambios() {

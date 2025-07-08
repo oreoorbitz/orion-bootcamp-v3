@@ -67,22 +67,53 @@ export function iniciarServidor(puerto: number = 3000, callback: () => Promise<R
             return await manejarPeticionThemeUpdate(req, callback);
         }
 
-        let path = url.pathname === "/" ? "server/themes/dev/dist/index.html" : `server/themes/dev/dist/${url.pathname}`;
-        console.log(`📂 Intentando servir archivo: ${path}`);
+        // 🎯 Determinar qué archivo servir desde themes/dev/dist/
+        let filePath: string;
+
+        if (url.pathname === "/") {
+            // Página principal
+            filePath = "server/themes/dev/dist/content_for_index.html";
+        } else if (url.pathname === "/theme.css") {
+            // Archivo CSS del tema
+            filePath = "server/themes/dev/dist/theme.css";
+        } else if (url.pathname.startsWith("/assets/")) {
+           const assetName = url.pathname.replace("/assets/", "");
+           filePath = `server/themes/dev/dist/assets/${assetName}`;
+        } else {
+            // Otras rutas HTML
+            const routeName = url.pathname.slice(1); // Quitar el "/" inicial
+            filePath = `server/themes/dev/dist/${routeName}.html`;
+        }
+
+        console.log(`📂 Intentando servir archivo: ${filePath}`);
 
         try {
-            if (url.pathname.startsWith("/assets")) {
-              path = `server/themes/dev/dist${url.pathname}`;
-            }
+            const archivo = await Deno.readTextFile(filePath);
 
-            const archivo = await Deno.readTextFile(path);
+            // Determinar el Content-Type
+            const contentType = filePath.endsWith(".css") ? "text/css" : "text/html";
+
             return new Response(archivo, {
-                headers: {
-                    "Content-Type": path.endsWith(".css") ? "text/css" : "text/html"
-                }
+                headers: { "Content-Type": contentType }
             });
-        } catch {
-            return new Response("404 - Página no encontrada", { status: 404 });
+
+        } catch (error) {
+            console.log(`❌ Archivo no encontrado: ${filePath}`);
+
+            // 🎯 Intentar servir 404.html desde themes/dev/dist/
+            try {
+                const archivo404 = await Deno.readTextFile("server/themes/dev/dist/404.html");
+                return new Response(archivo404, {
+                    status: 404,
+                    headers: { "Content-Type": "text/html" }
+                });
+            } catch {
+                // Si no existe 404.html, devolver mensaje básico
+                return new Response("404 - Página no encontrada", {
+                    status: 404,
+                    headers: { "Content-Type": "text/html" }
+                });
+            }
         }
     });
 }
