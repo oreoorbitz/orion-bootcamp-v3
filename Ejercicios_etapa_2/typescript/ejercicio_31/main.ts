@@ -37,7 +37,7 @@
  *    ```ts
  *    {
  *      template: "product" | "collection" | "content_for_index",
- *      object?: any // objeto relevante que se pasa al template, en este caso, el producto o la colección
+ *      object?: any // objeto relevante que se pasa al template
  *    }
  *    ```
  *
