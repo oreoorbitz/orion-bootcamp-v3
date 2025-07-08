@@ -1,0 +1,19 @@
+<h1>Bienvenido a nuestra tienda</h1>
+
+<h2>Colecciones</h2>
+<ul>
+  {% for collection in collections %}
+    <li>
+      <a href="/collections/{{ collection.handle }}">{{ collection.title }}</a>
+    </li>
+  {% endfor %}
+</ul>
+
+<h2>Productos</h2>
+<ul>
+  {% for producto in products %}
+    <li>
+      <a href="/products/{{ producto.handle }}">{{ producto.title }}</a>
+    </li>
+  {% endfor %}
+</ul>
