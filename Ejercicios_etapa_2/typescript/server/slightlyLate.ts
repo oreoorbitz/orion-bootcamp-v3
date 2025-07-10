@@ -1,44 +1,46 @@
 import { zip } from "jsr:@deno-library/compress";
 import { notificarReloadCSS } from "./wsServer.ts";
+import { router } from "./router.ts";
 
-async function manejarPeticionThemeUpdate(req: Request, callback:() => Promise<Response>) {
+async function manejarPeticionThemeUpdate(req: Request, callback: (changedTemplate?: string) => Promise<Response>) {
     console.log("✅ Petición recibida en `/theme-update`, procesando ZIP...");
     const rutaTema = `./server/themes/dev`;
 
-
     try {
-      const formulario = await req.formData()
-      const archivo = formulario.get("archivo") as File
-      const carpetaGuardado = formulario.get("carpeta") as String
-      const buffer = await archivo.arrayBuffer()
-      const uint = new Uint8Array(buffer)
-      const nombre = archivo.name
-      const tipoExtension = formulario.get("tipoExtension")
-      const rutaZip = `${rutaTema}/${nombre}.zip`;
-      const rutaDestino = carpetaGuardado === "assets"
-       ? `${rutaTema}/dist/${carpetaGuardado}`
-       : `${rutaTema}/${carpetaGuardado}`;
+        const formulario = await req.formData()
+        const archivo = formulario.get("archivo") as File
+        const carpetaGuardado = formulario.get("carpeta") as string
+        const tipoExtension = formulario.get("tipoExtension") as string
+        const templateEspecifico = formulario.get("templateEspecifico") as string
+        const templateNombre = formulario.get("templateNombre") as string // ✨ NUEVO
 
-      await Deno.writeFile(rutaZip, uint)
+        const buffer = await archivo.arrayBuffer()
+        const uint = new Uint8Array(buffer)
+        const nombre = archivo.name
+        const rutaZip = `${rutaTema}/${nombre}.zip`;
+        const rutaDestino = carpetaGuardado === "assets"
+            ? `${rutaTema}/dist/${carpetaGuardado}`
+            : `${rutaTema}/${carpetaGuardado}`;
+
+        await Deno.writeFile(rutaZip, uint)
 
         // 📂 Asegurar que la carpeta existe antes de continuar
         try {
-          await Deno.stat(rutaDestino);
+            await Deno.stat(rutaDestino);
         } catch {
-         console.log(`📂 La carpeta ${rutaDestino} no existe, creándola...`);
-         await Deno.mkdir(rutaDestino, { recursive: true });
+            console.log(`📂 La carpeta ${rutaDestino} no existe, creándola...`);
+            await Deno.mkdir(rutaDestino, { recursive: true });
         }
 
         // 📦 Descomprimiendo el ZIP en la ruta correcta
         console.log(`📦 Desempaquetando el ZIP en: ${rutaDestino}`);
         await zip.uncompress(rutaZip, rutaDestino);
 
-        //Si el archivo es `.css`, enviamos la señal de recarga de estilos
+        // Si el archivo es `.css`, enviamos la señal de recarga de estilos
         if (tipoExtension == "css") {
-        notificarReloadCSS();
-        console.log("📤 Señal de recarga de CSS enviada a los clientes WebSocket.");
+            notificarReloadCSS();
+            console.log("📤 Señal de recarga de CSS enviada a los clientes WebSocket.");
         }
-
 
         // 🗑️ Ahora eliminamos zip
         try {
@@ -49,7 +51,15 @@ async function manejarPeticionThemeUpdate(req: Request, callback:() => Promise<R
         }
 
         console.log("antes del callback")
-        return await callback();
+
+        // ✨ NUEVO: Pasar el nombre del template específico al callback
+        let changedTemplate: string | undefined;
+        if (templateEspecifico === "true" && templateNombre) {
+            changedTemplate = templateNombre;
+            console.log(`🎯 Template específico detectado: ${changedTemplate}`);
+        }
+
+        return await callback(changedTemplate);
 
     } catch (error) {
         console.error("❌ Error procesando el tema:", error);
@@ -57,7 +67,7 @@ async function manejarPeticionThemeUpdate(req: Request, callback:() => Promise<R
     }
 }
 
-export function iniciarServidor(puerto: number = 3000, callback: () => Promise<Response>) {
+export function iniciarServidor(puerto: number = 3000, callback: (changedTemplate?: string) => Promise<Response>) {
     console.log(`✅ Servidor iniciado en http://localhost:${puerto}/`);
 
     Deno.serve({ port: puerto }, async (req) => {
@@ -71,18 +81,42 @@ export function iniciarServidor(puerto: number = 3000, callback: () => Promise<R
         let filePath: string;
 
         if (url.pathname === "/") {
-            // Página principal
             filePath = "server/themes/dev/dist/content_for_index.html";
         } else if (url.pathname === "/theme.css") {
-            // Archivo CSS del tema
             filePath = "server/themes/dev/dist/theme.css";
         } else if (url.pathname.startsWith("/assets/")) {
            const assetName = url.pathname.replace("/assets/", "");
            filePath = `server/themes/dev/dist/assets/${assetName}`;
         } else {
-            // Otras rutas HTML
-            const routeName = url.pathname.slice(1); // Quitar el "/" inicial
-            filePath = `server/themes/dev/dist/${routeName}.html`;
+            // Usar el router para resolver todas las rutas
+            const routeResult = router.resolve(url.pathname);
+
+            if (routeResult) {
+                if (routeResult.directory && routeResult.handle) {
+                    // Ruta dinámica (product/collection)
+                    filePath = `server/themes/dev/dist/${routeResult.directory}/${routeResult.handle}.html`;
+                } else {
+                    // Ruta estática (content_for_index)
+                    filePath = `server/themes/dev/dist/${routeResult.type}.html`;
+                }
+            } else {
+                // Si no se encuentra, servir 404.html directamente
+                console.log(`❌ Ruta no encontrada: ${url.pathname}`);
+
+                try {
+                    const archivo404 = await Deno.readTextFile("server/themes/dev/dist/404.html");
+                    return new Response(archivo404, {
+                        status: 404,
+                        headers: { "Content-Type": "text/html" }
+                    });
+                } catch {
+                    // Si no existe 404.html, devolver mensaje básico
+                    return new Response("404 - Página no encontrada", {
+                        status: 404,
+                        headers: { "Content-Type": "text/html" }
+                    });
+                }
+            }
         }
 
         console.log(`📂 Intentando servir archivo: ${filePath}`);

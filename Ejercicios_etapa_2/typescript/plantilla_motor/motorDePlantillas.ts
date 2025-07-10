@@ -6,10 +6,23 @@ interface TokenPlantilla {
   directiva?: TipoDirectiva;
 }
 
+// 🎯 FILTROS CORREGIDOS: asset_url ahora maneja rutas según el contexto
 let filtrosRegistrados: Record<string, Function> = {
   upcase: (x: string) => x.toUpperCase(),
   reverse: (x: string) => x.split('').reverse().join(''),
-  asset_url: (x: string) => `./assets/${x}`,
+  // 🔧 asset_url corregido para manejar diferentes niveles de carpeta
+  asset_url: (x: string, contexto?: Record<string, any>) => {
+    // Determinar el nivel de carpeta actual basado en el contexto
+    const templateType = contexto?.template_type || 'root';
+
+    if (templateType === 'product' || templateType === 'collection') {
+      // Para productos y colecciones, necesitamos subir un nivel
+      return `../assets/${x}`;
+    } else {
+      // Para templates en la raíz (content_for_index, 404, etc.)
+      return `./assets/${x}`;
+    }
+  },
   stylesheet_tag: (x: string) => `<link rel="stylesheet" href="${x}"></link>`,
   money: (x: number) => (x/100).toFixed(2)
 }
@@ -90,8 +103,7 @@ function procesarAsignaciones(tokens: TokenPlantilla[], contexto: Record<string,
     return resultado;
 }
 
-
-// ✅ FUNCIÓN AUXILIAR: Procesa variables con filtros
+// 🎯 FUNCIÓN AUXILIAR CORREGIDA: Procesa variables con filtros y contexto
 function procesarVariableConFiltros(token: TokenPlantilla, contexto: Record<string, any>): TokenPlantilla {
     if (token.tipo === "variable") {
         let partes = token.contenido.split('|').map(p => p.trim());
@@ -103,28 +115,33 @@ function procesarVariableConFiltros(token: TokenPlantilla, contexto: Record<stri
 
         // Si es una cadena literal (entre comillas), usar el valor literal
         if (nombreVariable.startsWith("'") && nombreVariable.endsWith("'")) {
-            valorFinal = nombreVariable.slice(1, -1); // Quitar las comillas
+            valorFinal = nombreVariable.slice(1, -1);
         } else if (nombreVariable.startsWith('"') && nombreVariable.endsWith('"')) {
-            valorFinal = nombreVariable.slice(1, -1); // Quitar las comillas
+            valorFinal = nombreVariable.slice(1, -1);
         } else {
             // Obtener el valor de la variable del contexto
             valorFinal = nombreVariable.split('.').reduce((obj, key) => {
                 return obj && Object.prototype.hasOwnProperty.call(obj, key) ? obj[key] : undefined;
             }, contexto);
 
-            // Si no está en el contexto, usar el nombre tal como está
             if (valorFinal === undefined) {
                 valorFinal = nombreVariable;
             }
         }
 
-        // Aplicar filtros secuencialmente
+        // 🔧 Aplicar filtros secuencialmente, pasando el contexto para asset_url
         for (let filtro of filtros) {
             let filtroLimpio = filtro.trim();
             if (!filtrosRegistrados[filtroLimpio]) {
                 throw new Error(`Error: El filtro '${filtroLimpio}' no está definido.`);
             }
-            valorFinal = filtrosRegistrados[filtroLimpio](valorFinal);
+
+            // Para asset_url, pasar el contexto como segundo parámetro
+            if (filtroLimpio === 'asset_url') {
+                valorFinal = filtrosRegistrados[filtroLimpio](valorFinal, contexto);
+            } else {
+                valorFinal = filtrosRegistrados[filtroLimpio](valorFinal);
+            }
         }
 
         return { tipo: "texto", contenido: String(valorFinal) };
@@ -194,7 +211,7 @@ function procesarBucles(tokens: TokenPlantilla[], contexto: Record<string, any>)
             for (let valor of valoresLista) {
                 let contextoLocal = { ...contexto, [nombreItem]: valor };
 
-                // ✅ RECURSIÓN: Procesar bucles anidados primero
+                // Recursión: Procesar bucles anidados primero
                 let bloqueProcesadoBucles = procesarBucles(bloqueInterno, contextoLocal);
 
                 // Luego procesar condicionales
@@ -208,7 +225,7 @@ function procesarBucles(tokens: TokenPlantilla[], contexto: Record<string, any>)
                 resultado.push(...tokensFinales);
             }
 
-            i = j - 1; // j ya apunta después del endfor
+            i = j - 1;
         } else {
             resultado.push(token);
         }
@@ -288,8 +305,7 @@ function procesarCondicionales(tokens: TokenPlantilla[], contexto: Record<string
     return resultado;
 }
 
-
-// ✅ FUNCIÓN CORREGIDA: renderizarVariables
+// 🎯 FUNCIÓN CORREGIDA: renderizarVariables con contexto para filtros
 function renderizarVariables(tokens: TokenPlantilla[], contexto: Record<string, any>, filtrosRegistrados: Record<string, Function>): string {
     return tokens.map(token => {
         if (token.tipo === "variable") {
@@ -303,38 +319,41 @@ function renderizarVariables(tokens: TokenPlantilla[], contexto: Record<string, 
 
             // Si es una cadena literal (entre comillas), usar el valor literal
             if (nombreVariable.startsWith("'") && nombreVariable.endsWith("'")) {
-                valorFinal = nombreVariable.slice(1, -1); // Quitar las comillas
+                valorFinal = nombreVariable.slice(1, -1);
             } else if (nombreVariable.startsWith('"') && nombreVariable.endsWith('"')) {
-                valorFinal = nombreVariable.slice(1, -1); // Quitar las comillas
+                valorFinal = nombreVariable.slice(1, -1);
             } else {
                 // Obtener el valor de la variable del contexto
                 valorFinal = nombreVariable.split('.').reduce((obj, key) => {
                     return obj && Object.prototype.hasOwnProperty.call(obj, key) ? obj[key] : undefined;
                 }, contexto);
 
-                // Si no está en el contexto, usar el nombre tal como está
                 if (valorFinal === undefined) {
                     valorFinal = nombreVariable;
                 }
             }
 
-            // Aplicar filtros secuencialmente
+            // 🔧 Aplicar filtros secuencialmente, pasando contexto para asset_url
             for (let filtro of filtros) {
                 let filtroLimpio = filtro.trim();
                 if (!filtrosRegistrados[filtroLimpio]) {
                     throw new Error(`Error: El filtro '${filtroLimpio}' no está definido.`);
                 }
-                valorFinal = filtrosRegistrados[filtroLimpio](valorFinal);
+
+                // Para asset_url, pasar el contexto como segundo parámetro
+                if (filtroLimpio === 'asset_url') {
+                    valorFinal = filtrosRegistrados[filtroLimpio](valorFinal, contexto);
+                } else {
+                    valorFinal = filtrosRegistrados[filtroLimpio](valorFinal);
+                }
             }
 
             return String(valorFinal);
         }
 
-        // Para tokens de texto, devolver el contenido tal como está
         return token.contenido;
     }).join('');
 }
-
 
 export async function liquidEngine(entradaInicial: string, contexto: Record<string, any>): Promise<string> {
     console.log("Entrada inicial en liquidEngine:\n", entradaInicial);
