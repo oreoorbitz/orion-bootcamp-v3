@@ -2,6 +2,7 @@ import { zip } from "jsr:@deno-library/compress";
 import { notificarReloadCSS } from "./wsServer.ts";
 import { ThemeUpdateData } from "./types.ts";
 import { router } from "./router.ts";
+import { generarDesdeRuta } from "./controller.ts";
 
 
 function temmplateToHtmlMapper(template: string) {
@@ -109,7 +110,6 @@ async function manejarPeticionThemeUpdate(req: Request, callback: () => Promise<
     }
 }
 
-// add support for 404 page
 export function iniciarServidor(puerto: number = 3000, callback: () => Promise<Response>) {
     console.log(`✅ Servidor iniciado en http://localhost:${puerto}/`);
 
@@ -134,18 +134,14 @@ export function iniciarServidor(puerto: number = 3000, callback: () => Promise<R
             }
         }
 
-        const templateName = router.resolve(url.pathname) ?? "404";
-        const htmlPath = `server/themes/dev/dist/${templateName}.html`;
-
-        console.log(`📂 Intentando servir: ${htmlPath}`);
-
         try {
-            const html = await Deno.readTextFile(htmlPath);
+            const html = await generarDesdeRuta(url.pathname);
             return new Response(html, {
                 headers: { "Content-Type": "text/html" }
             });
-        } catch {
-            return new Response("404 - Página no encontrada", { status: 404 });
+        } catch (err) {
+            console.error("❌ Error generando HTML desde ruta:", err);
+            return new Response("Error interno del servidor", { status: 500 });
         }
     });
 }

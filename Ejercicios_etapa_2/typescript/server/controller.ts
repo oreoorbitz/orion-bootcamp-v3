@@ -25,6 +25,45 @@ function liquidToHtmlPath(templateName: string) {
 
 const layoutPath = path("../server/themes/dev/layout/theme.liquid");
 
+export async function generarDesdeRuta(pathname: string) {
+    const match = router.resolve(pathname, context);
+
+    let template = "404";
+    let templateContext = { ...context };
+
+    if (match) {
+        template = match.template;
+        if (match.object) {
+            templateContext = {
+                ...context,
+                [template]: match.object,
+                content_for_layout: await liquidEngine(
+                    await Deno.readTextFile(getTemplatePath(template)),
+                    { ...context, [template]: match.object }
+                )
+            };
+        } else {
+            templateContext.content_for_layout = await liquidEngine(
+                await Deno.readTextFile(getTemplatePath(template)),
+                context
+            );
+        }
+    } else {
+        // fallback: render 404 template
+        templateContext.content_for_layout = await liquidEngine(
+            await Deno.readTextFile(getTemplatePath("404")),
+            context
+        );
+    }
+
+    const layout = await Deno.readTextFile(layoutPath);
+    const finalTemplate = await liquidEngine(layout, templateContext);
+    const arbolDOM = htmlParser(finalTemplate);
+    const htmlFinal = renderDOM(arbolDOM);
+
+    return htmlFinal;
+}
+
 export async function recargarYGenerarHTML(data: ThemeUpdateData) {
     try {
         const { carpetaGuardado, tipoExtension, nombre } = data;
