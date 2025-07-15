@@ -1,85 +1,111 @@
 /**
- * 🧩 MÓDULO 32: Drops personalizados para `collections` y `all_products`
+ * 🧩 MÓDULO 32: Drops personalizados para `collections` y `products`
  *
  * 🧠 Contexto:
- * Shopify utiliza objetos llamados **Drops** para exponer datos globales a sus plantillas Liquid. Estos Drops permiten:
- * - Acceso por clave (`drop['handle']`)
- * - Encapsular estructuras de datos
- * - Prevenir iteraciones no deseadas o accesos inválidos
+ * Shopify utiliza objetos llamados **Drops** para exponer datos globales a sus plantillas Liquid.
+ * Un Drop es un tipo especial de objeto que:
+ * - Expone datos por `handle`, como `collections['soft-shirts']`
+ * - Encapsula su estructura interna para protegerla
+ * - No puede iterarse ni accederse por índice, aunque parezca un arreglo u objeto
  *
- * Originalmente, `all_products` en Shopify permitía acceder a todos los productos por su `handle`. Sin embargo, descubrieron que algunas tiendas tenían miles de productos, lo que generaba problemas de rendimiento. Por eso, lo limitaron a mostrar como máximo **20 productos**.
+ * Aunque Liquid no tiene un sistema de tipos estricto, Shopify implementó este patrón dentro de su motor
+ * para ofrecer seguridad y control. No estamos hablando de un `type` de TypeScript, sino de una convención:
+ * objetos que tienen un comportamiento especial que tu motor de plantillas debe respetar.
  *
- * En este módulo, vas a replicar esa lógica y crear tres Drops:
- *
- * - `CollectionsDrop`: para exponer colecciones globalmente por `handle`
- * - `ProductsDrop`: para acceder productos por `handle`, sin permitir iteración
- * - `EmptyDrop`: que simula el comportamiento de Shopify cuando accedes a un handle inexistente
+ * Por ejemplo:
+ * - `collections['some-handle']` debería devolver una colección si existe, o algo vacío si no existe
+ * - No deberías poder hacer un `for` directamente sobre `collections`
  *
  * 🎯 Objetivos:
- * - Crear los tres Drops y exponerlos desde `contextPlease.ts`
- * - Limitar `all_products` a 20 productos, ordenados como lleguen de la base de datos
- * - Asegurar que acceder a datos inexistentes no lanza errores (usa `EmptyDrop`)
+ * - Implementar soporte para un tipo especial de objeto llamado Drop en tu motor de Liquid
+ * - Los Drops deben permitir acceso por clave (como un diccionario)
+ * - No deben permitir iteración (`{% for ... in drop %}` debe fallar o ignorarse)
+ * - No deben permitir acceso por índice (`drop[0]` no debe devolver nada útil)
  *
  * ✅ Instrucciones:
  *
- * 1. **Crea el archivo `drops.ts` dentro de `typescript/server/`**
+ * 1. **Crea un Drop de productos y uno de colecciones**
  *
- *    Implementa tres clases:
+ *    - En tu `contextPlease.ts`, agrega una forma de identificar que las propiedades `collections` y `products`
+ *      que estás exportando en el objeto `context` son Drops:
+ *      - Un Drop de productos que exponga los productos por su `handle`
+ *      - Un Drop de colecciones que exponga las colecciones por su `handle`
+ *    - Ambos Drops deben funcionar como diccionarios, por ejemplo, en tu Liquid:
  *
- *    - `EmptyDrop`:
- *      - Retorna `undefined`, `""` o `null` para cualquier propiedad o clave
- *      - Implementa `toString()` para retornar una cadena vacía
+ *      ```liquid
+ *      {{ products['camisa-suave-a'].title }}
+ *      {{ collections['soft-shirts'].title }}
+ *      ```
  *
- *    - `ProductsDrop`:
- *      - Recibe un arreglo de productos
- *      - Internamente construye un `Map` usando el `handle` como clave
- *      - Solo permite acceder por `drop['handle']`
- *      - Si no existe, retorna una instancia de `EmptyDrop`
- *      - ⚠️ No debe permitir iteración ni acceso por índice
+ *    - Cada colección debe incluir su arreglo `products` como propiedad normal (no necesita ser un Drop)
  *
- *    - `CollectionsDrop`:
- *      - Igual que `ProductsDrop`, pero con colecciones
- *      - Cada colección expone su arreglo `products` de forma normal
- *
- *    🧠 Consejo: Añade `.isDrop = true` a los objetos Drop para que tu motor pueda reconocerlos como no iterables.
- *
- * 2. **Actualiza `contextPlease.ts`**
- *
- *    - Usa tu base de datos SQLite como lo hiciste en ejercicios anteriores
- *    - Ejecuta `planter.ts` antes de comenzar para asegurarte de tener los datos actualizados
- *    - En lugar de exportar `products`, ahora exporta `all_products`, usando los primeros 20 productos
- *    - También construye `collections` usando `CollectionsDrop`
- *
+ *    Ejemplo conceptual (no copies literalmente):
  *    ```ts
- *    const all_products = new ProductsDrop(productos.slice(0, 20));
+ *    const rawProducts = await db.select().from(products);
+ *    const productos = new ProductsDrop(rawProducts);
+ *
+ *    const rawCollections = await db.query.collections.findMany({
+ *      with: {
+ *        productCollections: {
+ *          with: { product: true }
+ *        }
+ *      }
+ *    });
+ *
+ *    const colecciones = new CollectionsDrop(
+ *      rawCollections.map(c => ({
+ *        ...c,
+ *        products: c.productCollections.map(pc => pc.product)
+ *      }))
+ *    );
+ *
+ *    return {
+ *      products: productos,
+ *      collections: colecciones
+ *    };
  *    ```
  *
- *    ✅ Asegúrate de que:
- *    - `collections['soft-shirts'].products` sigue funcionando
- *    - `all_products['camisa-suave-a']` funciona correctamente
- *    - Accesos inválidos como `all_products['inexistente']` o `collections['nada']` **no lancen errores**
+ * 2. **Actualiza tu motor de plantillas para soportar Drops**
+ *
+ *    - Un Drop es simplemente un objeto que implementa una convención especial en tu motor
+ *    - Puedes identificar si un objeto es un Drop usando `.isDrop = true` o `instanceof`
+ *    - En `renderizarVariables()` y `procesarBucles()`, evita iterar Drops o accederlos como si fueran arreglos
+ *    - Asegúrate de que si se accede a una clave que no existe (`drop['no-existe']`), **el resultado sea un string vacío** cuando se renderiza en una plantilla
+ *
+ *    Esto asegura que Drops se comporten de forma segura y silenciosa, como lo hacen en Shopify.
  *
  * 3. **Prueba tu implementación usando `liquid_snippets/32_content_for_index.liquid`**
  *
- *    Usa el archivo `32_content_for_index.liquid` como prueba visual de tu implementación.
- *    Copia su contenido en tu carpeta `templates/` o donde esté apuntando tu sistema de rutas.
+ *    Copia el contenido de ese archivo a tu carpeta `templates/` o donde tu router lo espere.
+ *    Este archivo contiene el siguiente Liquid, que debe renderizarse sin errores:
  *
- * 📂 Estructura esperada:
+ *    ```liquid
+ *    {{ products['camisa-suave-a'].title }}
  *
- * ```
- * ├── typescript/
- * │   ├── server/
- * │   │   ├── drops.ts              ✅ nuevo
- * │   │   ├── contextPlease.ts      ✅ actualizado
- * │   └── planter.ts                ✅ volver a correr
- * └── liquid/
- *     └── 32_content_for_index.liquid ✅ plantilla de prueba
- * ```
+ *    {{ collections['soft-shirts'].title }}
+ *
+ *    {% for producto in collections['soft-shirts'].products %}
+ *      {{ producto.title }} - {{ producto.precio }}
+ *    {% endfor %}
+ *
+ *    {{ products['no-existe'].title }} → (no error)
+ *    {{ collections['fantasma'].products }} → (no error)
+ *    ```
+ *
+ * 4. **Ejecuta `planter.ts` antes de comenzar**
+ *
+ *    El archivo de base de datos ha sido actualizado con más productos.
+ *    Asegúrate de correr `planter.ts` para que tu base esté al día:
+ *
+ *    ```bash
+ *    deno run --allow-read --allow-write --allow-net planter.ts
+ *    ```
  *
  * ✅ Resultado esperado:
- * - Acceso seguro y controlado a `collections` y `all_products`
- * - Manejo silencioso de datos inexistentes
- * - Consistencia con cómo Shopify maneja estos objetos internamente
+ * - `products['handle']` y `collections['handle']` devuelven datos útiles si existen
+ * - Accesos inválidos retornan valores vacíos sin lanzar errores
+ * - Tu motor reconoce que no debe iterar Drops o tratarlos como arreglos
+ * - Las colecciones siguen teniendo acceso a sus productos normalmente
  */
 import { zip } from "jsr:@deno-library/compress";
 import { debounce } from "jsr:@std/async/debounce";
