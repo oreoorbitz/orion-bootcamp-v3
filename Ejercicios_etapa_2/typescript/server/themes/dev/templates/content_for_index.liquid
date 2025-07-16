@@ -1,19 +1,17 @@
-<h1>Bienvenido a nuestra tienda</h1>
+<h1>all_products: acceso por handle</h1>
+<p>{{ all_products['camisa-suave-a'].title }}</p>
+<p>{{ all_products['camisa-suave-b'].precio }}</p>
 
-<h2>Colecciones</h2>
+<h1>collections: acceso por handle</h1>
+<p>{{ collections['soft-shirts'].title }}</p>
+
+<h1>collections['soft-shirts'].products:</h1>
 <ul>
-  {% for collection in collections %}
-    <li>
-      <a href="/collections/{{ collection.handle }}">{{ collection.title }}</a>
-    </li>
+  {% for producto in collections['soft-shirts'].products %}
+    <li>{{ producto.title }} – {{ producto.precio }}</li>
   {% endfor %}
 </ul>
 
-<h2>Productos</h2>
-<ul>
-  {% for producto in products %}
-    <li>
-      <a href="/products/{{ producto.handle }}">{{ producto.title }}</a>
-    </li>
-  {% endfor %}
-</ul>
+<h1>Accesos inexistentes:</h1>
+<p>{{ all_products['no-existe'].title }}</p>
+<p>{{ collections['fantasma'].products }}</p>
