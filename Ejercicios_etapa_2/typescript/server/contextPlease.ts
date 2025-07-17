@@ -40,80 +40,44 @@ async function agruparProductos(
   }
 }
 
-// 🧩 CLASE DROP BASE
-class Drop {
-  isDrop = true;
-  protected data: Record<string, any> = {};
 
-  constructor(items: any[], handleKey: string = 'handle') {
-    // Indexar los elementos por su handle
-    for (const item of items) {
-      if (item && item[handleKey]) {
-        this.data[item[handleKey]] = item;
+function crearDrop<T extends { handle: string }>(items: T[]): any {
+  const mapa = new Map<string, T>();
+  for (const item of items) {
+    mapa.set(item.handle, item);
+  }
+
+  const drop = new Proxy(mapa, {
+    get(target, prop: string) {
+      if (prop === 'isDrop') return true;
+      if (typeof prop === 'string') {
+        return target.get(prop) ?? "";
       }
+      return undefined;
+    },
+
+    has(target, prop: string) {
+      return target.has(prop as string);
+    },
+
+    ownKeys(target) {
+      return Array.from(target.keys());
+    },
+
+    getOwnPropertyDescriptor() {
+      return {
+        enumerable: true,
+        configurable: true,
+      };
     }
-  }
+  });
 
-  // Método para acceder por handle
-  get(handle: string) {
-    const result = this.data[handle];
-    console.log(`🔍 Drop.get('${handle}') = ${result ? 'encontrado' : 'no encontrado'}`);
-    return result || null;
-  }
-
-  // Método para verificar si existe un handle
-  has(handle: string): boolean {
-    return handle in this.data;
-  }
-
-  // Prevenir iteración directa
-  [Symbol.iterator]() {
-    return {
-      next() {
-        return { done: true, value: undefined };
-      }
-    };
-  }
+  return drop;
 }
 
-// 🧩 DROP ESPECÍFICO PARA PRODUCTOS
-class ProductsDrop extends Drop {
-  constructor(productos: Producto[]) {
-    super(productos, 'handle');
-    console.log('🏗️ ProductsDrop creado con handles:', Object.keys(this.data));
-  }
-}
+const coleccionesConProductos = await agruparProductos(products, collectionss, collectionsProducts);
 
-// 🧩 DROP ESPECÍFICO PARA COLECCIONES
-class CollectionsDrop extends Drop {
-  constructor(colecciones: (Coleccion & { products: Producto[] })[]) {
-    super(colecciones, 'handle');
-    console.log('🏗️ CollectionsDrop creado con handles:', Object.keys(this.data));
-  }
-}
-
-// Obtener las colecciones agrupadas
-const collections = await agruparProductos(products, collectionss, collectionsProducts);
-
-// 🎯 CREAR LOS DROPS
-const productsDrop = new ProductsDrop(products);
-const collectionsDrop = new CollectionsDrop(collections || []);
-
-// 🎯 CORRECCIÓN: Usar 'all_products' en lugar de 'products' para coincidir con la plantilla
 export const context = {
-  settings: {
-    titulo: "Rosita"
-  },
-  all_products: productsDrop,  // ✅ Cambio clave: usar 'all_products'
-  collections: collectionsDrop
+  collections: crearDrop(coleccionesConProductos ?? []),
+  all_products: crearDrop(products),
 };
-
-console.log('🎯 Contexto final creado:', {
-  all_products: 'ProductsDrop',
-  collections: 'CollectionsDrop'
-});
-
-// Debug: Verificar que los drops funcionan correctamente
-console.log('🔍 Verificando drops:');
-console.log('- all_products["camisa-suave-a"]:', productsDrop.get('camisa-suave-a'));
-console.log('- collections["soft-shirts"]:', collectionsDrop.get('soft-shirts'));

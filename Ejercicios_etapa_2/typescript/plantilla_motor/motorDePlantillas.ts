@@ -151,89 +151,96 @@ function procesarVariableConFiltros(token: TokenPlantilla, contexto: Record<stri
 }
 
 function procesarBucles(tokens: TokenPlantilla[], contexto: Record<string, any>): TokenPlantilla[] {
-    let resultado: TokenPlantilla[] = [];
-    let i = 0;
+  let resultado: TokenPlantilla[] = [];
+  let i = 0;
 
-    while (i < tokens.length) {
-        const token = tokens[i];
+  while (i < tokens.length) {
+    const token = tokens[i];
 
-        if (token.tipo === 'directiva' && token.directiva === 'for') {
-            let partes = token.contenido.split(/\s+/);
-            let nombreItem = partes[1];
-            let nombreLista = partes[3];
+    if (token.tipo === 'directiva' && token.directiva === 'for') {
+      let partes = token.contenido.split(/\s+/);
+      let nombreItem = partes[1];
+      let nombreLista = partes[3];
 
-            // Resolver la lista desde el contexto (puede ser anidada como collection.products)
-            let valoresLista = nombreLista.split('.').reduce((obj, key) => {
-                return obj && Object.prototype.hasOwnProperty.call(obj, key) ? obj[key] : undefined;
-            }, contexto);
+      // 🔹 Resolver la lista desde el contexto (soporta notación anidada)
+      let segmentos = nombreLista.replace(/\[(["'])(.*?)\1\]/g, '.$2').split('.');
+      let valoresLista = segmentos.reduce((obj, key) => {
+       return obj && Object.prototype.hasOwnProperty.call(obj, key) ? obj[key] : undefined;
+      }, contexto);
 
-            if (!Array.isArray(valoresLista)) {
-                console.warn(`Advertencia: '${nombreLista}' no es un array o no existe.`);
-                // Buscar el endfor correspondiente y saltar el bloque
-                let nivel = 1;
-                let j = i + 1;
-                while (j < tokens.length && nivel > 0) {
-                    if (tokens[j].tipo === 'directiva' && tokens[j].directiva === 'for') {
-                        nivel++;
-                    } else if (tokens[j].tipo === 'directiva' && tokens[j].directiva === 'endfor') {
-                        nivel--;
-                    }
-                    j++;
-                }
-                i = j - 1;
-                i++;
-                continue;
-            }
+      // 🔸 Si es Drop, no se puede iterar
+      if (valoresLista?.isDrop) {
+        console.warn(`Advertencia: no se puede iterar directamente un Drop: '${nombreLista}'`);
+        i = saltarBloque(tokens, i);
+        continue;
+      }
 
-            // Encontrar el bloque interno del bucle, respetando la anidación
-            let j = i + 1;
-            let bloqueInterno: TokenPlantilla[] = [];
-            let nivel = 1;
+      // 🔸 Si no es array, tampoco se puede iterar
+      if (!Array.isArray(valoresLista)) {
+        console.warn(`Advertencia: '${nombreLista}' no es un array.`);
+        i = saltarBloque(tokens, i);
+        continue;
+      }
 
-            while (j < tokens.length && nivel > 0) {
-                if (tokens[j].tipo === 'directiva' && tokens[j].directiva === 'for') {
-                    nivel++;
-                } else if (tokens[j].tipo === 'directiva' && tokens[j].directiva === 'endfor') {
-                    nivel--;
-                }
+      // 🔹 Encontrar el bloque interno del bucle
+      let j = i + 1;
+      let bloqueInterno: TokenPlantilla[] = [];
+      let nivel = 1;
 
-                if (nivel > 0) {
-                    bloqueInterno.push(tokens[j]);
-                }
-                j++;
-            }
-
-            if (nivel > 0) {
-                throw new Error("Error de sintaxis: {% for %} sin {% endfor %}");
-            }
-
-            // Procesar cada elemento de la lista
-            for (let valor of valoresLista) {
-                let contextoLocal = { ...contexto, [nombreItem]: valor };
-
-                // Recursión: Procesar bucles anidados primero
-                let bloqueProcesadoBucles = procesarBucles(bloqueInterno, contextoLocal);
-
-                // Luego procesar condicionales
-                let bloqueProcesadoCondicionales = procesarCondicionales(bloqueProcesadoBucles, contextoLocal);
-
-                // Finalmente procesar variables
-                let tokensFinales = bloqueProcesadoCondicionales.map(token =>
-                    procesarVariableConFiltros(token, contextoLocal)
-                );
-
-                resultado.push(...tokensFinales);
-            }
-
-            i = j - 1;
-        } else {
-            resultado.push(token);
+      while (j < tokens.length && nivel > 0) {
+        if (tokens[j].tipo === 'directiva' && tokens[j].directiva === 'for') {
+          nivel++;
+        } else if (tokens[j].tipo === 'directiva' && tokens[j].directiva === 'endfor') {
+          nivel--;
         }
 
-        i++;
+        if (nivel > 0) {
+          bloqueInterno.push(tokens[j]);
+        }
+        j++;
+      }
+
+      if (nivel > 0) {
+        throw new Error("Error de sintaxis: {% for %} sin {% endfor %}");
+      }
+
+      // 🔹 Procesar cada elemento del array
+      for (let valor of valoresLista) {
+        let contextoLocal = { ...contexto, [nombreItem]: valor };
+
+        let bloqueProcesadoBucles = procesarBucles(bloqueInterno, contextoLocal);
+        let bloqueProcesadoCondicionales = procesarCondicionales(bloqueProcesadoBucles, contextoLocal);
+        let tokensFinales = bloqueProcesadoCondicionales.map(token =>
+          procesarVariableConFiltros(token, contextoLocal)
+        );
+
+        resultado.push(...tokensFinales);
+      }
+
+      i = j - 1;
+    } else {
+      resultado.push(token);
     }
 
-    return resultado;
+    i++;
+  }
+
+  return resultado;
+}
+
+// 🔧 Función auxiliar para saltar bloques {% for %} ... {% endfor %}
+function saltarBloque(tokens: TokenPlantilla[], inicio: number): number {
+  let nivel = 1;
+  let j = inicio + 1;
+  while (j < tokens.length && nivel > 0) {
+    if (tokens[j].tipo === 'directiva' && tokens[j].directiva === 'for') {
+      nivel++;
+    } else if (tokens[j].tipo === 'directiva' && tokens[j].directiva === 'endfor') {
+      nivel--;
+    }
+    j++;
+  }
+  return j - 1;
 }
 
 function procesarCondicionales(tokens: TokenPlantilla[], contexto: Record<string, any>): TokenPlantilla[] {
@@ -306,53 +313,62 @@ function procesarCondicionales(tokens: TokenPlantilla[], contexto: Record<string
 }
 
 // 🎯 FUNCIÓN CORREGIDA: renderizarVariables con contexto para filtros
-function renderizarVariables(tokens: TokenPlantilla[], contexto: Record<string, any>, filtrosRegistrados: Record<string, Function>): string {
-    return tokens.map(token => {
-        if (token.tipo === "variable") {
-            // Separar variable y filtros
-            let partes = token.contenido.split('|').map(p => p.trim());
-            let nombreVariable = partes.shift() ?? '';
-            let filtros = partes;
+function renderizarVariables(
+  tokens: TokenPlantilla[],
+  contexto: Record<string, any>,
+  filtrosRegistrados: Record<string, Function>
+): string {
+  return tokens.map(token => {
+    if (token.tipo === "variable") {
+      let partes = token.contenido.split('|').map(p => p.trim());
+      let nombreVariable = partes.shift() ?? '';
+      let filtros = partes;
 
-            // Obtener el valor inicial
-            let valorFinal: any;
+      let valorFinal: any;
 
-            // Si es una cadena literal (entre comillas), usar el valor literal
-            if (nombreVariable.startsWith("'") && nombreVariable.endsWith("'")) {
-                valorFinal = nombreVariable.slice(1, -1);
-            } else if (nombreVariable.startsWith('"') && nombreVariable.endsWith('"')) {
-                valorFinal = nombreVariable.slice(1, -1);
-            } else {
-                // Obtener el valor de la variable del contexto
-                valorFinal = nombreVariable.split('.').reduce((obj, key) => {
-                    return obj && Object.prototype.hasOwnProperty.call(obj, key) ? obj[key] : undefined;
-                }, contexto);
+      // 🔹 Si es cadena literal
+      if ((nombreVariable.startsWith("'") && nombreVariable.endsWith("'")) ||
+          (nombreVariable.startsWith('"') && nombreVariable.endsWith('"'))) {
+        valorFinal = nombreVariable.slice(1, -1);
+      } else {
+        // 🔹 Separar por puntos y corchetes
+        let segmentos = nombreVariable
+          .replace(/\[(["'])(.*?)\1\]/g, '.$2') // convierte ['x'] o ["x"] a .x
+          .split('.');
 
-                if (valorFinal === undefined) {
-                    valorFinal = nombreVariable;
-                }
-            }
+        valorFinal = segmentos.reduce((obj, key) => {
+          if (obj?.isDrop) {
+            // 🔸 Si es Drop, acceder por clave segura
+            return obj[key] ?? "";
+          } else if (obj && Object.prototype.hasOwnProperty.call(obj, key)) {
+            return obj[key];
+          } else {
+            return undefined;
+          }
+        }, contexto);
 
-            // 🔧 Aplicar filtros secuencialmente, pasando contexto para asset_url
-            for (let filtro of filtros) {
-                let filtroLimpio = filtro.trim();
-                if (!filtrosRegistrados[filtroLimpio]) {
-                    throw new Error(`Error: El filtro '${filtroLimpio}' no está definido.`);
-                }
+        if (valorFinal === undefined) {
+          valorFinal = "";
+        }
+      }
 
-                // Para asset_url, pasar el contexto como segundo parámetro
-                if (filtroLimpio === 'asset_url') {
-                    valorFinal = filtrosRegistrados[filtroLimpio](valorFinal, contexto);
-                } else {
-                    valorFinal = filtrosRegistrados[filtroLimpio](valorFinal);
-                }
-            }
-
-            return String(valorFinal);
+      // 🔹 Aplicar filtros
+      for (let filtro of filtros) {
+        let filtroLimpio = filtro.trim();
+        if (!filtrosRegistrados[filtroLimpio]) {
+          throw new Error(`Error: El filtro '${filtroLimpio}' no está definido.`);
         }
 
-        return token.contenido;
-    }).join('');
+        valorFinal = filtroLimpio === 'asset_url'
+          ? filtrosRegistrados[filtroLimpio](valorFinal, contexto)
+          : filtrosRegistrados[filtroLimpio](valorFinal);
+      }
+
+      return String(valorFinal);
+    }
+
+    return token.contenido;
+  }).join('');
 }
 
 export async function liquidEngine(entradaInicial: string, contexto: Record<string, any>): Promise<string> {
