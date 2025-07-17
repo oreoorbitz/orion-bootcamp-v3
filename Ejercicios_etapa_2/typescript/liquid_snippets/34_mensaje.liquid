@@ -1,9 +1,5 @@
 <p>Texto recibido: {{ texto }}</p>
 
-<p>Texto global (debería fallar en render): {{ texto }}</p>
+<p>Texto global (debería fallar en render si viene de assign): {{ texto }}</p>
 
-<ul>
-  {% for collection in collections['camisa-suave'] %}
-    <li>{{ collection.title }}</li>
-  {% endfor %}
-</ul>
+<p>Título de la colección 'soft-shirts': {{ collections["soft-shirts"].title }}</p>
