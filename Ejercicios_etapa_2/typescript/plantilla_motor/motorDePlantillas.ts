@@ -6,6 +6,11 @@ interface TokenPlantilla {
   directiva?: TipoDirectiva;
 }
 
+//Para los paths
+function path(stl: string) {
+  return new URL(stl, import.meta.url).pathname
+}
+
 // 🎯 FILTROS CORREGIDOS: asset_url ahora maneja rutas según el contexto
 let filtrosRegistrados: Record<string, Function> = {
   upcase: (x: string) => x.toUpperCase(),
@@ -101,6 +106,61 @@ function procesarAsignaciones(tokens: TokenPlantilla[], contexto: Record<string,
     }
 
     return resultado;
+}
+
+// 🔧 Función auxiliar para procesar snippets sin recursión
+async function procesarSnippet(contenido: string, contexto: Record<string, any>): Promise<string> {
+  // Paso 1: Tokenización
+  const tokens = detectarTokensPlantilla(contenido);
+
+  // Paso 2: Clasificación de tokens
+  const tokensClasificados = clasificarTokensPlantilla(tokens);
+
+  // Paso 3: Procesar asignaciones
+  const tokensConAsignaciones = procesarAsignaciones(tokensClasificados, contexto);
+
+  // Paso 4: Procesar bucles
+  const tokensConBucles = procesarBucles(tokensConAsignaciones, contexto);
+
+  // Paso 5: Procesar condicionales
+  const tokensConCondicionales = procesarCondicionales(tokensConBucles, contexto);
+
+  // Paso 6: Renderizar variables finales
+  const resultado = renderizarVariables(tokensConCondicionales, contexto, filtrosRegistrados);
+
+  return resultado;
+}
+
+async function procesarIncludes(tokens: TokenPlantilla[], contexto: Record<string, any>): Promise<TokenPlantilla[]> {
+  const resultado: TokenPlantilla[] = [];
+
+  for (const token of tokens) {
+    if (token.tipo === 'directiva' && token.contenido.startsWith('include ')) {
+      const partes = token.contenido.split(/\s+/);
+      const nombre = partes[1]?.replace(/^['"]|['"]$/g, '');
+
+      const ruta = new URL(`../server/themes/dev/snippets/${nombre}.liquid`, import.meta.url).pathname;
+      console.log('ruta resuelta:', ruta);
+
+      try {
+        const contenido = await Deno.readTextFile(ruta);
+
+        // 🔧 CORRECCIÓN: Procesar el snippet con la función auxiliar
+        const snippetProcesado = await procesarSnippet(contenido, contexto);
+
+        // Convertir el resultado procesado de vuelta a tokens de texto
+        resultado.push({ tipo: 'texto', contenido: snippetProcesado });
+
+      } catch (error) {
+        console.error('Error al procesar include:', error);
+        resultado.push({ tipo: 'texto', contenido: `Liquid error: ${nombre} not found` });
+      }
+    } else {
+      resultado.push(token);
+    }
+  }
+
+  return resultado;
 }
 
 // 🎯 FUNCIÓN AUXILIAR CORREGIDA: Procesa variables con filtros y contexto
@@ -387,15 +447,19 @@ export async function liquidEngine(entradaInicial: string, contexto: Record<stri
     const entradaProcesadaAsignacion = procesarAsignaciones(entradaClasificada, contexto);
     console.log("Después de procesar asignaciones:\n", entradaProcesadaAsignacion);
 
-    // Paso 4: Procesar bucles PRIMERO (antes que condicionales)
-    const buclesProcesados = procesarBucles(entradaProcesadaAsignacion, contexto);
+    // Paso 4: Procesar includes
+    const entradaConIncludes = await procesarIncludes(entradaProcesadaAsignacion, contexto);
+    console.log("Después de procesar includes:\n", entradaConIncludes);
+
+    // Paso 5: Procesar bucles PRIMERO (antes que condicionales)
+    const buclesProcesados = procesarBucles(entradaConIncludes, contexto);
     console.log("Después de procesar bucles:\n", buclesProcesados);
 
-    // Paso 5: Procesar condicionales (después de bucles)
+    // Paso 6: Procesar condicionales (después de bucles)
     const entradaProcesada = procesarCondicionales(buclesProcesados, contexto);
     console.log("Después de procesar condicionales:\n", entradaProcesada);
 
-    // Paso 6: Renderizar variables finales
+    // Paso 7: Renderizar variables finales
     const entradaRenderizada = renderizarVariables(entradaProcesada, contexto, filtrosRegistrados);
     console.log("Resultado final de Liquid:\n", entradaRenderizada);
 
