@@ -1,0 +1,7 @@
+{% assign texto = "ESTE TEXTO VIENE DEL CONTEXTO GLOBAL" %}
+
+<h2>Probando include:</h2>
+{% include "mensaje" %}
+
+<h2>Probando render:</h2>
+{% render "mensaje", texto: "ESTE TEXTO VIENE DE RENDER" %}
