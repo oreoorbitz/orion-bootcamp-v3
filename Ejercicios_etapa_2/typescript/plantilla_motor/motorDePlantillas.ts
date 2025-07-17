@@ -163,6 +163,51 @@ async function procesarIncludes(tokens: TokenPlantilla[], contexto: Record<strin
   return resultado;
 }
 
+async function procesarRender(tokens: TokenPlantilla[], contexto: Record<string, any>): Promise<TokenPlantilla[]> {
+  const resultado: TokenPlantilla[] = [];
+
+  for (const token of tokens) {
+    if (token.tipo === 'directiva' && token.contenido.startsWith('render ')) {
+      const partes = token.contenido.split(/,\s*/);
+      const nombreRaw = partes[0].split(/\s+/)[1]; // 'mensaje'
+      const nombre = nombreRaw.replace(/^['"]|['"]$/g, '');
+
+      const ruta = new URL(`../server/themes/dev/snippets/${nombre}.liquid`, import.meta.url).pathname;
+
+      // 🔹 Extraer variables pasadas
+      let variablesLocales: Record<string, any> = {};
+      for (let i = 1; i < partes.length; i++) {
+        let [clave, valorRaw] = partes[i].split(':').map(s => s.trim());
+        let valor = /^['"]/.test(valorRaw) ? valorRaw.slice(1, -1) : contexto[valorRaw];
+        variablesLocales[clave] = valor;
+      }
+
+      // 🔹 Clonar drops del contexto global
+      let contextoRender: Record<string, any> = {};
+      for (let clave in contexto) {
+        if (contexto[clave]?.isDrop) {
+          contextoRender[clave] = contexto[clave];
+        }
+      }
+
+      // 🔹 Mezclar variables locales
+      contextoRender = { ...contextoRender, ...variablesLocales };
+
+      try {
+        const contenido = await Deno.readTextFile(ruta);
+        const htmlRenderizado = await procesarSnippet(contenido, contextoRender);
+        resultado.push({ tipo: 'texto', contenido: htmlRenderizado });
+      } catch {
+        resultado.push({ tipo: 'texto', contenido: `Liquid error: ${nombre} not found` });
+      }
+    } else {
+      resultado.push(token);
+    }
+  }
+
+  return resultado;
+}
+
 // 🎯 FUNCIÓN AUXILIAR CORREGIDA: Procesa variables con filtros y contexto
 function procesarVariableConFiltros(token: TokenPlantilla, contexto: Record<string, any>): TokenPlantilla {
     if (token.tipo === "variable") {
@@ -451,8 +496,12 @@ export async function liquidEngine(entradaInicial: string, contexto: Record<stri
     const entradaConIncludes = await procesarIncludes(entradaProcesadaAsignacion, contexto);
     console.log("Después de procesar includes:\n", entradaConIncludes);
 
+    // Paso 5: Procesar render
+    const entradaConRender = await procesarRender(entradaConIncludes, contexto);
+    console.log("Despues de procesar render:\n",entradaConRender);
+
     // Paso 5: Procesar bucles PRIMERO (antes que condicionales)
-    const buclesProcesados = procesarBucles(entradaConIncludes, contexto);
+    const buclesProcesados = procesarBucles(entradaConRender, contexto);
     console.log("Después de procesar bucles:\n", buclesProcesados);
 
     // Paso 6: Procesar condicionales (después de bucles)
