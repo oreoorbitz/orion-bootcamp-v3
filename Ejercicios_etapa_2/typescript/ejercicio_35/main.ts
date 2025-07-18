@@ -40,8 +40,6 @@
  *    themes/dev/sections/
  *    ```
  *
- *    El servidor debe poder identificar que un archivo corresponde a una sección sin requerir estructura fija en el zip.
- *
  * 2. **Agrega soporte para `{% section 'nombre' %}` en tu motor de plantillas**
  *
  *    - Debes reconocer expresiones como: `{% section 'header_menu' %}`
@@ -52,7 +50,7 @@
  *    - Si el archivo no existe, renderiza:
  *
  *      ```
- *      Liquid error: header_menu not found
+ *      Liquid error: section 'header_menu' not found
  *      ```
  *
  * 3. **Soporte para `{% schema %}`**
