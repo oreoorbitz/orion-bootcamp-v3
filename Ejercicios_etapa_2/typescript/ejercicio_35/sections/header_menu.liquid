@@ -1,0 +1,19 @@
+<nav class="p-4 bg-gray-100 border-b">
+    <h2 class="text-lg font-semibold mb-2">{{ section.settings.heading }}</h2>
+    <ul class="flex gap-4">
+      <li><a href="{{ section.settings.link_1_url }}">{{ section.settings.link_1_label }}</a></li>
+      <li><a href="{{ section.settings.link_2_url }}">{{ section.settings.link_2_label }}</a></li>
+    </ul>
+  </nav>
+
+  {% schema %}
+  {
+    "settings": [
+      { "type": "text", "id": "heading" },
+      { "type": "text", "id": "link_1_label" },
+      { "type": "text", "id": "link_1_url" },
+      { "type": "text", "id": "link_2_label" },
+      { "type": "text", "id": "link_2_url" }
+    ]
+  }
+  {% endschema %}

@@ -208,6 +208,65 @@ async function procesarRender(tokens: TokenPlantilla[], contexto: Record<string,
   return resultado;
 }
 
+// Función auxiliar soporte para {% schema %}
+function extraerSchema(contenido: string): any {
+  const match = contenido.match(/{% schema %}([\s\S]*?){% endschema %}/);
+  if (!match) return null;
+
+  try {
+    return JSON.parse(match[1].trim());
+  } catch (error) {
+    console.warn("Error al parsear schema:", error);
+    return null;
+  }
+}
+
+//Procesar Secciones para la carpeta sections
+async function procesarSection(tokens: TokenPlantilla[], contexto: Record<string, any>): Promise<TokenPlantilla[]> {
+  const resultado: TokenPlantilla[] = [];
+
+  for (const token of tokens) {
+    if (token.tipo === 'directiva' && token.contenido.startsWith('section ')) {
+      const nombreRaw = token.contenido.split(/\s+/)[1];
+      const nombre = nombreRaw?.replace(/^['"]|['"]$/g, '');
+      const ruta = new URL(`../server/themes/dev/sections/${nombre}.liquid`, import.meta.url).pathname;
+
+      try {
+        const contenido = await Deno.readTextFile(ruta);
+
+        // 🔎 Separar plantilla visual y extraer schema
+        const schema = extraerSchema(contenido);
+        const contenidoVisual = contenido.replace(/{% schema %}[\s\S]*?{% endschema %}/, "").trim();
+
+        // 🔧 Construir contexto local de la sección
+        const settings = contexto[`${nombre}_data`]?.section?.settings ?? {};
+
+        let contextoSection: Record<string, any> = {};
+        for (let clave in contexto) {
+          if (contexto[clave]?.isDrop) {
+            contextoSection[clave] = contexto[clave];
+          }
+        }
+
+        contextoSection.section = {
+          settings,
+          schema, // Schema disponiblee
+        };
+
+        const htmlRenderizado = await procesarSnippet(contenidoVisual, contextoSection);
+        resultado.push({ tipo: 'texto', contenido: htmlRenderizado });
+      } catch {
+        resultado.push({ tipo: 'texto', contenido: `Liquid error: ${nombre} not found` });
+      }
+    } else {
+      resultado.push(token);
+    }
+  }
+
+  return resultado;
+}
+
+
 // 🎯 FUNCIÓN AUXILIAR CORREGIDA: Procesa variables con filtros y contexto
 function procesarVariableConFiltros(token: TokenPlantilla, contexto: Record<string, any>): TokenPlantilla {
     if (token.tipo === "variable") {
@@ -500,8 +559,12 @@ export async function liquidEngine(entradaInicial: string, contexto: Record<stri
     const entradaConRender = await procesarRender(entradaConIncludes, contexto);
     console.log("Despues de procesar render:\n",entradaConRender);
 
+    //Paso 6: Procesar sections
+    const entradaConSections = await procesarSection(entradaConRender, contexto);
+    console.log("Después de procesar Sections:\n", entradaConSections);
+
     // Paso 5: Procesar bucles PRIMERO (antes que condicionales)
-    const buclesProcesados = procesarBucles(entradaConRender, contexto);
+    const buclesProcesados = procesarBucles(entradaConSections, contexto);
     console.log("Después de procesar bucles:\n", buclesProcesados);
 
     // Paso 6: Procesar condicionales (después de bucles)
