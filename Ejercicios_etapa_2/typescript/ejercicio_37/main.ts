@@ -25,7 +25,7 @@
  * - Leer `settings_data.json` desde tu servidor y convertirlo a un objeto JS
  * - Exponer ese objeto como `settings` en el contexto de tu motor Liquid
  *   - Esto permitirá escribir `{{ settings.copyright.text }}` en cualquier plantilla
- * - Asegurar que el objeto `shop` esté disponible como variable global en todas tus plantillas Liquid
+ * - Exponer el objeto `Mockify` como variable global en tu motor Liquid (ya debería existir en el contexto)
  *
  * ✅ Instrucciones:
  *
@@ -46,25 +46,28 @@
  *
  *    - Lee el contenido de `settings_data.json` y conviértelo a objeto JS
  *    - No es necesario interpretar la schema aún
- *    - Agrega las siguientes propiedades al objeto `context` exportado:
+ *    - Asegúrate de que el objeto `context` exportado tenga:
+ *      - Una propiedad `settings` con el contenido del objeto `current` en `settings_data.json`
+ *      - Un objeto `Mockify`, que ya deberías tener desde ejercicios anteriores (usado para `Mockify.locale`), y que ahora también debe incluir `name`:
  *
- *      - `settings`: el contenido del objeto `current` en `settings_data.json`
- *      - `shop`: un objeto con una propiedad `name` que tú definas (por ejemplo `"Mi tienda"`)
- *
- *    Puedes copiar directamente la estructura del archivo `37_settings_data.json` para poblar el objeto `settings`.
+ *    ```ts
+ *    Mockify: {
+ *      locale: "en",
+ *      name: "Mi tienda"
+ *    }
+ *    ```
  *
  * 3. **Actualiza tu motor de plantillas**
  *
  *    - Asegúrate de que el objeto `settings` esté disponible como variable global en todas tus plantillas Liquid
- *    - Asegúrate de que el objeto `shop` también esté disponible como variable global
- *    - Cambia tu logica para processar el data para tus seciones en tu motor de plantillas para que use la informacion de seciones que va esta endentro de el object 'settings' que estas pasando a tu motor de plantillas
+ *    - Asegúrate de que el objeto `Mockify` también esté disponible como variable global (esto es nuevo para este ejercicio)
  *
  * 4. **Usa el layout provisto**
  *
  *    Copia el archivo `37_layout.liquid` desde `liquid_snippets/` y colócalo en tu carpeta `layout/` como `theme.liquid`.
  *
  * ✅ Resultado esperado:
- * - El `title` del HTML se muestra correctamente con el nombre de la tienda (`shop.name`)
+ * - El `title` del HTML se muestra correctamente con el nombre de la tienda (`Mockify.name`)
  * - El pie de página muestra el texto definido en `settings.copyright.text`
  * - Ambos objetos están disponibles como variables globales
  */
