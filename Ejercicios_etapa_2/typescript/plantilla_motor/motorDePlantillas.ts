@@ -6,9 +6,21 @@ interface TokenPlantilla {
   directiva?: TipoDirectiva;
 }
 
-//Para los paths
-function path(stl: string) {
-  return new URL(stl, import.meta.url).pathname
+const cacheTraducciones: Record<string, Record<string, string>> = {};
+
+function cargarTraducciones(locale: string): Record<string, string> {
+  if (cacheTraducciones[locale]) return cacheTraducciones[locale];
+
+  try {
+    const ruta = new URL(`../server/themes/dev/locales/${locale}.json`, import.meta.url).pathname;
+    const contenido = Deno.readTextFileSync(ruta);
+    const traducciones = JSON.parse(contenido);
+    cacheTraducciones[locale] = traducciones;
+    return traducciones;
+  } catch {
+    console.warn(`No se pudo cargar el archivo de traducciones para el locale: ${locale}`);
+    return {};
+  }
 }
 
 // 🎯 FILTROS CORREGIDOS: asset_url ahora maneja rutas según el contexto
@@ -29,7 +41,18 @@ let filtrosRegistrados: Record<string, Function> = {
     }
   },
   stylesheet_tag: (x: string) => `<link rel="stylesheet" href="${x}"></link>`,
-  money: (x: number) => (x/100).toFixed(2)
+  money: (x: number) => (x/100).toFixed(2),
+  t: (clave: string, contexto: Record<string, any>) => {
+    const locale = contexto.Mockify?.locale ?? "en";
+    const traducciones = cargarTraducciones(locale);
+    return traducciones[clave] ?? clave;
+  },
+
+  translate: (clave: string, contexto: Record<string, any>) => {
+    const locale = contexto.Mockify?.locale ?? "en";
+    const traducciones = cargarTraducciones(locale);
+    return traducciones[clave] ?? clave;
+  }
 }
 
 function detectarTokensPlantilla(entrada: string): string[] {
@@ -110,6 +133,13 @@ function procesarAsignaciones(tokens: TokenPlantilla[], contexto: Record<string,
 
 // 🔧 Función auxiliar para procesar snippets sin recursión
 async function procesarSnippet(contenido: string, contexto: Record<string, any>): Promise<string> {
+  console.log(`🔄 Procesando snippet/section con contexto:`, Object.keys(contexto));
+
+  // Agregar template_type si no existe
+  if (!contexto.template_type) {
+    contexto.template_type = 'snippet';
+  }
+
   // Paso 1: Tokenización
   const tokens = detectarTokensPlantilla(contenido);
 
@@ -250,7 +280,6 @@ async function procesarSection(tokens: TokenPlantilla[], contexto: Record<string
 
         contextoSection.section = {
           settings,
-          schema, // Schema disponiblee
         };
 
         const htmlRenderizado = await procesarSnippet(contenidoVisual, contextoSection);
@@ -269,49 +298,44 @@ async function procesarSection(tokens: TokenPlantilla[], contexto: Record<string
 
 // 🎯 FUNCIÓN AUXILIAR CORREGIDA: Procesa variables con filtros y contexto
 function procesarVariableConFiltros(token: TokenPlantilla, contexto: Record<string, any>): TokenPlantilla {
-    if (token.tipo === "variable") {
-        let partes = token.contenido.split('|').map(p => p.trim());
-        let nombreVariable = partes.shift() ?? '';
-        let filtros = partes;
+  if (token.tipo === "variable") {
+    let partes = token.contenido.split('|').map(p => p.trim());
+    let nombreVariable = partes.shift() ?? '';
+    let filtros = partes;
 
-        // Obtener el valor inicial
-        let valorFinal: any;
+    // Obtener el valor inicial
+    let valorFinal: any;
 
-        // Si es una cadena literal (entre comillas), usar el valor literal
-        if (nombreVariable.startsWith("'") && nombreVariable.endsWith("'")) {
-            valorFinal = nombreVariable.slice(1, -1);
-        } else if (nombreVariable.startsWith('"') && nombreVariable.endsWith('"')) {
-            valorFinal = nombreVariable.slice(1, -1);
-        } else {
-            // Obtener el valor de la variable del contexto
-            valorFinal = nombreVariable.split('.').reduce((obj, key) => {
-                return obj && Object.prototype.hasOwnProperty.call(obj, key) ? obj[key] : undefined;
-            }, contexto);
+    // Si es una cadena literal (entre comillas), usar el valor literal
+    if (nombreVariable.startsWith("'") && nombreVariable.endsWith("'")) {
+      valorFinal = nombreVariable.slice(1, -1);
+    } else if (nombreVariable.startsWith('"') && nombreVariable.endsWith('"')) {
+      valorFinal = nombreVariable.slice(1, -1);
+    } else {
+      // Obtener el valor de la variable del contexto
+      valorFinal = nombreVariable.split('.').reduce((obj, key) => {
+        return obj && Object.prototype.hasOwnProperty.call(obj, key) ? obj[key] : undefined;
+      }, contexto);
 
-            if (valorFinal === undefined) {
-                valorFinal = nombreVariable;
-            }
-        }
-
-        // 🔧 Aplicar filtros secuencialmente, pasando el contexto para asset_url
-        for (let filtro of filtros) {
-            let filtroLimpio = filtro.trim();
-            if (!filtrosRegistrados[filtroLimpio]) {
-                throw new Error(`Error: El filtro '${filtroLimpio}' no está definido.`);
-            }
-
-            // Para asset_url, pasar el contexto como segundo parámetro
-            if (filtroLimpio === 'asset_url') {
-                valorFinal = filtrosRegistrados[filtroLimpio](valorFinal, contexto);
-            } else {
-                valorFinal = filtrosRegistrados[filtroLimpio](valorFinal);
-            }
-        }
-
-        return { tipo: "texto", contenido: String(valorFinal) };
+      if (valorFinal === undefined) {
+        valorFinal = nombreVariable;
+      }
     }
 
-    return token;
+    // 🔧 Aplicar filtros secuencialmente, pasando el contexto
+    for (let filtro of filtros) {
+      let filtroLimpio = filtro.trim();
+      if (!filtrosRegistrados[filtroLimpio]) {
+        throw new Error(`Error: El filtro '${filtroLimpio}' no está definido.`);
+      }
+
+      valorFinal = filtrosRegistrados[filtroLimpio](valorFinal, contexto);
+    }
+
+    return { tipo: "texto", contenido: String(valorFinal) };
+  }
+
+  return token;
 }
 
 function procesarBucles(tokens: TokenPlantilla[], contexto: Record<string, any>): TokenPlantilla[] {
