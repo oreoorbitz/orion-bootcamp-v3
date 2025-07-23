@@ -1,16 +1,15 @@
 {
-    "current": {
-      "copyright": {
-        "text": "© 2025 Mi tienda. Todos los derechos reservados."
-      },
-      "sections": {
-        "featured_collection": {
-          "type": "featured_collection",
-          "settings": {
-            "title": "Productos destacados"
-          }
+  "current": {
+    "copyright": {
+      "text": "© 2025 Mi tienda. Todos los derechos reservados."
+    },
+    "sections": {
+      "featured_collection": {
+        "type": "featured_collection",
+        "settings": {
+          "title": "Productos destacados"
         }
       }
     }
   }
-  
+}

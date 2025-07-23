@@ -13,15 +13,15 @@
  * 🗂 A partir de este ejercicio:
  * - Cada tema debe tener una carpeta `locales/`
  * - Los archivos `.json` dentro de esa carpeta deben subirse al servidor, igual que haces con `sections/` o `snippets/`
- * - El archivo debe guardarse en: `themes/dev/locales/en.json`, `themes/dev/locales/es.json`, etc.
+ * - El servidor debe guardarlos en: `themes/dev/locales/en.json`, `themes/dev/locales/es.json`, etc.
  *
  * 📦 Además, tu `contextPlease.ts` debe incluir un objeto `Mockify` dentro del `context`, con una propiedad `locale`.
  * - Por ejemplo: `{ Mockify: { locale: "en" } }`
- * - A futuro esta estructura crecerá, como en Shopify.
+ * - Esta estructura crecerá en el futuro para simular el comportamiento de Shopify.
  *
  * 🎯 Objetivos:
  * - Crear un filtro llamado `translate`, con alias `t`
- * - Leer el archivo de traducción correspondiente al valor de `Shopify.locale`
+ * - Leer el archivo de traducción correspondiente al valor de `Mockify.locale`
  * - Usar el string de entrada como un path de acceso (`actions.view` busca en `{ actions: { view: ... } }`)
  *
  * ✅ Instrucciones:
@@ -36,7 +36,7 @@
  *    │   └── es.json
  *    ```
  *
- *    Asegúrate de que cuando subas los archivos, el servidor los guarde en:
+ *    ✅ Sube estos archivos al servidor. El servidor debe guardarlos en:
  *    ```
  *    themes/dev/locales/
  *    ```
@@ -70,7 +70,7 @@
  *
  *    - Tu motor debe registrar un filtro llamado `translate`, con un alias `t`.
  *    - El filtro debe:
- *      1. Leer el valor de `Shopify.locale` desde el contexto
+ *      1. Leer el valor de `Mockify.locale` desde el contexto
  *      2. Buscar y cargar el archivo correspondiente (`locales/en.json`, por ejemplo)
  *      3. Interpretar el string de entrada como una ruta (`actions.view`)
  *      4. Devolver el valor traducido
@@ -91,7 +91,7 @@
  * - `36_theme.css` en `assets/`
  *
  * ✅ Resultado esperado:
- * - El botón al final muestra el texto traducido según el valor de `Shopify.locale`
+ * - El botón al final muestra el texto traducido según el valor de `Mockify.locale`
  * - Si cambias `locale` a `'es'`, ves el texto en español sin cambiar ninguna otra línea de código
  * - El resto del contenido (secciones, snippets, loops, Drops) sigue funcionando correctamente
  */
