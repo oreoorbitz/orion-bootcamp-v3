@@ -238,18 +238,6 @@ async function procesarRender(tokens: TokenPlantilla[], contexto: Record<string,
   return resultado;
 }
 
-// Función auxiliar soporte para {% schema %}
-function extraerSchema(contenido: string): any {
-  const match = contenido.match(/{% schema %}([\s\S]*?){% endschema %}/);
-  if (!match) return null;
-
-  try {
-    return JSON.parse(match[1].trim());
-  } catch (error) {
-    console.warn("Error al parsear schema:", error);
-    return null;
-  }
-}
 
 //Procesar Secciones para la carpeta sections
 async function procesarSection(tokens: TokenPlantilla[], contexto: Record<string, any>): Promise<TokenPlantilla[]> {
@@ -265,11 +253,19 @@ async function procesarSection(tokens: TokenPlantilla[], contexto: Record<string
         const contenido = await Deno.readTextFile(ruta);
 
         // 🔎 Separar plantilla visual y extraer schema
-        const schema = extraerSchema(contenido);
+
         const contenidoVisual = contenido.replace(/{% schema %}[\s\S]*?{% endschema %}/, "").trim();
 
         // 🔧 Construir contexto local de la sección
-        const settings = contexto[`${nombre}_data`]?.section?.settings ?? {};
+        const settings =
+        contexto.sections?.[nombre]?.settings ??
+        contexto.settings?.current?.sections?.[nombre]?.settings ??
+        {};
+
+        if (Object.keys(settings).length === 0) {
+        console.warn(`⚠️ Advertencia: No se encontraron settings para la sección '${nombre}'.`);
+        }
+
 
         let contextoSection: Record<string, any> = {};
         for (let clave in contexto) {

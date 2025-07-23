@@ -80,13 +80,18 @@ const coleccionesConProductos = await agruparProductos(products, collectionss, c
 export const context = {
   collections: crearDrop(coleccionesConProductos ?? []),
   all_products: crearDrop(products),
-  Mockify: {
-    locale: "en"
-  },
-  sections: {
-    featured_collection: {
-      schema_data: {
-        title: "Productos destacados"
+  settings: {
+    current: {
+      sections: {
+        header_menu: {
+          settings: {
+            heading: "Menú principal",
+            link_1_label: "Camisas suaves",
+            link_1_url: "/collections/soft-shirts",
+            link_2_label: "Camisa suave A",
+            link_2_url: "/products/camisa-suave-a"
+          }
+        }
       }
     }
   }
