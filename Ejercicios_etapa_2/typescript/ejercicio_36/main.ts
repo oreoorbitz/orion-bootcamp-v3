@@ -49,22 +49,14 @@
  *
  *    ```ts
  *    export const context = {
- *      products: productsDrop,
- *      collections: collectionsDrop,
+ *      ... otro codigo
  *      Mockify: {
  *        locale: "en"
- *      },
- *      sections: {
- *        featured_collection: {
- *          schema_data: {
- *            title: "Productos destacados"
- *          }
- *        }
  *      }
+ *      ... otro codigo
  *    };
  *    ```
  *
- *    👉 Puedes copiar directamente el objeto `sections` desde el archivo `36_section_data_featured_collection.js`.
  *
  * 3. **Agrega el filtro `translate` en tu motor**
  *

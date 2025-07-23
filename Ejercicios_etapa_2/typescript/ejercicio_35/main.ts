@@ -18,12 +18,12 @@
  * ├── templates/
  * ├── snippets/
  * ├── sections/
- * │   └── featured_collection.liquid
+ * │   └── header_menu.liquid
  * ```
  *
  * 🎯 Objetivos:
- * - Implementar soporte para `{% section 'featured_collection' %}`
- * - Leer el archivo desde `sections/featured_collection.liquid`
+ * - Implementar soporte para `{% section 'header_menu' %}`
+ * - Leer el archivo desde `sections/header_menu.liquid`
  * - Procesar su contenido usando su propio contexto (como `render`)
  * - Soportar `{% schema %}` para extraer configuración de la sección
  * - Inyectar los valores en `section.settings`, que estará disponible en la plantilla
@@ -42,15 +42,15 @@
  *
  * 2. **Agrega soporte para `{% section 'nombre' %}` en tu motor de plantillas**
  *
- *    - Debes reconocer expresiones como: `{% section 'featured_collection' %}`
- *    - Leer el archivo `featured_collection.liquid` de la carpeta `sections/`
+ *    - Debes reconocer expresiones como: `{% section 'header_menu' %}`
+ *    - Leer el archivo `header_menu.liquid` de la carpeta `sections/`
  *    - Procesar su contenido con una estrategia similar a `render`, es decir:
  *      - Scope aislado (no tiene acceso a variables locales del template padre)
  *      - Debe tener acceso a los Drops globales (`collections`, `all_products`, etc.)
  *    - Si el archivo no existe, renderiza:
  *
  *      ```
- *      Liquid error: section 'featured_collection' not found
+ *      Liquid error: section 'header_menu' not found
  *      ```
  *
  * 3. **Soporte para `{% schema %}`**
@@ -67,23 +67,23 @@
  *      que se inyectarán como `section.settings`.
  *
  *    Por ejemplo:
- *    - Si el schema contiene `{ "id": "title" }`
- *    - Y el archivo tiene `settings.current.sections.featured_collection.settings.title = "Productos destacados"`
- *    - Entonces `section.settings.title` debe estar disponible dentro del template
+ *    - Si el schema contiene `{ "id": "heading" }`
+ *    - Y `settings.current.sections.header_menu.settings.heading = "Menú principal"`
+ *    - Entonces `section.settings.heading` debe estar disponible dentro del template
  *
- * 4. **Probar con la sección `featured_collection`**
+ * 4. **Probar con la sección `header_menu`**
  *
  *    Copia los siguientes archivos desde `liquid_snippets/` a tu tema:
  *
  *    - `35_content_for_index.liquid` → `templates/`
- *    - `35_featured_collection.liquid` → `sections/`
+ *    - `35_header_menu.liquid` → `sections/`
  *    - `35_settings_data.js` → copia su contenido dentro de `contextPlease.ts`
  *
  * ✅ Resultado esperado:
- * - `{% section 'featured_collection' %}` incluye correctamente el contenido del archivo
+ * - `{% section 'header_menu' %}` incluye correctamente el contenido del archivo
  * - Se extrae el schema correctamente y se interpreta
  * - `section.settings` está disponible y tiene los valores correctos
  * - El motor renderiza con un scope aislado, como `render`
  * - El servidor guarda correctamente los archivos de sección
- * - Si no existe la sección, aparece: `Liquid error: featured_collection not found`
+ * - Si no existe la sección, aparece: `Liquid error: header_menu not found`
  */
