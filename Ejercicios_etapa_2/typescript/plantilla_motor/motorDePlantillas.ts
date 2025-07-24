@@ -42,17 +42,23 @@ let filtrosRegistrados: Record<string, Function> = {
   },
   stylesheet_tag: (x: string) => `<link rel="stylesheet" href="${x}"></link>`,
   money: (x: number) => (x/100).toFixed(2),
-  t: (clave: string, contexto: Record<string, any>) => {
-    const locale = contexto.Mockify?.locale ?? "en";
-    const traducciones = cargarTraducciones(locale);
-    return traducciones[clave] ?? clave;
-  },
 
-  translate: (clave: string, contexto: Record<string, any>) => {
-    const locale = contexto.Mockify?.locale ?? "en";
-    const traducciones = cargarTraducciones(locale);
-    return traducciones[clave] ?? clave;
+  // 🔧 CORRECCIÓN: Ambos filtros apuntan a la misma función
+  t: (clave: string, contexto: Record<string, any>) => {
+  const locale = contexto.Mockify?.locale ?? "en";
+  const traducciones = cargarTraducciones(locale);
+
+  const partes = clave.split(".");
+  let actual = traducciones;
+    console.log("🌍 Locale recibido en filtro t:", contexto?.Mockify?.locale);
+  for (const parte of partes) {
+    actual = actual?.[parte];
+    if (actual === undefined) break;
   }
+
+  return actual ?? clave;
+}
+
 }
 
 function detectarTokensPlantilla(entrada: string): string[] {
@@ -131,7 +137,7 @@ function procesarAsignaciones(tokens: TokenPlantilla[], contexto: Record<string,
     return resultado;
 }
 
-// 🔧 Función auxiliar para procesar snippets sin recursión
+// 🔧 FUNCIÓN AUXILIAR CORREGIDA: procesarSnippet - SIN procesamiento prematuro de render
 async function procesarSnippet(contenido: string, contexto: Record<string, any>): Promise<string> {
   console.log(`🔄 Procesando snippet/section con contexto:`, Object.keys(contexto));
 
@@ -142,15 +148,22 @@ async function procesarSnippet(contenido: string, contexto: Record<string, any>)
 
   // Paso 1: Tokenización
   const tokens = detectarTokensPlantilla(contenido);
+  console.log("🔧 Tokens detectados en snippet:", tokens);
 
   // Paso 2: Clasificación de tokens
   const tokensClasificados = clasificarTokensPlantilla(tokens);
+  console.log("🔧 Tokens clasificados en snippet:", tokensClasificados);
 
   // Paso 3: Procesar asignaciones
   const tokensConAsignaciones = procesarAsignaciones(tokensClasificados, contexto);
 
-  // Paso 4: Procesar bucles
-  const tokensConBucles = procesarBucles(tokensConAsignaciones, contexto);
+  // Paso 4: Procesar includes
+  const tokensConIncludes = await procesarIncludes(tokensConAsignaciones, contexto);
+
+  // 🔧 CAMBIO CRÍTICO: Procesar bucles ANTES que render
+  // Esto permite que el bucle maneje el render con el contexto correcto
+  const tokensConBucles = await procesarBucles(tokensConIncludes, contexto);
+  console.log("🔧 Después de procesar bucles en snippet:", tokensConBucles);
 
   // Paso 5: Procesar condicionales
   const tokensConCondicionales = procesarCondicionales(tokensConBucles, contexto);
@@ -158,6 +171,7 @@ async function procesarSnippet(contenido: string, contexto: Record<string, any>)
   // Paso 6: Renderizar variables finales
   const resultado = renderizarVariables(tokensConCondicionales, contexto, filtrosRegistrados);
 
+  console.log("🎯 Resultado final del snippet:", resultado);
   return resultado;
 }
 
@@ -193,148 +207,48 @@ async function procesarIncludes(tokens: TokenPlantilla[], contexto: Record<strin
   return resultado;
 }
 
-async function procesarRender(tokens: TokenPlantilla[], contexto: Record<string, any>): Promise<TokenPlantilla[]> {
-  const resultado: TokenPlantilla[] = [];
+// 🎯 NUEVA FUNCIÓN: Procesar bloque específicamente dentro de bucles
+async function procesarBloqueEnBucle(tokens: TokenPlantilla[], contexto: Record<string, any>): Promise<TokenPlantilla[]> {
+  console.log(`🔧 procesarBloqueEnBucle - Contexto disponible:`, Object.keys(contexto));
 
-  for (const token of tokens) {
-    if (token.tipo === 'directiva' && token.contenido.startsWith('render ')) {
-      const partes = token.contenido.split(/,\s*/);
-      const nombreRaw = partes[0].split(/\s+/)[1]; // 'mensaje'
-      const nombre = nombreRaw.replace(/^['"]|['"]$/g, '');
-
-      const ruta = new URL(`../server/themes/dev/snippets/${nombre}.liquid`, import.meta.url).pathname;
-
-      // 🔹 Extraer variables pasadas
-      let variablesLocales: Record<string, any> = {};
-      for (let i = 1; i < partes.length; i++) {
-        let [clave, valorRaw] = partes[i].split(':').map(s => s.trim());
-        let valor = /^['"]/.test(valorRaw) ? valorRaw.slice(1, -1) : contexto[valorRaw];
-        variablesLocales[clave] = valor;
-      }
-
-      // 🔹 Clonar drops del contexto global
-      let contextoRender: Record<string, any> = {};
-      for (let clave in contexto) {
-        if (contexto[clave]?.isDrop) {
-          contextoRender[clave] = contexto[clave];
-        }
-      }
-
-      // 🔹 Mezclar variables locales
-      contextoRender = { ...contextoRender, ...variablesLocales };
-
-      try {
-        const contenido = await Deno.readTextFile(ruta);
-        const htmlRenderizado = await procesarSnippet(contenido, contextoRender);
-        resultado.push({ tipo: 'texto', contenido: htmlRenderizado });
-      } catch {
-        resultado.push({ tipo: 'texto', contenido: `Liquid error: ${nombre} not found` });
-      }
-    } else {
-      resultado.push(token);
-    }
+  // 🔍 DEBUG: Mostrar contenido específico del contexto
+  if (contexto.product) {
+    console.log(`🔍 Product en contexto:`, contexto.product);
   }
 
-  return resultado;
+  // Paso 1: Procesar asignaciones
+  let tokensConAsignaciones = procesarAsignaciones([...tokens], contexto);
+
+  // Paso 2: Procesar includes
+  let tokensConIncludes = await procesarIncludes(tokensConAsignaciones, contexto);
+
+  // 🔧 PASO 3: Procesar render AQUÍ con el contexto correcto del bucle
+  let tokensConRender = await procesarRender(tokensConIncludes, contexto);
+
+  // Paso 4: Procesar sections
+  let tokensConSections = await procesarSection(tokensConRender, contexto);
+
+  // Paso 5: Procesar bucles anidados (recursión)
+  let tokensConBucles = await procesarBucles(tokensConSections, contexto);
+
+  // Paso 6: Procesar condicionales
+  let tokensConCondicionales = procesarCondicionales(tokensConBucles, contexto);
+
+  // 🔧 PASO 7: Procesar variables con la función corregida
+  let tokensFinales = tokensConCondicionales.map(token => {
+    if (token.tipo === "variable") {
+      console.log(`🔧 Procesando variable en bucle: ${token.contenido}`);
+      console.log(`🔧 Contexto para variable:`, Object.keys(contexto));
+      return procesarVariableConFiltros(token, contexto);
+    }
+    return token;
+  });
+
+  return tokensFinales;
 }
 
-
-//Procesar Secciones para la carpeta sections
-async function procesarSection(tokens: TokenPlantilla[], contexto: Record<string, any>): Promise<TokenPlantilla[]> {
-  const resultado: TokenPlantilla[] = [];
-
-  for (const token of tokens) {
-    if (token.tipo === 'directiva' && token.contenido.startsWith('section ')) {
-      const nombreRaw = token.contenido.split(/\s+/)[1];
-      const nombre = nombreRaw?.replace(/^['"]|['"]$/g, '');
-      const ruta = new URL(`../server/themes/dev/sections/${nombre}.liquid`, import.meta.url).pathname;
-
-      try {
-        const contenido = await Deno.readTextFile(ruta);
-
-        // 🔎 Separar plantilla visual y extraer schema
-
-        const contenidoVisual = contenido.replace(/{% schema %}[\s\S]*?{% endschema %}/, "").trim();
-
-        // 🔧 Construir contexto local de la sección
-        const settings =
-        contexto.sections?.[nombre]?.settings ??
-        contexto.settings?.current?.sections?.[nombre]?.settings ??
-        {};
-
-        if (Object.keys(settings).length === 0) {
-        console.warn(`⚠️ Advertencia: No se encontraron settings para la sección '${nombre}'.`);
-        }
-
-
-        let contextoSection: Record<string, any> = {};
-        for (let clave in contexto) {
-          if (contexto[clave]?.isDrop) {
-            contextoSection[clave] = contexto[clave];
-          }
-        }
-
-        contextoSection.section = {
-          settings,
-        };
-
-        const htmlRenderizado = await procesarSnippet(contenidoVisual, contextoSection);
-        resultado.push({ tipo: 'texto', contenido: htmlRenderizado });
-      } catch {
-        resultado.push({ tipo: 'texto', contenido: `Liquid error: ${nombre} not found` });
-      }
-    } else {
-      resultado.push(token);
-    }
-  }
-
-  return resultado;
-}
-
-
-// 🎯 FUNCIÓN AUXILIAR CORREGIDA: Procesa variables con filtros y contexto
-function procesarVariableConFiltros(token: TokenPlantilla, contexto: Record<string, any>): TokenPlantilla {
-  if (token.tipo === "variable") {
-    let partes = token.contenido.split('|').map(p => p.trim());
-    let nombreVariable = partes.shift() ?? '';
-    let filtros = partes;
-
-    // Obtener el valor inicial
-    let valorFinal: any;
-
-    // Si es una cadena literal (entre comillas), usar el valor literal
-    if (nombreVariable.startsWith("'") && nombreVariable.endsWith("'")) {
-      valorFinal = nombreVariable.slice(1, -1);
-    } else if (nombreVariable.startsWith('"') && nombreVariable.endsWith('"')) {
-      valorFinal = nombreVariable.slice(1, -1);
-    } else {
-      // Obtener el valor de la variable del contexto
-      valorFinal = nombreVariable.split('.').reduce((obj, key) => {
-        return obj && Object.prototype.hasOwnProperty.call(obj, key) ? obj[key] : undefined;
-      }, contexto);
-
-      if (valorFinal === undefined) {
-        valorFinal = nombreVariable;
-      }
-    }
-
-    // 🔧 Aplicar filtros secuencialmente, pasando el contexto
-    for (let filtro of filtros) {
-      let filtroLimpio = filtro.trim();
-      if (!filtrosRegistrados[filtroLimpio]) {
-        throw new Error(`Error: El filtro '${filtroLimpio}' no está definido.`);
-      }
-
-      valorFinal = filtrosRegistrados[filtroLimpio](valorFinal, contexto);
-    }
-
-    return { tipo: "texto", contenido: String(valorFinal) };
-  }
-
-  return token;
-}
-
-function procesarBucles(tokens: TokenPlantilla[], contexto: Record<string, any>): TokenPlantilla[] {
+// 🔧 FUNCIÓN CORREGIDA: procesarBucles - Maneja render dentro del contexto del bucle
+async function procesarBucles(tokens: TokenPlantilla[], contexto: Record<string, any>): Promise<TokenPlantilla[]> {
   let resultado: TokenPlantilla[] = [];
   let i = 0;
 
@@ -346,11 +260,16 @@ function procesarBucles(tokens: TokenPlantilla[], contexto: Record<string, any>)
       let nombreItem = partes[1];
       let nombreLista = partes[3];
 
-      // 🔹 Resolver la lista desde el contexto (soporta notación anidada)
+      console.log(`🔄 Procesando bucle: ${nombreItem} in ${nombreLista}`);
+
+      // 🔹 Resolver la lista desde el contexto
       let segmentos = nombreLista.replace(/\[(["'])(.*?)\1\]/g, '.$2').split('.');
       let valoresLista = segmentos.reduce((obj, key) => {
        return obj && Object.prototype.hasOwnProperty.call(obj, key) ? obj[key] : undefined;
       }, contexto);
+
+      console.log(`🔍 Lista encontrada:`, valoresLista);
+      console.log(`🔍 Es array:`, Array.isArray(valoresLista));
 
       // 🔸 Si es Drop, no se puede iterar
       if (valoresLista?.isDrop) {
@@ -361,7 +280,7 @@ function procesarBucles(tokens: TokenPlantilla[], contexto: Record<string, any>)
 
       // 🔸 Si no es array, tampoco se puede iterar
       if (!Array.isArray(valoresLista)) {
-        console.warn(`Advertencia: '${nombreLista}' no es un array.`);
+        console.warn(`Advertencia: '${nombreLista}' no es un array. Valor:`, valoresLista);
         i = saltarBloque(tokens, i);
         continue;
       }
@@ -388,17 +307,27 @@ function procesarBucles(tokens: TokenPlantilla[], contexto: Record<string, any>)
         throw new Error("Error de sintaxis: {% for %} sin {% endfor %}");
       }
 
-      // 🔹 Procesar cada elemento del array
-      for (let valor of valoresLista) {
-        let contextoLocal = { ...contexto, [nombreItem]: valor };
+      console.log(`🔍 Bloque interno del bucle:`, bloqueInterno);
 
-        let bloqueProcesadoBucles = procesarBucles(bloqueInterno, contextoLocal);
-        let bloqueProcesadoCondicionales = procesarCondicionales(bloqueProcesadoBucles, contextoLocal);
-        let tokensFinales = bloqueProcesadoCondicionales.map(token =>
-          procesarVariableConFiltros(token, contextoLocal)
-        );
+      // 🔧 CORRECCIÓN CLAVE: Procesar cada elemento con render incluido
+      for (let index = 0; index < valoresLista.length; index++) {
+        let valor = valoresLista[index];
+        let contextoLocal = {
+        ...contexto,
+        [nombreItem]: valor,
+        Mockify: contexto.Mockify // ✅ Asegura que se mantenga el locale
+        };
 
-        resultado.push(...tokensFinales);
+        console.log(`🔄 Iteración ${index + 1}:`, {
+          nombreItem,
+          valor,
+          tieneTitle: valor?.title,
+          tienePrecio: valor?.precio
+        });
+
+        // ✅ NUEVA FUNCIÓN: Procesar bloque con render en contexto local
+        let bloqueProcesado = await procesarBloqueEnBucle(bloqueInterno, contextoLocal);
+        resultado.push(...bloqueProcesado);
       }
 
       i = j - 1;
@@ -410,6 +339,220 @@ function procesarBucles(tokens: TokenPlantilla[], contexto: Record<string, any>)
   }
 
   return resultado;
+}
+// 🔧 FUNCIÓN CORREGIDA: procesarRender con mejor logging
+async function procesarRender(tokens: TokenPlantilla[], contexto: Record<string, any>): Promise<TokenPlantilla[]> {
+  const resultado: TokenPlantilla[] = [];
+
+  for (const token of tokens) {
+    if (token.tipo === 'directiva' && token.contenido.startsWith('render ')) {
+      const partes = token.contenido.split(/,\s*/);
+      const nombreRaw = partes[0].split(/\s+/)[1];
+      const nombre = nombreRaw.replace(/^['"]|['"]$/g, '');
+
+      console.log(`🔧 Procesando render '${nombre}' en contexto:`, Object.keys(contexto));
+
+      const ruta = new URL(`../server/themes/dev/snippets/${nombre}.liquid`, import.meta.url).pathname;
+
+      // 🔹 Extraer variables pasadas
+      let variablesLocales: Record<string, any> = {};
+      for (let i = 1; i < partes.length; i++) {
+        let [clave, valorRaw] = partes[i].split(':').map(s => s.trim());
+
+        // 🔧 CORRECCIÓN: Mejor resolución de variables
+        let valor;
+        if (/^['"]/.test(valorRaw)) {
+          valor = valorRaw.slice(1, -1); // String literal
+        } else {
+          // Buscar en el contexto
+          valor = contexto[valorRaw];
+          console.log(`🔍 Resolviendo '${valorRaw}' como:`, valor);
+        }
+
+        variablesLocales[clave] = valor;
+        console.log(`🔧 Variable local '${clave}':`, valor);
+      }
+
+      // 🔹 Clonar contexto base
+      // 🔧 Corrección: pasar el contexto completo sin filtrar
+      let contextoRender: Record<string, any> = {
+       ...contexto,
+       ...variablesLocales
+};
+
+      console.log(`🔧 Contexto final para render '${nombre}':`, Object.keys(contextoRender));
+
+      try {
+        const contenido = await Deno.readTextFile(ruta);
+        const htmlRenderizado = await procesarSnippet(contenido, contextoRender);
+        resultado.push({ tipo: 'texto', contenido: htmlRenderizado });
+      } catch (error) {
+        console.error(`❌ Error procesando render '${nombre}':`, error);
+        resultado.push({ tipo: 'texto', contenido: `Liquid error: ${nombre} not found` });
+      }
+    } else {
+      resultado.push(token);
+    }
+  }
+
+  return resultado;
+}
+
+//Procesar Secciones para la carpeta sections
+async function procesarSection(tokens: TokenPlantilla[], contexto: Record<string, any>): Promise<TokenPlantilla[]> {
+  const resultado: TokenPlantilla[] = [];
+
+  for (const token of tokens) {
+    if (token.tipo === 'directiva' && token.contenido.startsWith('section ')) {
+      const nombreRaw = token.contenido.split(/\s+/)[1];
+      const nombre = nombreRaw?.replace(/^['"]|['"]$/g, '');
+
+      // 🔧 CORRECCIÓN: Usar la ruta correcta hacia sections
+      const ruta = new URL(`../server/themes/dev/sections/${nombre}.liquid`, import.meta.url).pathname;
+
+      console.log(`🔍 Intentando cargar sección desde: ${ruta}`);
+
+      try {
+        const contenido = await Deno.readTextFile(ruta);
+
+        // 🔎 Separar plantilla visual y extraer schema
+        const contenidoVisual = contenido.replace(/{% schema %}[\s\S]*?{% endschema %}/, "").trim();
+
+        // 🔧 Construir contexto local de la sección
+        const settings =
+        contexto.sections?.[nombre]?.settings ??
+        contexto.settings?.current?.sections?.[nombre]?.settings ??
+        {};
+
+
+        console.log(`🔍 Settings para sección '${nombre}':`, settings);
+        console.log(`🔍 Contexto completo disponible:`, Object.keys(contexto));
+        console.log(`🔍 contexto.collections:`, contexto.collections);
+        console.log(`🔍 contexto.products:`, contexto.products);
+
+        if (Object.keys(settings).length === 0) {
+        console.warn(`⚠️ Advertencia: No se encontraron settings para la sección '${nombre}'.`);
+        }
+
+        let contextoSection: Record<string, any> = {
+         ...contexto // ✅ Conserva todo: Mockify, Drops, settings, etc.
+        };
+
+        // 🔧 CORRECCIÓN: Agregar el objeto section correctamente
+        contextoSection.section = {
+          settings,
+        };
+
+        // 🔧 CORRECCIÓN: Agregar template_type para asset_url
+        contextoSection.template_type = 'section';
+
+        const htmlRenderizado = await procesarSnippet(contenidoVisual, contextoSection);
+        resultado.push({ tipo: 'texto', contenido: htmlRenderizado });
+      } catch (error) {
+        console.error(`❌ Error al cargar sección '${nombre}':`, error);
+        resultado.push({ tipo: 'texto', contenido: `Liquid error: ${nombre} not found` });
+      }
+    } else {
+      resultado.push(token);
+    }
+  }
+
+  return resultado;
+}
+
+// 🎯 FUNCIÓN AUXILIAR MEJORADA: Procesa variables con filtros y contexto - CORREGIDA
+function procesarVariableConFiltros(token: TokenPlantilla, contexto: Record<string, any>): TokenPlantilla {
+  if (token.tipo === "variable") {
+    let partes = token.contenido.split('|').map(p => p.trim());
+    let nombreVariable = partes.shift() ?? '';
+    let filtros = partes;
+
+    console.log(`🔍 Procesando variable '${nombreVariable}' con filtros:`, filtros);
+    console.log(`🔍 Contexto disponible:`, Object.keys(contexto));
+
+    // Obtener el valor inicial
+    let valorFinal: any;
+
+    // Si es una cadena literal (entre comillas), usar el valor literal
+    if (nombreVariable.startsWith("'") && nombreVariable.endsWith("'")) {
+      valorFinal = nombreVariable.slice(1, -1);
+    } else if (nombreVariable.startsWith('"') && nombreVariable.endsWith('"')) {
+      valorFinal = nombreVariable.slice(1, -1);
+    } else {
+      // 🔧 CORRECCIÓN PRINCIPAL: Mejor manejo de acceso a propiedades
+      let segmentos = nombreVariable
+        .replace(/\[(["'])(.*?)\1\]/g, '.$2')
+        .split('.');
+
+      console.log(`🔍 Buscando '${nombreVariable}' en segmentos:`, segmentos);
+
+      valorFinal = segmentos.reduce((obj, key) => {
+        console.log(`🔍 Accediendo a '${key}' en:`, obj);
+
+        // 🔧 CORRECCIÓN: Mejor manejo de objetos normales y Drops
+        if (obj === null || obj === undefined) {
+          console.log(`⚠️ Objeto es null/undefined para clave '${key}'`);
+          return undefined;
+        }
+
+        // Si es un Drop, usar su método de acceso
+        if (obj?.isDrop) {
+          const resultado = obj[key];
+          console.log(`🔍 Acceso Drop '${key}':`, resultado);
+          return resultado;
+        }
+
+        // 🔧 CORRECCIÓN CRÍTICA: Para objetos normales, verificar si existe la propiedad
+        if (typeof obj === 'object' && obj !== null) {
+          // Verificar si tiene la propiedad directamente
+          if (Object.prototype.hasOwnProperty.call(obj, key)) {
+            const resultado = obj[key];
+            console.log(`🔍 Acceso directo '${key}':`, resultado);
+            return resultado;
+          }
+
+          // Si no existe, retornar undefined
+          console.log(`⚠️ Propiedad '${key}' no encontrada en objeto:`, Object.keys(obj));
+          return undefined;
+        }
+
+        console.log(`⚠️ No se puede acceder a '${key}' en tipo:`, typeof obj);
+        return undefined;
+      }, contexto);
+
+      console.log(`🔍 Valor encontrado para '${nombreVariable}':`, valorFinal);
+
+      if (valorFinal === undefined || valorFinal === null) {
+        console.warn(`⚠️ Variable '${nombreVariable}' no encontrada. Contexto disponible:`, Object.keys(contexto));
+
+        // 🔧 DEBUG: Mostrar el contenido completo del contexto para debugging
+        console.log(`🔍 Contenido completo del contexto:`, contexto);
+
+        valorFinal = "";
+      }
+    }
+
+    // 🔧 Aplicar filtros secuencialmente, pasando el contexto
+    for (let filtro of filtros) {
+      let filtroLimpio = filtro.trim();
+      if (!filtrosRegistrados[filtroLimpio]) {
+        throw new Error(`Error: El filtro '${filtroLimpio}' no está definido.`);
+      }
+
+      console.log(`🔧 Aplicando filtro '${filtroLimpio}' a:`, valorFinal);
+
+      if (filtroLimpio === 'asset_url' || filtroLimpio === 't' || filtroLimpio === 'translate') {
+        valorFinal = filtrosRegistrados[filtroLimpio](valorFinal, contexto);
+      } else {
+        valorFinal = filtrosRegistrados[filtroLimpio](valorFinal);
+      }
+    }
+
+    console.log(`✅ Resultado final para '${token.contenido}':`, valorFinal);
+    return { tipo: "texto", contenido: String(valorFinal) };
+  }
+
+  return token;
 }
 
 // 🔧 Función auxiliar para saltar bloques {% for %} ... {% endfor %}
@@ -543,9 +686,12 @@ function renderizarVariables(
           throw new Error(`Error: El filtro '${filtroLimpio}' no está definido.`);
         }
 
-        valorFinal = filtroLimpio === 'asset_url'
-          ? filtrosRegistrados[filtroLimpio](valorFinal, contexto)
-          : filtrosRegistrados[filtroLimpio](valorFinal);
+        // 🔧 CORRECCIÓN: Filtros que necesitan contexto
+        if (filtroLimpio === 'asset_url' || filtroLimpio === 't' || filtroLimpio === 'translate') {
+          valorFinal = filtrosRegistrados[filtroLimpio](valorFinal, contexto);
+        } else {
+          valorFinal = filtrosRegistrados[filtroLimpio](valorFinal);
+        }
       }
 
       return String(valorFinal);
@@ -575,23 +721,28 @@ export async function liquidEngine(entradaInicial: string, contexto: Record<stri
     const entradaConIncludes = await procesarIncludes(entradaProcesadaAsignacion, contexto);
     console.log("Después de procesar includes:\n", entradaConIncludes);
 
-    // Paso 5: Procesar render
-    const entradaConRender = await procesarRender(entradaConIncludes, contexto);
-    console.log("Despues de procesar render:\n",entradaConRender);
+    // 🔧 CAMBIO: Procesar bucles ANTES que render para el template principal
+    // Esto maneja bucles que no están dentro de snippets
+    const buclesProcesados = await procesarBucles(entradaConIncludes, contexto);
+    console.log("Después de procesar bucles:\n", buclesProcesados);
 
-    //Paso 6: Procesar sections
+    // Paso 5: Procesar render (después de bucles principales)
+    const entradaConRender = await procesarRender(buclesProcesados, contexto);
+    console.log("Despues de procesar render:\n", entradaConRender);
+
+    // Paso 6: Procesar sections
     const entradaConSections = await procesarSection(entradaConRender, contexto);
     console.log("Después de procesar Sections:\n", entradaConSections);
 
-    // Paso 5: Procesar bucles PRIMERO (antes que condicionales)
-    const buclesProcesados = procesarBucles(entradaConSections, contexto);
-    console.log("Después de procesar bucles:\n", buclesProcesados);
+    // Paso 7: Procesar bucles adicionales (para bucles que pudieron generarse en sections)
+    const buclesFinales = await procesarBucles(entradaConSections, contexto);
+    console.log("Después de procesar bucles finales:\n", buclesFinales);
 
-    // Paso 6: Procesar condicionales (después de bucles)
-    const entradaProcesada = procesarCondicionales(buclesProcesados, contexto);
+    // Paso 8: Procesar condicionales
+    const entradaProcesada = procesarCondicionales(buclesFinales, contexto);
     console.log("Después de procesar condicionales:\n", entradaProcesada);
 
-    // Paso 7: Renderizar variables finales
+    // Paso 9: Renderizar variables finales
     const entradaRenderizada = renderizarVariables(entradaProcesada, contexto, filtrosRegistrados);
     console.log("Resultado final de Liquid:\n", entradaRenderizada);
 

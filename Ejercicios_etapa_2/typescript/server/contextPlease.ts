@@ -40,7 +40,6 @@ async function agruparProductos(
   }
 }
 
-
 function crearDrop<T extends { handle: string }>(items: T[]): any {
   const mapa = new Map<string, T>();
   for (const item of items) {
@@ -76,23 +75,20 @@ function crearDrop<T extends { handle: string }>(items: T[]): any {
 }
 
 const coleccionesConProductos = await agruparProductos(products, collectionss, collectionsProducts);
-
+let collecciones =crearDrop(coleccionesConProductos ?? []);
+let todosProductos = crearDrop(products);
 export const context = {
-  collections: crearDrop(coleccionesConProductos ?? []),
-  all_products: crearDrop(products),
-  settings: {
-    current: {
-      sections: {
-        header_menu: {
-          settings: {
-            heading: "Menú principal",
-            link_1_label: "Camisas suaves",
-            link_1_url: "/collections/soft-shirts",
-            link_2_label: "Camisa suave A",
-            link_2_url: "/products/camisa-suave-a"
-          }
-        }
+  collections: collecciones,
+  all_products: todosProductos,
+  Mockify: {
+    locale: "es"
+  },
+  sections: {
+    featured_collection: {
+      settings: {
+        title: "Productos destacados"
       }
     }
   }
 };
+console.log(context)
