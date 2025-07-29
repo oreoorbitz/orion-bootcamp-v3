@@ -41,10 +41,7 @@
     grid-template-columns: repeat(1, minmax(0, 1fr));
   }
   .md\:grid-cols-3 {
-    /* Apply this only at medium screen size and up */
-  }
-  @media (min-width: 768px) {
-    .md\:grid-cols-3 {
+    @media (min-width: 768px) {
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }
   }
