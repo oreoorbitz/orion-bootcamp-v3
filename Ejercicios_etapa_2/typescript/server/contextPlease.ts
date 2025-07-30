@@ -1,4 +1,13 @@
 import { DatabaseSync } from "node:sqlite";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// ✅ Ruta correcta a la carpeta config dentro de server/themes/dev
+const rutaConfig = path.resolve(__dirname, "themes/dev/config");
 
 const db = new DatabaseSync("data.db");
 
@@ -14,30 +23,23 @@ async function agruparProductos(
   productos: Producto[],
   colecciones: Coleccion[],
   relaciones: Relacion[]
-): Promise<(Coleccion & { products: Producto[] })[] | undefined> {
-  try {
-    const resultado: (Coleccion & { products: Producto[] })[] = [];
+): Promise<(Coleccion & { products: Producto[] })[]> {
+  const resultado: (Coleccion & { products: Producto[] })[] = [];
 
-    for (let i = 0; i < colecciones.length; i++) {
-      const coleccion = { ...colecciones[i], products: [] as Producto[] };
+  for (const coleccion of colecciones) {
+    const agrupada = { ...coleccion, products: [] as Producto[] };
 
-      for (let j = 0; j < relaciones.length; j++) {
-        if (relaciones[j].collectionId === coleccion.id) {
-          for (let k = 0; k < productos.length; k++) {
-            if (productos[k].id === relaciones[j].productId) {
-              coleccion.products.push(productos[k]);
-            }
-          }
-        }
+    for (const relacion of relaciones) {
+      if (relacion.collectionId === coleccion.id) {
+        const producto = productos.find(p => p.id === relacion.productId);
+        if (producto) agrupada.products.push(producto);
       }
-
-      resultado.push(coleccion);
     }
 
-    return resultado;
-  } catch (error) {
-    console.log(error);
+    resultado.push(agrupada);
   }
+
+  return resultado;
 }
 
 function crearDrop<T extends { handle: string }>(items: T[]): any {
@@ -46,23 +48,18 @@ function crearDrop<T extends { handle: string }>(items: T[]): any {
     mapa.set(item.handle, item);
   }
 
-  const drop = new Proxy(mapa, {
+  return new Proxy(mapa, {
     get(target, prop: string) {
       if (prop === 'isDrop') return true;
-      if (typeof prop === 'string') {
-        return target.get(prop) ?? "";
-      }
+      if (typeof prop === 'string') return target.get(prop) ?? "";
       return undefined;
     },
-
     has(target, prop: string) {
       return target.has(prop as string);
     },
-
     ownKeys(target) {
       return Array.from(target.keys());
     },
-
     getOwnPropertyDescriptor() {
       return {
         enumerable: true,
@@ -70,25 +67,42 @@ function crearDrop<T extends { handle: string }>(items: T[]): any {
       };
     }
   });
-
-  return drop;
 }
 
-const coleccionesConProductos = await agruparProductos(products, collectionss, collectionsProducts);
-let collecciones =crearDrop(coleccionesConProductos ?? []);
-let todosProductos = crearDrop(products);
-export const context = {
-  collections: collecciones,
-  all_products: todosProductos,
-  Mockify: {
-    locale: "es"
-  },
-  sections: {
-    featured_collection: {
-      settings: {
-        title: "Productos destacados"
-      }
+export async function crearContexto() {
+  const data = JSON.parse(fs.readFileSync(path.join(rutaConfig, "settings_data.json"), "utf-8"));
+  const current = data.current
+  //console.log(current)
+
+  const sections = data.current.sections
+  //console.log(sections)
+  const settings={}
+
+  for (const key in current) {
+    const obj = current[key]
+    if (key !== "sections") {
+      settings[key] = current[key]
     }
   }
-};
-console.log(context)
+
+  const coleccionesConProductos = await agruparProductos(products, collectionss, collectionsProducts);
+  const collecciones = crearDrop(coleccionesConProductos);
+  const todosProductos = crearDrop(products);
+
+  return {
+    collections: collecciones,
+    all_products: todosProductos,
+    Mockify: {
+      locale: "es"
+    },
+    shop: {
+       name: "Mi tienda"
+    },
+    sections,
+    settings,
+  };
+}
+
+//Para probar que funciona
+const contexto = await crearContexto();
+console.log(contexto)

@@ -4,7 +4,9 @@ import { renderDOM } from "../plantilla_motor/renderizador.ts";
 import { injector } from "../injector.ts";
 import { iniciarServidor } from "./slightlyLate.ts";
 import { notificarRecargaPagina } from "./wsServer.ts";
-import { context } from "./contextPlease.ts";
+import { crearContexto } from "./contextPlease.ts";
+
+const context = crearContexto();
 
 function path(stl: string) {
   return new URL(stl, import.meta.url).pathname
