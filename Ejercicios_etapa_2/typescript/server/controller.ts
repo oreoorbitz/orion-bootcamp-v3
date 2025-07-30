@@ -6,7 +6,7 @@ import { iniciarServidor } from "./slightlyLate.ts";
 import { notificarRecargaPagina } from "./wsServer.ts";
 import { crearContexto } from "./contextPlease.ts";
 
-const context = crearContexto();
+const context = await crearContexto();
 
 function path(stl: string) {
   return new URL(stl, import.meta.url).pathname
