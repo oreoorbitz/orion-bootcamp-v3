@@ -88,14 +88,3 @@
  * - Repetir contenido en bucles (`for fruta in frutas`)
  * - Y ahora también asignar valores (`assign`)
  */
-
-
-type TokenTipo = "directiva" | "variable" | "texto";
-
-interface Token {
-    tipo: TokenTipo;
-    contenido: string;
-}
-
-type Contexto = Record<string, any>;
-type filtrosRegistrados = Record<string, (x: any) => any>;

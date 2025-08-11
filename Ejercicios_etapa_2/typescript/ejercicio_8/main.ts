@@ -194,33 +194,3 @@
  * Esta implementación no es trivial, pero se alinea con cómo funciona realmente Liquid en Shopify.
  * Si decides implementarlo, tendrás una base mucho más robusta para renderizado dinámico.
  */
-
-
-type TokenPlantilla = {
-    tipo: "texto" | "variable" | "directiva";
-    contenido: string;
-  };
-  
-  function procesarCondicionales(tokens: TokenPlantilla[], contexto: Record<string, any>): TokenPlantilla[] {
-    const resultado: TokenPlantilla[] = [];
-    for (let i = 0; i < tokens.length; i++) {
-      const token = tokens[i];
-      if (token.tipo === "directiva" && token.contenido.startsWith("if ")) {
-        const variable = token.contenido.split(" ")[1];
-        let j = i + 1;
-        while (j < tokens.length && !(tokens[j].tipo === "directiva" && tokens[j].contenido === "endif")) {
-          j++;
-        }
-        if (contexto[variable]) {
-          resultado.push(...tokens.slice(i + 1, j));
-        }
-        i = j;
-      } else {
-        resultado.push(token);
-      }
-    }
-    return resultado;
-  }
-  
-  console.log(procesarCondicionales())
-  
