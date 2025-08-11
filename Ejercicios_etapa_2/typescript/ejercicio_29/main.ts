@@ -1,101 +1,94 @@
 /**
- * MÓDULO 29: RUTEO Y PLANTILLAS DINÁMICAS PARA PRODUCTOS Y COLECCIONES
-
+ * 🧩 MÓDULO 29: Separar plantilla base y contenido mediante `layout` y `templates`
+ *
  * 🧠 Concepto clave:
- * En cualquier sitio web dinámico (como una tienda), las rutas definen qué contenido mostrar:
- * - `/products/gold-necklace` debería mostrar un producto específico
- * - `/collections/sale` debería mostrar una colección con productos
-
- * Este módulo conecta:
- * - Tu sistema de rutas (servidor)
- * - Tu base de datos SQLite (vía Drizzle)
- * - Tu motor de plantillas Liquid personalizado
-
- * 📁 Estructura esperada en cada proyecto de tema:
- * ```
- * templates/
- * ├── product.liquid
- * └── collection.liquid
- * ```
-
- * ✅ Objetivo:
- * Conectar tu base de datos a tu sistema de ruteo y generar HTML real usando plantillas dinámicas.
-
+ * En este módulo vas a separar la lógica del diseño principal (layout) del contenido específico de cada página (template).
+ * Este patrón imita la arquitectura de temas de Shopify, donde `layout/theme.liquid` sirve como contenedor general
+ * y cada archivo dentro de `templates/` representa el contenido de una página específica.
+ *
+ * 🎯 Objetivo:
+ * - Crear una estructura más escalable separando `layout` y `templates`.
+ * - Usar la variable especial `{{ content_for_layout }}` para inyectar el contenido de plantilla en el diseño base.
+ * - Mantener la renderización en `controller.ts` con esta nueva estructura.
+ *
  * ✅ Instrucciones:
-
- * 1. Dentro del proyecto del tema (`ejercicio_29` o similar), crea una carpeta:
- *    ```
- *    templates/
- *    ├── product.liquid
- *    └── collection.liquid
- *    ```
-
- * 2. En tu módulo del servidor (por ejemplo, `slightlyLate.ts`):
- *    - Agrega soporte para rutas dinámicas:
- *      - `/products/:handle` → renderiza `product.liquid` con el producto que tenga ese `handle`
- *      - `/collections/:handle` → renderiza `collection.liquid` con la colección correspondiente
-
- * 3. Usa Drizzle para consultar la base de datos SQLite:
- *    - Productos y colecciones deben tener una columna `handle` única
- *    - Cuando se accede a una ruta, realiza la consulta a la base de datos
- *    - Si no existe el producto o colección, devuelve un mensaje de error o una página 404 simple
-
- * 4. Agrega al contexto dentro del motor de plantillas:
- *    - Para producto: `{ product: objetoDelProducto }`
- *    - Para colección: `{ collection: objetoDeLaColeccion }`
-
- * 5. Asegúrate de que la plantilla pueda acceder a los datos como:
- *    ```liquid
- *    <h1>{{ product.title }}</h1>
- *    <p>{{ product.description }}</p>
- *    ```
-
- * 6. Usa tu pipeline existente para:
- *    - Cargar la plantilla desde `templates/`
- *    - Pasarle el contexto apropiado (producto o colección)
- *    - Renderizar el HTML y enviarlo como respuesta al navegador
- *    - (opcional) Guardarlo en la carpeta `dist/` si estás en modo build
-
- * 🧪 Ejemplo de flujo:
-
- * URL accedida: `/products/gold-necklace`
-
- * En base de datos:
- * {
- *   id: 1,
- *   title: "Gold Necklace",
- *   description: "Handmade with real gold.",
- *   handle: "gold-necklace"
- * }
-
- * Plantilla `product.liquid`:
- * ```
- * <h1>{{ product.title }}</h1>
- * <p>{{ product.description }}</p>
- * ```
-
- * Resultado renderizado:
- * ```
- * <h1>Gold Necklace</h1>
- * <p>Handmade with real gold.</p>
- * ```
-
- * 🛠 Consejo:
- * - Este patrón es el mismo que usan Shopify y otros sistemas:
- *   - Tienen rutas dinámicas basadas en `handle`
- *   - Cargan los datos desde una base (MySQL, SQLite, GraphQL)
- *   - Renderizan el contenido con un motor de plantillas
-
- * - Puedes comenzar con rutas simples (solo `product` y `collection`) y extender en el futuro
-
- * 🔁 Verifica:
- * - Que tu servidor reciba la ruta desde el navegador
- * - Que se consulte correctamente la base de datos usando el `handle`
- * - Que el archivo de plantilla (`product.liquid` o `collection.liquid`) exista en `templates/`
- * - Que el HTML generado se renderice correctamente con los datos inyectados
- * - Que el CLI `Mockify` también valide:
- *    - Que la carpeta `templates/` exista
- *    - Que los archivos requeridos estén presentes:
- *        - `product.liquid`
- *        - `collection.liquid`
- *    - Si falta alguno, debe mostrar un mensaje de advertencia o error y detener la ejecución
+ *
+ * 1. **Verifica la estructura de tu tema en `typescript/ejercicio_29/`**
+ *
+ *    Debes tener ya tu proyecto con la siguiente estructura:
+ *    - `layout/theme.liquid`
+ *    - `templates/content_for_index.liquid`
+ *    - `assets/theme.css`
+ *    - `main.ts`
+ *
+ *    Puedes copiar el contenido de tu tema desde `ejercicio_28`, incluyendo las carpetas `layout/`, `templates/` y `assets/`.
+ *
+ * 2. **Actualiza tu archivo `layout/theme.liquid`**
+ *
+ *    - Reemplaza el uso de `{{ content_for_index }}` por `{{ content_for_layout }}`
+ *    - Este marcador actuará como punto de entrada dinámico para el contenido de cualquier plantilla.
+ *
+ * 3. **Actualiza tu motor de plantillas**
+ *
+ *    - Debes asegurarte de que tu motor de plantillas (no importa cómo lo hayas nombrado o dividido en funciones)
+ *      valide **que exista la variable `content_for_layout`** en el contexto.
+ *    - Ya **no debe haber ninguna lógica dentro del motor de plantillas que busque `content_for_index` directamente**.
+ *    - La única variable que debe usarse para inyectar contenido en el layout es `{{ content_for_layout }}`.
+ *
+ *    Esta separación es importante para que en el futuro puedas reutilizar la misma estructura de layout
+ *    con múltiples plantillas sin cambiar la lógica del motor.
+ *
+ * 4. **Actualiza `controller.ts` para combinar layout + template**
+ *
+ *    Dentro de tu función de renderizado:
+ *
+ *    - Lee el archivo `templates/content_for_index.liquid` como plantilla base de contenido.
+ *    - Luego, renderízalo con el contexto actual.
+ *    - Usa el resultado como valor de `content_for_layout` y pásalo al motor de plantillas para procesar `layout/theme.liquid`.
+ *    - Escribe el HTML final resultante dentro de `themes/dev/dist/index.html`.
+ *
+ *    El `controller.ts` debe ser el único lugar donde decides **qué archivo de plantilla se va a usar**.
+ *    Esto te prepara para poder asociar diferentes archivos `.liquid` a diferentes rutas más adelante.
+ *
+ *    ⚠️ **Asegúrate de que tu motor no tenga ninguna ruta hardcoded ni que lea `content_for_index` directamente.**
+ *
+ * 5. **Prueba el flujo completo**
+ *
+ *    - Verifica que `layout/theme.liquid` y `templates/content_for_index.liquid` se combinen correctamente
+ *      y que el archivo `dist/index.html` contenga ambos resultados.
+ *    - Asegúrate de que los estilos de `theme.css` siguen aplicándose.
+ *    - Usa `main.ts` para observar cambios y enviar actualizaciones al servidor.
+ *
+ * 📁 Estructura esperada:
+ * Ejercicios_etapa_2/
+ * ├── typescript/
+ * │   ├── ejercicio_29/
+ * │   │   ├── layout/
+ * │   │   │   └── theme.liquid
+ * │   │   ├── templates/
+ * │   │   │   └── content_for_index.liquid
+ * │   │   ├── assets/
+ * │   │   │   └── theme.css
+ * │   │   └── main.ts
+ * │   └── server/
+ * │       ├── controller.ts
+ * │       ├── contextPlease.ts
+ * │       ├── slightlyLate.ts
+ * │       ├── wsServer.ts
+ * │       └── themes/
+ * │           └── dev/
+ * │               ├── layout/
+ * │               │   └── theme.liquid
+ * │               ├── templates/
+ * │               │   └── content_for_index.liquid
+ * │               └── dist/
+ * │                   ├── index.html
+ * │                   └── assets/
+ * │                       └── theme.css
+ *
+ * 🎯 Resultado esperado:
+ * El archivo final generado (`dist/index.html`) debe tener el diseño base definido en `layout/theme.liquid`
+ * con el contenido dinámico de `templates/content_for_index.liquid` correctamente inyectado en `{{ content_for_layout }}`.
+ *
+ * Este patrón te preparará para manejar múltiples plantillas y rutas en el siguiente módulo.
+ */

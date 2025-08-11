@@ -1,0 +1,17 @@
+<h1>Bienvenido a nuestra tienda</h1>
+
+{% for collection in collections %}
+  <h2>{{ collection.title }}</h2>
+{% endfor %}
+
+<hr>
+
+<h2>Todos los productos:</h2>
+<ul>
+  {% for producto in products %}
+    <li class="producto">
+      <h3>{{ producto.title }}</h3>
+      <p>Precio: ${{ producto.precio | money }}</p>
+    </li>
+  {% endfor %}
+</ul>

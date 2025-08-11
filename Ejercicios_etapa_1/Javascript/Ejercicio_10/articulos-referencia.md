@@ -15,5 +15,5 @@ A continuación, se incluyen enlaces a lecturas complementarias en español que 
 
 - [Microtareas (Microtasks)](https://es.javascript.info/microtask-queue)
 
-- [Async/await]()
+- [Async/await](https://es.javascript.info/async-await)
 --- 

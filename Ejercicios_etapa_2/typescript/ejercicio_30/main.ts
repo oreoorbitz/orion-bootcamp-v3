@@ -1,70 +1,104 @@
 /**
- * MÓDULO 30: SECCIONES CON ESQUEMA Y CONFIGURACIÓN BÁSICA
+ * 🧩 MÓDULO 30: Crear módulo de rutas y manejar 404s
  *
  * 🧠 Concepto clave:
- * En motores como Shopify, las "secciones" (`sections/`) son bloques independientes y reutilizables de contenido,
- * que pueden ser incluidos dentro de plantillas (`templates/`) como componentes.
+ * En este módulo comenzarás a estructurar el manejo de rutas, como lo harías en un servidor real.
+ * Crearás un módulo de rutas personalizado (parecido a un `Router` de Oak o Express) y establecerás
+ * un comportamiento base para cuando una ruta no se encuentre (404).
  *
- * Cada sección puede tener su propio esquema (`{% schema %}`), definido en JSON, que describe qué configuraciones acepta.
- * Estas configuraciones se acceden mediante `section.settings.<id>` dentro del contenido de la sección.
- *
- * 🔧 Por ahora:
- * - Las secciones estarán asociadas directamente a una plantilla específica (relación fija).
- * - Solo se soportará un tipo de configuración: `text`
- *
- * Objetivo:
- * - Crear secciones que aceptan configuraciones a través de un esquema definido en la plantilla Liquid.
- * - Implementar el reconocimiento y parseo del bloque `{% schema %}` con contenido JSON.
- * - Permitir el acceso a `section.settings.<id>` dentro del contenido de la sección.
+ * 🎯 Objetivo:
+ * - Crear un archivo `router.ts` en `server/` que contenga una tabla de rutas
+ * - Implementar una función `resolve(path)` que retorne el nombre del template asociado a una ruta
+ * - Crear una plantilla `404.liquid` para rutas no encontradas
+ * - Generar `404.html` y `index.html` como salida en el `dist/`
+ * - Simular comportamiento de servidor con manejo de rutas no encontradas
  *
  * ✅ Instrucciones:
- * 1. Crea una carpeta llamada `sections/` en tu ejercicio actual.
- * 2. Mockify debe validar la existencia de esta carpeta.
  *
- * 3. Crea un archivo de sección Liquid (por ejemplo, `hero.liquid`) con la siguiente estructura:
- * ```
- * <div class="hero">
- *   <h1>{{ section.settings.titulo }}</h1>
- * </div>
+ * 1. **Prepara tu carpeta de ejercicio**
  *
- * {% schema %}
- * {
- *   "name": "Hero",
- *   "settings": [
- *     {
- *       "type": "text",
- *       "id": "titulo",
- *       "label": "Título principal"
- *     }
- *   ]
- * }
- * {% endschema %}
- * ```
+ *    Copia tu tema a `typescript/ejercicio_30/` desde el ejercicio anterior (`ejercicio_29`).
+ *    Asegúrate de incluir:
+ *    - `layout/`
+ *    - `templates/`
+ *    - `assets/`
+ *    - `main.ts`
  *
- * 4. Agrega soporte en tu motor de plantillas para:
- *    - Detectar el bloque `{% schema %}` y extraer su contenido JSON
- *    - Parsear este JSON y almacenarlo como `section.settings`
- *    - Permitir acceder a `{{ section.settings.<id> }}` dentro del contenido principal
+ *    Verifica que `templates/` contenga `content_for_index.liquid`.
  *
- * 5. Puedes inyectar valores de prueba en `section.settings` desde tu servidor hasta que más adelante
- *    se defina cómo configurar secciones vía archivos externos.
-
- * 🔁 Verifica:
- * - Que la carpeta `sections/` exista
- * - Que los archivos `.liquid` dentro de `sections/` incluyan un bloque `{% schema %}` válido
- * - Que tu motor extraiga y valide el JSON del esquema
- * - Que `section.settings.<id>` esté disponible como variable dentro del contenido renderizado
- * - Que Mockify valide la existencia de `sections/` y reporte errores si falta
+ * 2. **Crea el archivo `router.ts` en `server/`**
+ *
+ *    Este módulo vivirá del lado del servidor.
+ *
+ *    - Crea `typescript/server/router.ts`
+ *    - Exporta una función u objeto `router` con una función `resolve(path: string)`
+ *    - Esta función debe devolver el nombre del template asociado (por ejemplo: `"content_for_index"` para la ruta `/`)
+ *
+ *    En próximos módulos, este archivo se expandirá para admitir handles dinámicos.
+ *
+ * 3. **Crea la plantilla `404.liquid`**
+ *
+ *    Dentro de `templates/`, crea un nuevo archivo:
+ *    ```
+ *    templates/404.liquid  ← ✅ nuevo archivo
+ *    ```
+ *    Copia el contenido desde `typescript/liquid_snippets/404.liquid`.
+ *
+ * 4. **Actualiza tu lógica de renderizado para usar el router**
+ *
+ *    - Importa `router` desde `server/router.ts`
+ *    - Llama a `router.resolve(path)` para determinar el nombre del template
+ *    - Si `resolve()` devuelve `undefined`, usa `"404"` como fallback
+ *    - Renderiza ese template con tu motor Liquid como hiciste con `content_for_index.liquid`
+ *    - Inyecta el resultado como `content_for_layout` en el layout
+ *    - Escribe el HTML final en `themes/dev/dist/`
+ *
+ *    > ⚠️ Recuerda: si antes solo estabas procesando un solo template (`content_for_index.liquid`), ahora deberías asegurarte
+ *    > de que tu sistema de generación puede manejar múltiples archivos `.liquid` desde `templates/`.
+ *
+ * 5. **Organiza tus rutas y plantillas**
+ *
+ *    - Si aún no lo has hecho, considera crear una función como `getTemplatePath(nombre: string)` para ubicar templates fácilmente.
+ *    - Esto será útil a medida que agregues más archivos como `product.liquid`, `collection.liquid`, etc.
+ *
+ * 6. **Modifica tu función `iniciarServidor()` en `slightlyLate.ts`**
+ *
+ *    - Ajusta la función para servir el archivo correspondiente desde `themes/dev/dist/`
+ *    - Si la ruta solicitada no existe en disco, sirve `404.html` con status `404`
+ *    - Puedes seguir usando `Deno.readTextFile()` como hasta ahora
+ *
+ *    Esto simulará un comportamiento de servidor real con manejo de errores por rutas no encontradas.
  *
  * 📁 Estructura esperada:
- * ├── sections/
- * │   └── hero.liquid
- * └── templates/
- *     └── collection.liquid
+ * Ejercicios_etapa_2/
+ * ├── typescript/
+ * │   ├── ejercicio_30/
+ * │   │   ├── layout/
+ * │   │   ├── templates/
+ * │   │   │   ├── content_for_index.liquid
+ * │   │   │   └── 404.liquid        ← ✅ nuevo archivo
+ * │   │   ├── assets/
+ * │   │   ├── main.ts
+ * │   └── server/
+ * │       ├── controller.ts
+ * │       ├── contextPlease.ts
+ * │       ├── router.ts           ← ✅ nuevo archivo de este módulo
+ * │       ├── slightlyLate.ts
+ * │       ├── wsServer.ts
+ * │       └── themes/
+ * │           └── dev/
+ * │               ├── layout/
+ * │               ├── templates/
+ * │               ├── dist/
+ * │               │   ├── content_for_index.html
+ * │               │   ├── 404.html           ← ✅ nuevo archivo generado
+ * │               │   └── assets/
+ * │               │       └── theme.css
  *
- * 🧩 Consejo:
- * - No necesitas aún un archivo externo para los valores de `section.settings`.
- *   Puedes definir una configuración fija desde tu servidor para cada sección mientras desarrollas.
- *
- * Este módulo abre el camino para construir interfaces visuales como el editor de temas de Shopify.
+ * 🎯 Resultado esperado:
+ * - Tienes un `router.ts` funcional que resuelve rutas a templates
+ * - Puedes renderizar tanto `content_for_index.liquid` como `404.liquid`
+ * - Se generan correctamente `content_for_index.html` y `404.html` en `dist/`
+ * - Tu servidor en `iniciarServidor()` sirve `404.html` con status 404 cuando la ruta no existe
+ * - Estás listo para soportar rutas dinámicas como `/products/:handle` en el próximo módulo
  */

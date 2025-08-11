@@ -9,24 +9,33 @@
  * Esto simula cómo los desarrolladores organizan librerías, reutilizan módulos, y preparan su código para crecer.
  *
  * 🎯 Objetivo:
- * Crear un archivo central donde vivan todas tus funciones relacionadas a:
+ * Crear un archivo o una carpeta central donde vivan todas tus funciones relacionadas a:
  * - Motor de plantillas (`tokenizar`, `condicionales`, `filtros`, `bucles`, etc.)
  * - Parser de HTML (`tokenizarHTML`, `clasificarTokens`, `construirArbol`)
  * - Renderizador (`renderizarHTML`, `escapeTexto`)
  *
  * ✅ Instrucciones:
  * 1. Crea una nueva carpeta en el directorio padre del curso:
- *    `Ejercicios_etapa_2/plantilla_motor/`
+ *    `Ejercicios_etapa_2/typesctript/plantilla_motor/`
  *
- * 2. Dentro de esa carpeta, crea un archivo llamado `mod.ts` y organiza tus funciones ahí:
+ * 2a. Si quieres usar un archivo central: dentro de esa carpeta, crea un archivo llamado `mod.ts` y organiza tus funciones ahí:
  *    - Usa `export` para cada función o tipo
  *    - Puedes dividir por secciones si lo deseas (parsing, rendering, liquid, etc.)
+ * 2b. Si quieres crear una carpeta central: dentro de la carpeta coloca tus tres archivos por separado
+ *    - Motor de plantillas (`tokenizar`, `condicionales`, `filtros`, `bucles`, etc.)
+ *    - Parser de HTML (`tokenizarHTML`, `clasificarTokens`, `construirArbol`)
+ *    - Renderizador (`renderizarHTML`)
+ *    No olvides:
+ *    - Usa `export` para cada función o tipo
  *
- * 3. En cada carpeta de módulo (`ejercicio_{{n}}`), importa desde ahí:
+ * 3. En cada carpeta de los próximos módulos (`ejercicio_{{n}}`), importa desde ahí:
  *    ```ts
  *    import { renderizarArchivoLiquid } from "../plantilla_motor/mod.ts";
  *    ```
- *
+ *    En caso de que estés usando una carpeta central asegurate de escribir bien la dirección del archivo y que los import esten escritos correctamente.
+ *    ```ts
+ *    import { motorDePlantillas } from "../plantilla_motor/motorDePlantillas.ts";
+ *    ```
  * 4. Elige si este módulo tiene pruebas:
  *    - Puedes crear un `main.ts` para probar tu archivo central
  *    - Puedes decidir si ya estás satisfecho con las pruebas existentes
@@ -39,7 +48,7 @@
  *
  * ✅ Resultado esperado:
  * - Un archivo `mod.ts` con todo tu sistema de rendering.
- * - Los siguientes ejercicios ya no necesitan copiar funciones previas.
+ * - Los siguientes ejercicios ya no necesitaran copiar funciones previas porque ya se estará usando el motor creado en la carpeta.
  * - Posiblemente un pequeño `main_test.ts` o `demo.ts` para verificar que sigue funcionando.
  *
  * Consejo:

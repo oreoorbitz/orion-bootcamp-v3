@@ -1,57 +1,95 @@
 /**
- * MÓDULO 12: ASIGNACIÓN DE VARIABLES EN PLANTILLAS
+ * MÓDULO 12: CONECTAR MOTOR DE PLANTILLAS CON MOTOR DOM
  *
  * 🧠 Concepto clave:
- * En Liquid (y otros motores de plantillas), se pueden definir nuevas variables directamente desde la plantilla usando `assign`.
- * Esto permite guardar temporalmente un valor para usarlo más adelante.
+ * Hasta ahora, has construido dos sistemas importantes por separado:
+ * - Un **motor de plantillas Liquid** que transforma texto con variables, condiciones, bucles y filtros.
+ * - Un **motor DOM** que convierte HTML plano en un árbol de nodos que puedes recorrer y manipular.
+
+ * En este módulo los vas a combinar:
+ * - Primero se procesa la plantilla con Liquid.
+ * - Luego se pasa el resultado como HTML a tu parser para construir un árbol DOM.
  *
- * Ejemplo:
+ * ✅ Ejemplo de plantilla combinada:
  * ```liquid
- * {% assign saludo = "Hola" %}
- * {{ saludo }}
+ * <ul>
+ *   {% for fruta in frutas %}
+ *     {% if fruta %}
+ *       <li>{{ fruta | upcase }}</li>
+ *     {% endif %}
+ *   {% endfor %}
+ * </ul>
  * ```
  *
- * Esto genera una variable llamada `saludo` con el valor `"Hola"`, que puede mostrarse luego con `{{ saludo }}`.
- * Esta funcionalidad te permite preparar valores intermedios, igual que en programación real.
- *
- * ✅ Tokens de entrada:
+ * ✅ Ejemplo de contexto:
  * ```ts
- * [
- *   { tipo: "directiva", contenido: "assign saludo = \"Hola\"" },
- *   { tipo: "variable", contenido: "saludo" }
- * ]
+ * {
+ *   frutas: ["manzana", "plátano", "uva"]
+ * }
  * ```
  *
- * ✅ Resultado esperado:
+ * ✅ Resultado después del render:
+ * ```html
+ * <ul>
+ *   <li>MANZANA</li>
+ *   <li>PLÁTANO</li>
+ *   <li>UVA</li>
+ * </ul>
+ * ```
+ *
+ * ✅ Resultado como árbol DOM (formato abreviado):
  * ```ts
- * [
- *   { tipo: "texto", contenido: "Hola" }
- * ]
+ * {
+ *   tipo: 'elemento',
+ *   nombre: 'ul',
+ *   atributos: {},
+ *   hijos: [
+ *     { tipo: 'elemento', nombre: 'li', hijos: [{ tipo: 'texto', contenido: 'MANZANA' }] },
+ *     ...
+ *   ]
+ * }
  * ```
  *
- * Objetivo:
- * Detectar y ejecutar asignaciones del tipo `{% assign nombre = valor %}` y actualizar el `contexto` con la nueva variable.
+ * 🎯 Objetivo:
+ * Procesar una plantilla Liquid completa, y luego convertir el resultado en un árbol de nodos usando tu parser DOM.
+
+ * 🛠️ Instrucciones:
+ * 1. Usa la función `renderizarPlantilla(...)` para transformar la plantilla con el contexto.
+ * 2. Pasa el resultado HTML a tu función `construirArbol(...)` del módulo DOM.
+ * 3. Imprime el árbol resultante con `console.log(...)`.
+
+ * ✅ Puedes usar el siguiente HTML + Liquid como punto de partida:
+ * ```ts
+ * const plantilla = `
+ * <section>
+ *   <h2>Frutas favoritas</h2>
+ *   <ul>
+ *     {% for fruta in frutas %}
+ *       {% if fruta %}
+ *         <li>{{ fruta | upcase }}</li>
+ *       {% endif %}
+ *     {% endfor %}
+ *   </ul>
+ * </section>
+ * `
+ * ```
  *
- * Instrucciones:
- * 1. Crea una función `procesarAsignaciones(tokens: TokenPlantilla[], contexto: Record<string, any>): TokenPlantilla[]`
- * 2. Para cada token `tipo: "directiva"` que comience con `"assign "`:
- *    - Extrae el nombre y el valor con un `.split("=")`
- *    - Si el valor está entre comillas (`"Hola"`), guárdalo como texto literal
- *    - Si **no** tiene comillas (`Hola`), intenta buscar el valor en el `contexto` original
- *    - Guarda esa nueva variable en el `contexto`
- *    - El token `assign` no debe producir ningún contenido visible
+ * ✅ Contexto de ejemplo:
+ * ```ts
+ * const contexto = {
+ *   frutas: ["manzana", "plátano", "uva"]
+ * }
+ * ```
  *
- * Detalles:
- * - Los valores pueden ser:
- *   - Texto literal entre comillas: `"Hola"`
- *   - Un número: `42`
- *   - Otro nombre de variable: `otroNombre`
- * - Si detectas comillas (`"` o `'`), quítalas al guardar el valor
- * - Si no hay comillas, interpreta el contenido como el nombre de otra variable ya existente en el contexto
- * - Si no existe en el contexto, puedes dejar el valor como `undefined` o lanzar una advertencia
+ * ✅ Recordatorio: asegúrate de procesar en orden:
+ * 1. Asignaciones (`assign`)
+ * 2. Bucles (`for`)
+ * 3. Condicionales (`if`)
+ * 4. Reemplazo de variables (`{{ nombre }}`)
+ * 5. Filtros (`| upcase`, etc.)
  *
  * Consejo:
- * - Usa `.trim()` después del `split("=")` para evitar errores con espacios
- * - Haz este paso **antes** de renderizar variables o evaluar condicionales
- * - Las asignaciones no deben dejar rastros visibles en el resultado renderizado
+ * - Revisa si necesitas normalizar el string (por ejemplo, `.trim()` o `.replace(/\n/g, '')`)
+ * - No necesitas mostrar nada visual todavía — solo asegúrate de que el árbol de nodos se construye correctamente
+ * - Este módulo prepara el camino para el renderizado real en pantalla en los siguientes pasos
  */

@@ -1,0 +1,14 @@
+[
+    {
+      "name": "General",
+      "settings": [
+        {
+          "type": "text",
+          "id": "copyright",
+          "label": "Copyright",
+          "default": "© 2025 Mi tienda. Todos los derechos reservados."
+        }
+      ]
+    }
+  ]
+  

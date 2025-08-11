@@ -7,7 +7,7 @@
  *
  * ```html
  * <html>
- *   <head>
+ *   <head> <meta charset="UTF-8"> </meta>
  *     <title>...</title>
  *   </head>
  *   <body>
@@ -27,18 +27,21 @@
  * Ejercicios_etapa_2/
  * ├── plantilla_motor/
  * ├── ejercicio_18/
- * │   ├── main.ts                ← ejecuta la renderización y guarda el archivo
- * │   ├── plantilla.liquid       ← incluye html, head, title, body, etc.
- * │   ├── data.ts                ← exporta el objeto `contexto`
- * │   └── server.ts              ← servidor que sirve el archivo generado
- * └── dist/
- *     └── index.html             ← se genera automáticamente
+ * │   ├── main.ts               ← ejecuta la renderización y guarda el archivo
+ * │   ├── template.liquid       ← incluye html, head, title, body, etc.
+ * │   ├── data.ts               ← exporta el objeto `contexto`
+ * |   ├── server.ts             ← servidor que sirve el archivo generado
+ * │   └── dist/
+ * │       └── index.html       ← se genera automáticamente
+ *
  * ```
  *
  * ✅ Instrucciones:
  * 1. Escribe una plantilla `plantilla.liquid` que represente una página HTML completa.
  *    - Incluye etiquetas `<html>`, `<head>`, `<title>`, y `<body>`
  *    - Usa variables dentro del body como `{{ nombre }}` o `{{ descripcion }}`
+ *    - A esta plantilla agrega <meta charset="UTF-8"> </meta> justo después de la etiqueta <head> para
+ *      que tu página pueda verse adecuadamente.
  *
  * 2. Usa tu función de renderizado para procesar la plantilla con el `contexto` definido en `data.ts`
  *    - Por ejemplo:

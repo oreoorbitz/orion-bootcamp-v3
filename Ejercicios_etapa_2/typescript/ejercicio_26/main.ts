@@ -1,57 +1,109 @@
 /**
- * MÓDULO 26: Introducción de una base de datos simulada de productos
-
+ * 🧩 MÓDULO 26: Enviar archivos individuales por HTTP y recargar HTML o CSS automáticamente
+ *
  * 🧠 Concepto clave:
- * En una tienda real como Shopify, los productos no se escriben manualmente dentro del código del tema.
- * Se almacenan en bases de datos como PostgreSQL, SQLite o mediante GraphQL, y se insertan dinámicamente en las páginas.
-
- * En este módulo, vas a simular esa separación creando una "base de datos mock" que estará fuera del tema visual.
-
- * Objetivo:
- * Crear una estructura de servidor que sirva como fuente de datos dinámica para los productos de la tienda.
-
+ * En este módulo, vas a comenzar a enviar archivos reales desde el navegador al servidor. 
+ * Cuando un archivo cambie, se comprimirá individualmente, se enviará por HTTP, y el servidor decidirá si 
+ * necesita regenerar el HTML o simplemente actualizar los estilos.
+ *
+ * 🎯 Objetivo:
+ * - Observar archivos en `layout/`, `templates/` y `assets/`
+ * - Comprimir solo el archivo que cambió
+ * - Enviarlo al servidor como ZIP junto con su nombre y carpeta
+ * - El servidor lo descomprime en la carpeta correspondiente
+ * - Si es `.liquid`, se regenera `index.html` y se inyecta el script de hot reload
+ * - Si es `.css`, se actualiza sin recargar la página
+ *
  * ✅ Instrucciones:
-
- * 1. En tu carpeta del ejercicio actual (por ejemplo `ejercicio_26/`), crea una nueva carpeta:
- *    ```
- *    ./server/
- *    ```
-
- * 2. Dentro de `./server/`, crea un archivo llamado `products.ts` que contenga un arreglo de productos con campos como:
- *    ```ts
- *    export const products = [
- *      { id: 1, title: "Producto A", precio: 1000 },
- *      { id: 2, title: "Producto B", precio: 2000 }
- *    ];
- *    ```
-
- * 3. En tu archivo `slightlyLate.ts` (el módulo que actúa como servidor):
- *    - Importa la base de datos de productos desde `./server/products.ts`
- *    - Asegúrate de incluir la variable `all_products` en el objeto `contexto` que se pasa al motor de plantillas
-
- * 4. En el archivo de plantilla (`theme.liquid` o `content_for_index.liquid`), ahora puedes hacer cosas como:
- *    ```liquid
- *    {% for producto in all_products %}
- *      <div>{{ producto.title }} - {{ producto.precio }}</div>
- *    {% endfor %}
- *    ```
-
- * 🔁 Flujo completo que debe estar funcionando hasta este punto:
- * - Tu CLI `Mockify` debe enviar al servidor el path de la carpeta actual
- * - El servidor (slightlyLate) debe:
- *   1. Importar la plantilla
- *   2. Inyectar el contexto (`all_products`)
- *   3. Renderizar el HTML usando tu motor Liquid
- *   4. Escribir el resultado en `./dist/index.html`
- *   5. Servir el archivo por HTTP
- *   6. Enviar por WebSocket la URL al CLI, que la imprime en consola
-
- * 🧠 Recuerda:
- * - En el mundo real, la información como productos, usuarios o pedidos se almacena en bases de datos externas
- * - Tu archivo `products.ts` es solo una simulación educativa para ayudarte a practicar flujo de datos real
-
- * 🔎 Consejo:
- * - Asegúrate de revisar si estás pasando correctamente el contexto a tu motor de plantillas
- * - Si tu motor Liquid no soporta variables de tipo arreglo aún, ¡revisa el módulo de bucles!
-
+ *
+ * 1. **Reestructura tu tema**
+ *    A partir de ahora, tu carpeta de ejercicio (`typescript/ejercicio_26/`) debe contener:
+ *    - Una carpeta `layout/` con `theme.liquid`
+ *    - Una carpeta `templates/` con `content_for_index.liquid`
+ *    - Una carpeta `assets/` con `theme.css` (u otros recursos)
+ *
+ *    Si tienes archivos sueltos, muévelos a estas carpetas.
+ *
+ * 2. **En `main.ts`**
+ *    - Observa cambios con `Deno.watchFs()` en:
+ *      - `layout/`
+ *      - `templates/`
+ *      - `assets/`
+ *
+ *    - Cuando detectes un cambio:
+ *      - Comprime **solo el archivo modificado** usando `zip` desde:
+ *        ```ts
+ *        import { zip } from "jsr:@deno-library/compress";
+ *        ```
+ *      - Crea un `FormData` y adjunta:
+ *        - El archivo ZIP
+ *        - El nombre del archivo (ej. `theme.liquid`) 
+ *        - El nombre de la carpeta (`layout`, `templates`, `assets`)
+ *      - Envía la solicitud `POST` a `http://localhost:3000/theme-update`
+ *      - Imprime la respuesta del servidor
+ *
+ * 3. **En `controller.ts`**
+ *    - Asegúrate de que `controller.ts` esté en `typescript/server/`
+ *    - Llama a `iniciarServidor(3000, callback)` pasando una función `callback` como segundo argumento
+ *
+ *    - Dentro de tu `callback`, llama a tu funcion para para regenerar el HTML desde los archivos de liquid
+ *
+ * 4. **En `slightlyLate.ts`**
+ *    - Crea la ruta `POST /theme-update`
+ *    - Dentro de ella:
+ *      - Usa `await req.formData()` para extraer:
+ *        - el ZIP enviado
+ *        - el nombre del archivo original
+ *        - el nombre de la carpeta destino
+ *      - Descomprime el ZIP recibido usando `zip.uncompress()` desde el mismo módulo que usaste para comprimir
+ *      - Escribe el archivo descomprimido en la carpeta correspondiente
+ *      - Llama el callback para generar el HTML desde los archivos liquid generados en el servidor
+ *
+ * 5. **Inyecta el script de hot reload**
+ *    - En tu función de generación de HTML, usa `injector()` para inyectar el script de `hotreload.ts` en el HTML generado.
+ *
+ * 🧪 Prueba:
+ * - Ejecuta el servidor con:
+ *   ```bash
+ *   deno run --allow-all typescript/server/controller.ts
+ *   ```
+ * - En otra terminal, ejecuta el cliente con:
+ *   ```bash
+ *   deno run --allow-all typescript/ejercicio_26/main.ts
+ *   ```
+ * - Abre `localhost:3000` en el navegador
+ * - Cambia:
+ *   - `layout/theme.liquid` → debe regenerar `index.html` y recargar la página
+ *   - `assets/theme.css` → debe recargar solo los estilos sin recargar la página
+ *
+ * 📁 Estructura esperada:
+ * Ejercicios_etapa_2/
+ * ├── typescript/
+ * │   ├── ejercicio_26/
+ * │   │   ├── layout/
+ * │   │   │   └── theme.liquid
+ * │   │   ├── templates/
+ * │   │   │   └── content_for_index.liquid
+ * │   │   ├── assets/
+ * │   │   │   └── theme.css
+ * │   │   └── main.ts
+ * │   └── server/
+ * │       ├── controller.ts
+ * │       ├── slightlyLate.ts
+ * │       ├── hotreload.ts
+ * │       ├── wsServer.ts
+ * │       └── themes/
+ * │           └── dev/
+ * │               ├── layout/
+ * │               ├── templates/
+ * │               ├── assets/
+ * │               └── dist/
+ * │                   └── index.html
+ *
+ * 🎯 Resultado esperado:
+ * - Detectas qué archivo cambió
+ * - Comprimís y enviás solo ese archivo al servidor
+ * - El servidor lo coloca en la carpeta adecuada y regenera si es necesario
+ * - El navegador se actualiza automáticamente según el tipo de archivo
+ * - Mantenés una estructura profesional, moderna y escalable
  */

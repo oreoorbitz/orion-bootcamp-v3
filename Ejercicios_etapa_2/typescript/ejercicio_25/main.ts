@@ -1,100 +1,75 @@
 /**
- * MÓDULO 25: CLI Mockify y conexión con servidor local
-
- * 🧠 Concepto clave:
- * En entornos profesionales como Shopify, los desarrolladores usan una interfaz de línea de comandos (CLI)
- * para iniciar un servidor, observar archivos, generar plantillas, y ver una vista previa del sitio.
-
- * En este módulo, vas a crear tu propia CLI llamada `Mockify` para simular este flujo de desarrollo:
- * - Validar la estructura de carpetas esperada
- * - Observar archivos importantes para cambios
- * - Recibir desde el servidor una URL local y mostrarla en consola
- * - Crear comunicación de dos vías entre CLI y servidor
-
- * Objetivo:
- * Implementar una CLI usable como:
- * ```
- * deno run --allow-all ../mockify.ts theme dev
- * ```
- * que:
- * - Valide que el directorio actual tiene la estructura esperada
- * - Se conecte a un servidor local que genere los archivos
- * - Escuche cambios en archivos dentro de `./assets` y `.liquid`
- * - Muestre una salida en consola similar a Shopify CLI:
-
- * ```
- * ╭─ success ─────────────────────────────────────────────────────────────╮
- * │                                                                       │
- * │  Preview your theme (t)                                               │
- * │    • http://127.0.0.1:9292                                            │
- * ╰───────────────────────────────────────────────────────────────────────╯
- * ```
-
+ * MÓDULO 25: Separación cliente-servidor y render desde el servidor
  *
- * 🧩 Estructura esperada:
- * En la carpeta actual donde se corre `Mockify`, debe existir:
- * ```
- * .
- * ├── assets/
- * │   └── theme.css
- * ├── content_for_index.liquid
- * └── theme.liquid
- * ```
-
- * ✅ Instrucciones:
-
- * 1. Crea un archivo `mockify.ts` en el directorio superior (`Ejercicios_etapa_2/`).
-
- * 2. Implementa una función que valide que el directorio actual tenga:
- *    - Una carpeta `assets`
- *    - Un archivo `content_for_index.liquid`
- *    - Un archivo `theme.liquid`
-
- * 3. Usa `Deno.watchFs()` para escuchar cambios en:
- *    - Todos los archivos dentro de `assets/`
- *    - `content_for_index.liquid`
- *    - `theme.liquid`
-
- * 4. Usa `Deno.args` para verificar si el comando recibido es:
+ * 🧠 Concepto clave:
+ * En Shopify, el servidor es responsable de generar vistas a partir de temas. El cliente (como una CLI)
+ * solicita al servidor que regenere contenido, y el servidor responde con una vista actualizada.
+ *
+ * En este módulo vas a preparar esa separación:
+ * - El archivo `main.ts` actuará como cliente.
+ * - El servidor escuchará peticiones desde el cliente.
+ * - Toda la lógica de renderizado se moverá a un archivo `controller.ts`.
+ *
+ * ✅ Objetivo:
+ * - Separar la lógica de generación en el servidor (`controller.ts`)
+ * - Simular una petición desde el cliente (`main.ts`) usando `fetch()`
+ * - Mostrar la respuesta en consola
+ *
+ * 📁 Estructura esperada:
+ *
+ * /Ejercicios_etapa_2/
+ * ├── ejercicio_25/
+ * │   └── main.ts            ← Este archivo solo enviará una petición al servidor
+ * └── typescript/
+ *     └── server/
+ *         ├── controller.ts   ← Mueve aquí la lógica de renderizado
+ *         ├── slightlyLate.ts ← Servidor con endpoint `/theme-update`
+ *         └── themes/
+ *             └── dev/
+ *                 ├── assets/
+ *                 │   └── theme.css
+ *                 ├── content_for_index.liquid
+ *                 ├── theme.liquid
+ *                 └── dist/            ← Aquí se genera el HTML
+ *
+ * 🛠️ Instrucciones:
+ *
+ * 1. En `/Ejercicios_etapa_2/typescript/server/`, crea una carpeta `themes/` y dentro de ella, una carpeta `dev/`.
+ *    Copia los archivos `content_for_index.liquid`, `theme.liquid`, y la carpeta `assets/` del ejercicio dentro de `themes/dev/`.
+ *    Crea también una carpeta vacía `dist/` dentro de `dev/`.
+ *
+ * 2. Crea el archivo `controller.ts` en `/Ejercicios_etapa_2/typescript/server/`.
+ *    Mueve aquí toda la lógica de generación de HTML que antes estaba en `main.ts`.
+ *    Asegúrate de que los `readFile` y `writeFile` ahora usen las rutas correctas desde `themes/dev/`.
+ *
+ * 3. En `slightlyLate.ts` (el servidor), agrega un endpoint:
+ *    ```ts
+ *    // dentro del router del servidor
+ *    if (req.url === "/theme-update" && req.method === "POST") {
+ *      const result = await generarHTMLDesdeController();
+ *      req.respond({ status: 200, body: result });
+ *    }
  *    ```
- *    theme dev
+ *    Este endpoint debe importar y llamar a una función de `controller.ts` que genera el HTML y devuelve un mensaje.
+ *
+ * 4. En `/Ejercicios_etapa_2/ejercicio_25/main.ts`, reemplaza la lógica de render por una solicitud al servidor:
+ *    ```ts
+ *    const res = await fetch("http://localhost:3000/theme-update", {
+ *      method: "POST",
+ *      body: JSON.stringify({ message: "hello" }),
+ *    });
+ *    const texto = await res.text();
+ *    console.log("🖥️ Respuesta del servidor:", texto);
  *    ```
- *    y toma la carpeta actual como contexto.
-
- * 5. Conéctate al servidor a través de WebSocket.
- *    - Cuando el servidor esté listo, debe enviarte una URL como:
- *      `{ type: "ready", url: "http://127.0.0.1:9292" }`
- *    - Muestra esa información con formato decorado en consola como el ejemplo superior.
-
- * 6. Cada vez que un archivo observado cambie, envía un mensaje al servidor para volver a renderizar.
-
- * 📁 Estructura sugerida:
- * - `/Ejercicios_etapa_2/`
- *   ├── mockify.ts          ← CLI que puedes correr desde un ejercicio con:
- *                             `deno run --allow-all ../mockify.ts theme dev`
- *   ├── ejercicio_25/
- *   │   ├── assets/
- *   │   │   └── theme.css
- *   │   ├── content_for_index.liquid
- *   │   ├── theme.liquid
- *   │   └── dist/           ← Aquí se genera el HTML
-
- * 🧭 Importante:
- * Si prefieres correr el comando directamente como `Mockify theme dev`, puedes añadir el directorio
- * donde está `mockify.ts` a tu `PATH` del sistema. Esto depende de tu sistema operativo:
-
- * - En Linux/Mac: edita tu `.bashrc`, `.zshrc`, o `.bash_profile`
- * - En Windows: usa la configuración del sistema para añadir el directorio al PATH
-
- * Este paso es completamente opcional, pero facilita mucho el uso de tu CLI personalizada.
-
- * 🎯 Consejo:
- * - Puedes usar `console.log` con estilos Unicode o ASCII para mostrar bloques decorados
- * - Define la interfaz de comunicación con el servidor:
- *    - El cliente (CLI) envía: `{ type: 'change', file: 'path/to/file' }`
- *    - El servidor responde: `{ type: 'ready', url: 'http://127.0.0.1:9292' }`
-
- * 🔁 Recomendación:
- * Usa este módulo como punto de partida para un flujo de desarrollo completo donde la consola,
- * el servidor, y los archivos trabajan sincronizados.
+ *    ⚠️ Recuerda iniciar el servidor antes de ejecutar `main.ts`.
+ *
+ * 📌 Recuerda:
+ * - Este patrón ilustra cómo, en un entorno profesional, la lógica se centraliza en el servidor.
+ * - `main.ts` representa la CLI que pide regenerar vistas (esto lo expandiremos en los siguientes módulos).
+ * - El servidor representa el entorno de producción o desarrollo donde se aplican los cambios.
+ *
+ * ✅ Checklist de entrega:
+ * - [ ] `controller.ts` genera el HTML desde `themes/dev/`
+ * - [ ] `slightlyLate.ts` expone el endpoint `/theme-update`
+ * - [ ] `main.ts` usa `fetch()` para pedir que se genere el HTML y muestra la respuesta
  */

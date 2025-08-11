@@ -1,113 +1,131 @@
 /**
- * MÓDULO 27: Introducción a Bases de Datos Relacionales con SQLite y Drizzle ORM
-
+ * MÓDULO 27: Introducción al Modelo (MVC) y uso de datos dinámicos
+ *
  * 🧠 Concepto clave:
- * Shopify fue construido originalmente con Ruby on Rails v1, utilizando MySQL como base de datos principal,
- * y Redis para manejo de caché. Este patrón relacional ha sido una constante en desarrollo web.
-
- * Un patrón común en comercio electrónico es:
- * - Un producto puede estar en múltiples colecciones
- * - Una colección puede tener múltiples productos
- * 
- * Este tipo de relación se llama **muchos a muchos**, y normalmente se resuelve con una tabla intermedia.
-
- * En este módulo:
- * Vas a instalar SQLite y usar Drizzle ORM para simular esta relación en tu entorno local.
-
+ * En este módulo vas a estructurar tu aplicación siguiendo el patrón Modelo-Vista-Controlador (MVC).
+ * Vas a crear un "modelo" que centraliza la información del contexto de renderizado.
+ * De esta forma, el servidor puede generar HTML a partir de datos reales como productos y colecciones.
+ *
  * 🎯 Objetivo:
- * - Instalar SQLite en tu entorno local
- * - Usar Drizzle ORM para definir tablas relacionales
- * - Crear una tabla de `products`, otra de `collections`, y una tabla intermedia
- * - Agregar datos a la base
- * - Exponer una variable global `collections` al motor Liquid, que contenga cada colección y sus productos asociados
-
+ * Separar la capa de datos del controlador, y renderizar HTML dinámico con productos y colecciones
+ * que provienen de un módulo llamado `contextPlease.ts`.
+ *
  * ✅ Instrucciones:
-
- * 1. Instala SQLite en tu carpeta principal del curso (Ejercicios_etapa_2/)
- *    Puedes usar el siguiente comando:
- *    ```bash
- *    deno run -A npm:drizzle-kit@latest generate:sqlite
- *    ```
-
- *    Asegúrate de tener también estos paquetes:
- *    ```bash
- *    deno add drizzle-orm sqlite
- *    ```
-
- * 2. Crea en tu directorio raíz un archivo `db/schema.ts` con la definición de tus tablas:
- *    ```ts
- *    import { sqliteTable, integer, text } from "drizzle-orm/sqlite-core";
-
- *    export const products = sqliteTable("products", {
- *      id: integer("id").primaryKey(),
- *      title: text("title").notNull(),
- *    });
-
- *    export const collections = sqliteTable("collections", {
- *      id: integer("id").primaryKey(),
- *      title: text("title").notNull(),
- *    });
-
- *    export const productCollections = sqliteTable("product_collections", {
- *      productId: integer("product_id").references(() => products.id),
- *      collectionId: integer("collection_id").references(() => collections.id),
- *    });
- *    ```
-
- * 3. Crea un archivo `db/seed.ts` para insertar datos de ejemplo. Puedes usar esta lógica base:
- *    ```ts
- *    import { db } from "./client.ts";
- *    import { products, collections, productCollections } from "./schema.ts";
-
- *    await db.insert(products).values([
- *      { id: 1, title: "Producto A" },
- *      { id: 2, title: "Producto B" },
- *    ]);
-
- *    await db.insert(collections).values([
- *      { id: 1, title: "Promociones" },
- *      { id: 2, title: "Nuevos productos" },
- *    ]);
-
- *    await db.insert(productCollections).values([
- *      { productId: 1, collectionId: 1 },
- *      { productId: 2, collectionId: 1 },
- *      { productId: 2, collectionId: 2 },
- *    ]);
- *    ```
-
- * 4. En tu servidor (`slightlyLate.ts`), crea una función que:
- *    - Haga un JOIN para obtener las colecciones y los productos relacionados
- *    - Devuelva la estructura esperada por Liquid:
+ *
+ * 1. **Copia el contenido base a `Ejercicios_etapa_2/typescript/ejercicio_27/`**
+ *    Asegúrate de que la estructura de carpetas sea como sigue:
+ *    - `layout/theme.liquid`
+ *    - `templates/content_for_index.liquid`
+ *    - `assets/theme.css`
+ *    - `main.ts`
+ *
+ *    Puedes copiar el contenido base desde `ejercicio_26`, que ya tiene este formato.
+ *
+ * 2. **En `contextPlease.ts`:**
+ *    - Crea un archivo nuevo en:
+ *      ```
+ *      Ejercicios_etapa_2/typescript/server/contextPlease.ts
+ *      ```
+ *    - Importa los datos desde `seedData.ts`:
  *      ```ts
- *      [
- *        {
- *          title: "Promociones",
- *          products: [
- *            { title: "Producto A" },
- *            { title: "Producto B" }
- *          ]
- *        },
- *        {
- *          title: "Nuevos productos",
- *          products: [
- *            { title: "Producto B" }
- *          ]
- *        }
- *      ]
+ *      import { products, collections, productCollections } from "../seedData.ts";
+ *      ```
+ *    - Construye un objeto llamado `context` con esta información. Ejemplo:
+ *      ```ts
+ *      export const context = {
+ *        products,
+ *        collections,
+ *        productCollections
+ *      };
  *      ```
 
- *    Este valor debe estar disponible como la variable global `collections` dentro de las plantillas.
+ * 3. **En `controller.ts`:**
+ *    - Importa `context` desde el nuevo módulo:
+ *      ```ts
+ *      import { context } from "./contextPlease.ts";
+ *      ```
+ *    - Reemplaza cualquier dato que antes estaba definido directamente en `controller.ts`
+ *      por el uso del objeto `context`.
 
- * 🔁 Flujo esperado:
- * - El CLI `Mockify` sigue enviando el path al servidor
- * - El servidor usa Drizzle para consultar la base SQLite
- * - El resultado se pasa como contexto a tu motor Liquid
- * - Se renderiza la plantilla en `dist/index.html`
- * - Se sirve por HTTP y se actualiza al detectar cambios
+ * 4. **Agrega un filtro de dinero:**
+ *    - En el lugar donde registras filtros de Liquid, agrega un filtro llamado `money` que:
+ *      - Recibe un número como argumento
+ *      - Lo divide por 100 y devuelve un número con dos decimales (`toFixed(2)`)
+ *
+ *      Ejemplo:
+ *      ```ts
+ *      liquidEngine.registerFilter("money", (value: number) => (value / 100).toFixed(2));
+ *      ```
 
- * 🧠 Consejo:
- * - No necesitas dominar SQL ni relaciones complejas aún. Solo asegúrate de comprender la idea de "una colección tiene muchos productos"
- * - Esta arquitectura es la base de la mayoría de los CMS modernos como Shopify, WordPress, Sanity, etc.
+ * 5. **Renderiza la plantilla con datos reales:**
+ *    - Asegúrate de que el motor Liquid reciba `context` como contexto al momento de renderizar.
 
+ * 6. **En tu ejercicio (`ejercicio_27`)**
+ *    - Abre el archivo `templates/content_for_index.liquid` y reemplaza su contenido con el snippet:
+ *      Copia desde:
+ *      ```
+ *      Ejercicios_etapa_2/typescript/liquid_snippets/27_content_for_index.liquid
+ *      ```
+ *    - Abre el archivo `assets/theme.css` y reemplaza su contenido con el snippet:
+ *      Copia desde:
+ *      ```
+ *      Ejercicios_etapa_2/typescript/css_snippets/27_theme.css
+ *      ```
+ *    - Estos snippets renderizarán las colecciones y productos de forma dinámica.
+
+ * 🧪 Prueba:
+ * - Inicia el servidor con:
+ *   ```bash
+ *   deno run --allow-all Ejercicios_etapa_2/typescript/server/controller.ts
+ *   ```
+ * - Envía el archivo actualizado desde:
+ *   ```bash
+ *   deno run --allow-all Ejercicios_etapa_2/typescript/ejercicio_27/main.ts
+ *   ```
+ * - Abre la URL del servidor en el navegador (p. ej. `http://localhost:3000`)
+ * - Debes ver los títulos de las colecciones y productos correctamente renderizados en HTML
+ * - Los precios deben mostrarse en formato decimal gracias al filtro `money`
+
+ * 🧠 Recomendación:
+ * Piensa en el archivo `contextPlease.ts` como el “modelo” en tu arquitectura:
+ * - Centraliza los datos
+ * - Permite que el controlador se enfoque solo en renderizar la vista
+ *
+ * Este patrón te permitirá escalar y modificar tu sitio fácilmente en los próximos módulos.
+ *
+ * 📁 Estructura esperada:
+ * Ejercicios_etapa_2/
+ * ├── typescript/
+ * │   ├── ejercicio_27/
+ * │   │   ├── layout/
+ * │   │   │   └── theme.liquid
+ * │   │   ├── templates/
+ * │   │   │   └── content_for_index.liquid
+ * │   │   ├── assets/
+ * │   │   │   └── theme.css
+ * │   │   └── main.ts
+ * │   ├── server/
+ * │   │   ├── contextPlease.ts
+ * │   │   ├── controller.ts
+ * │   │   ├── slightlyLate.ts
+ * │   │   ├── wsServer.ts
+ * │   │   └── themes/
+ * │   │       └── dev/
+ * │   │           ├── layout/
+ * │   │           │   └── theme.liquid
+ * │   │           ├── templates/
+ * │   │           │   └── content_for_index.liquid
+ * │   │           ├── assets/
+ * │   │           │   └── theme.css
+ * │   │           └── dist/
+ * │   │               └── index.html
+ * │   ├── seedData.ts
+ * │   ├── liquid_snippets/
+ * │   │   └── 27_content_for_index.liquid
+ * │   └── css_snippets/
+ * │       └── 27_theme.css
+ *
+ * 🎯 Resultado esperado:
+ * Has dividido correctamente tu app en Modelo (context), Vista (Liquid) y Controlador (render).
+ * Tu motor de plantillas ahora usa datos dinámicos, y la vista se adapta al contenido sin hardcodear nada.
  */

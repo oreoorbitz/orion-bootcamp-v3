@@ -34,6 +34,17 @@ Este documento repasa algunos conceptos clave que te ayudarán a entender y reso
 - **Uso en el desafío:** Se utiliza para devolver un mensaje de error de forma inmediata si la entrada no es válida, por ejemplo, si `centavos` es negativo o el código de moneda no existe en el objeto `monedas`.
 - **Beneficio:** Mejora la legibilidad del código y evita la ejecución innecesaria de código cuando se detecta un error.
 
+### 7. Comparación de Objetos en JavaScript
+- **Qué es:** En JavaScript, los objetos no se pueden comparar directamente usando `===`, porque esta comparación verifica si son la misma instancia en memoria, no si tienen el mismo contenido.
+- **Problema:** Incluso si dos objetos tienen exactamente las mismas claves y valores, `obj1 === obj2` será `false` si fueron creados por separado.
+- **Solución Simple:** Podemos usar `JSON.stringify(obj1) === JSON.stringify(obj2)` para comparar objetos simples, ya que convierte el contenido del objeto en una cadena.
+- **Limitación:** Este método solo funciona si:
+  - El orden de las claves es el mismo.
+  - No hay funciones, símbolos, o referencias circulares.
+- **Ejemplo de uso típico:** Comparar dos versiones de un producto para ver si tienen el mismo contenido.
+- **Nota:** Para comparaciones más complejas (por ejemplo, con objetos anidados en distinto orden), existen bibliotecas especializadas como `lodash.isEqual`, pero no las cubriremos en este curso.
+
+
 ---
 
 ## Temas Previamente Cubiertos

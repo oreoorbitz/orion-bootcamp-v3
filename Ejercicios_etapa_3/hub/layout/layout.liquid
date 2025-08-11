@@ -1,0 +1,21 @@
+<!doctype html>
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <title>{{ page_title | default: 'Untitled Page' }}</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="./assets/tailwind.css" rel="stylesheet">
+      </head>
+      <body class="font-sans bg-brand-dark text-brand-light">
+        <main class="p-4">
+          {% block %}{% endblock %}
+        </main>
+
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/9000.0.1/themes/prism-twilight.min.css" integrity="sha512-6rkEt5SymQMcnlRz1dHwAMSfMnDaFX28qdr3wyaa+XRCR8dTSWE4U6vjiTVuB6Mq9FgYOLVOTk0lrOeCnodcgA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+                 
+        <script defer src="./assets/htmx.org@1.9.6.js"></script>
+        <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
+        <script src="./assets/code-exercises.js" defer></script>
+      </body>
+    </html>
+    

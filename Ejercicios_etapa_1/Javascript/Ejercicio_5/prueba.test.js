@@ -1,5 +1,13 @@
 import { describe, it, expect } from 'vitest'
-import { convertirCentsAMoneda } from './index.js'
+import {
+  convertirCentsAMoneda,
+  compararObjetosPorStringify
+} from './index.js'
+import {
+  productoUno,
+  productoUnoVerDos,
+  productoUnoVerTres
+} from '../data/productos.js'
 
 describe('convertirCentsAMoneda', () => {
   it('debe retornar "Valor invalido" cuando centavos es negativo', () => {
@@ -20,5 +28,19 @@ describe('convertirCentsAMoneda', () => {
 
   it('debe convertir centavos a formato monetario para GBP', () => {
     expect(convertirCentsAMoneda(2000, "GBP")).toBe("£20.00")
+  })
+})
+
+describe('compararObjetosPorStringify', () => {
+  it('productoUno y productoUnoVerDos deben ser equivalentes', () => {
+    expect(compararObjetosPorStringify(productoUno, productoUnoVerDos)).toBe(true)
+  })
+
+  it('productoUno y productoUnoVerTres deben ser diferentes', () => {
+    expect(compararObjetosPorStringify(productoUno, productoUnoVerTres)).toBe(false)
+  })
+
+  it('productoUnoVerDos y productoUnoVerTres deben ser diferentes', () => {
+    expect(compararObjetosPorStringify(productoUnoVerDos, productoUnoVerTres)).toBe(false)
   })
 })
