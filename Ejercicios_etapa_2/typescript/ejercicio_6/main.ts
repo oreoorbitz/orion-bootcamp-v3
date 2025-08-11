@@ -54,16 +54,15 @@
  * - Recorta los delimitadores (`{{ }}`, `{% %}`) usando `.slice()` o `.replace()` para extraer solo el contenido
  */
 
+function detectarTokensPlantilla(entrada: string): string[] {
+  const partes = entrada.split(/({{.*?}}|{%.+?%})/g);
 
-const entrada = [
-   "Hola, ",
-   "{{ Nancy }}",
-   ". ",
-  "{% if admin %}",
-   "Eres administrador.",
-   "{% endif %}"
-]
-
+    return partes.filter(parte => parte.length > 0);
+  }
+  
+const ejemplo = "Hola, {{ Nancy }}. {% if admin %}Eres administrador.{% endif %}";
+const resultado = detectarTokensPlantilla(ejemplo);
+  
 
 type TipoTokenPlantilla = 'texto' | 'variable' | 'directiva';
 
@@ -97,4 +96,4 @@ function clasificarTokensPlantilla(tokens: string[]): TokenPlantilla[] {
   });
 }
 
-console.log(clasificarTokensPlantilla(entrada));
+console.log(clasificarTokensPlantilla(resultado));

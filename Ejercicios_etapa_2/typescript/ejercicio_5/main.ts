@@ -50,12 +50,12 @@
 
 
 function detectarTokensPlantilla(entrada: string): string[] {
-    const partes = entrada.split(/({{.*?}}|{%.+?%})/g);
+  const partes = entrada.split(/({{.*?}}|{%.+?%})/g);
 
     return partes.filter(parte => parte.length > 0);
   }
   
-  const ejemplo = "Hola, {{ Nancy }}. {% if admin %}Eres administrador.{% endif %}";
-  const resultado = detectarTokensPlantilla(ejemplo);
+const ejemplo = "Hola, {{ Nancy }}. {% if admin %}Eres administrador.{% endif %}";
+const resultado = detectarTokensPlantilla(ejemplo);
   
-  console.log(resultado);
+console.log(resultado);

@@ -106,4 +106,5 @@ type TokenPlantilla = {
     return resultado;
   }
   
+  console.log(procesarCondicionales())
   

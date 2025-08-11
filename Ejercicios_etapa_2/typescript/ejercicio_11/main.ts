@@ -82,3 +82,14 @@
  * - Puedes lanzar un error si el filtro no está definido
  * - Reutiliza el motor completo: primero bucles, luego condiciones, luego filtros → orden importa
  */
+
+
+type TokenTipo = "directiva" | "variable" | "texto";
+
+interface Token {
+    tipo: TokenTipo;
+    contenido: string;
+}
+
+type Contexto = Record<string, any>;
+type filtrosRegistrados = Record<string, (x: any) => any>;
