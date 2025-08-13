@@ -1,28 +1,130 @@
 import { zip } from "jsr:@deno-library/compress";
 import { notificarReloadCSS } from "./wsServer.ts";
 import { router } from "./router.ts";
+import { crearContexto } from "./contextPlease.ts";
 
-// 📋 Lista de endpoints .js soportados
+// 🛒 SISTEMA DE CARRITO EN MEMORIA
+interface CartItem {
+    product_id: number;
+    title: string;
+    handle: string;
+    price: number;
+    quantity: number;
+}
+
+interface Cart {
+    items: CartItem[];
+}
+
+// Map para almacenar carritos por token
+const cartsStorage = new Map<string, Cart>();
+
+// Función para generar UUID simple
+function generateCartToken(): string {
+    return 'cart_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+}
+
+// Función para obtener o crear carrito
+function getCart(token: string): Cart {
+    if (!cartsStorage.has(token)) {
+        cartsStorage.set(token, { items: [] });
+    }
+    return cartsStorage.get(token)!;
+}
+
+// Función para agregar item al carrito
+async function addItemToCart(token: string, productId: number, quantity: number): Promise<Cart> {
+    const cart = getCart(token);
+
+    // Obtener contexto para buscar el producto
+    const context = await crearContexto();
+    const product = context.products?.find((p: any) => p.id === productId);
+
+    if (!product) {
+        throw new Error(`Producto con ID ${productId} no encontrado`);
+    }
+
+    // Verificar si el producto ya existe en el carrito
+    const existingItem = cart.items.find(item => item.product_id === productId);
+
+    if (existingItem) {
+        // Si existe, incrementar cantidad
+        existingItem.quantity += quantity;
+    } else {
+        // Si no existe, agregar nuevo item
+        cart.items.push({
+            product_id: product.id,
+            title: product.title,
+            handle: product.handle,
+            price: product.price,
+            quantity: quantity
+        });
+    }
+
+    return cart;
+}
+
+// Función para convertir carrito a JSON
+function cartToJson(token: string, cart: Cart) {
+    return {
+        token: token,
+        items: cart.items
+    };
+}
+
+// Función para parsear cookies
+function parseCookies(cookieHeader: string): Record<string, string> {
+    const cookies: Record<string, string> = {};
+    if (cookieHeader) {
+        cookieHeader.split(';').forEach(cookie => {
+            const [name, value] = cookie.trim().split('=');
+            if (name && value) {
+                cookies[name] = decodeURIComponent(value);
+            }
+        });
+    }
+    return cookies;
+}
+
+// Función para crear header de cookie
+function createCookieHeader(name: string, value: string, options: any = {}): string {
+    let cookieStr = `${name}=${encodeURIComponent(value)}`;
+
+    if (options.maxAge) {
+        cookieStr += `; Max-Age=${options.maxAge}`;
+    }
+    if (options.path) {
+        cookieStr += `; Path=${options.path}`;
+    }
+    if (options.httpOnly) {
+        cookieStr += `; HttpOnly`;
+    }
+    if (options.sameSite) {
+        cookieStr += `; SameSite=${options.sameSite}`;
+    }
+
+    return cookieStr;
+}
+
+// 📋 Lista de endpoints .js soportados (ACTUALIZADA)
 const JS_ENDPOINTS = ['/cart.js'];
 
-// 🛒 Función para manejar el endpoint /cart.js
-async function manejarCartJs(): Promise<Response> {
+// 🛒 Función para manejar el endpoint /cart.js (ACTUALIZADA PARA USAR MEMORIA)
+async function manejarCartJs(cartToken: string): Promise<Response> {
     try {
-        // Leer el archivo JSON desde el disco
-        const cartDataText = await Deno.readTextFile("/home/bambiux/code/Bambi-uxx/orion-bootcamp-v3/Ejercicios_etapa_2/typescript/server/cart.js");
+        // Obtener carrito desde memoria en lugar del archivo
+        const cart = getCart(cartToken);
+        const responseData = cartToJson(cartToken, cart);
 
-        // Convertir el texto a JSON para validar que es válido
-        const cartData = JSON.parse(cartDataText);
-
-        return new Response(JSON.stringify(cartData), {
+        return new Response(JSON.stringify(responseData), {
             status: 200,
             headers: {
                 "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*" // Para permitir requests AJAX
+                "Access-Control-Allow-Origin": "*"
             }
         });
     } catch (error) {
-        console.error("❌ Error leyendo cart.js:", error);
+        console.error("❌ Error obteniendo carrito desde memoria:", error);
         return new Response(JSON.stringify({ error: "No se pudo cargar el carrito" }), {
             status: 500,
             headers: { "Content-Type": "application/json" }
@@ -30,18 +132,63 @@ async function manejarCartJs(): Promise<Response> {
     }
 }
 
-// 🔧 Función para manejar todos los endpoints .js
-async function manejarEndpointsJs(pathname: string): Promise<Response | null> {
-    switch (pathname) {
-        case '/cart.js':
-            return await manejarCartJs();
-        default:
-            return null; // No es un endpoint .js que manejemos
+// 🛒 NUEVA FUNCIÓN: Manejar POST /cart/add
+async function manejarCartAdd(req: Request, cartToken: string): Promise<Response> {
+    try {
+        const requestBody = await req.json();
+        const { id, quantity = 1 } = requestBody;
+
+        if (!id) {
+            return new Response(
+                JSON.stringify({ error: 'ID de producto requerido' }),
+                {
+                    status: 400,
+                    headers: { 'Content-Type': 'application/json' }
+                }
+            );
+        }
+
+        // Agregar item al carrito
+        const updatedCart = await addItemToCart(cartToken, parseInt(id), parseInt(quantity));
+        const responseData = cartToJson(cartToken, updatedCart);
+
+        console.log(`✅ Producto ${id} agregado al carrito. Items en carrito: ${updatedCart.items.length}`);
+
+        return new Response(
+            JSON.stringify(responseData),
+            {
+                status: 200,
+                headers: {
+                    'Content-Type': 'application/json',
+                    "Access-Control-Allow-Origin": "*"
+                }
+            }
+        );
+
+    } catch (error) {
+        console.error('❌ Error en /cart/add:', error);
+        return new Response(
+            JSON.stringify({ error: 'Error al agregar producto al carrito' }),
+            {
+                status: 500,
+                headers: { 'Content-Type': 'application/json' }
+            }
+        );
     }
 }
 
-// 🎯 Función para manejar todas las rutas estáticas y dinámicas
-async function manejarRutas(url: URL): Promise<Response> {
+// 🔧 Función para manejar todos los endpoints .js (ACTUALIZADA)
+async function manejarEndpointsJs(pathname: string, cartToken: string): Promise<Response | null> {
+    switch (pathname) {
+        case '/cart.js':
+            return await manejarCartJs(cartToken);
+        default:
+            return null;
+    }
+}
+
+// 🎯 Función para manejar todas las rutas estáticas y dinámicas (ACTUALIZADA CON COOKIES)
+async function manejarRutas(url: URL, shouldSetCookie: boolean, cartToken: string): Promise<Response> {
     let filePath: string;
 
     if (url.pathname === "/") {
@@ -66,7 +213,7 @@ async function manejarRutas(url: URL): Promise<Response> {
         } else {
             // Si no se encuentra, servir 404.html directamente
             console.log(`❌ Ruta no encontrada: ${url.pathname}`);
-            return await servirArchivo404();
+            return await servirArchivo404(shouldSetCookie, cartToken);
         }
     }
 
@@ -78,29 +225,63 @@ async function manejarRutas(url: URL): Promise<Response> {
         // Determinar el Content-Type
         const contentType = filePath.endsWith(".css") ? "text/css" : "text/html";
 
-        return new Response(archivo, {
-            headers: { "Content-Type": contentType }
-        });
+        const headers: HeadersInit = { "Content-Type": contentType };
+
+        // 🍪 Establecer cookie si es necesaria
+        if (shouldSetCookie && contentType === "text/html") {
+            headers['Set-Cookie'] = createCookieHeader('cart_token', cartToken, {
+                maxAge: 60 * 60 * 24 * 30, // 30 días
+                path: '/',
+                httpOnly: true,
+                sameSite: 'Lax'
+            });
+            console.log(`🍪 Cookie establecida para ${url.pathname}: ${cartToken}`);
+        }
+
+        return new Response(archivo, { headers });
 
     } catch (error) {
         console.log(`❌ Archivo no encontrado: ${filePath}`);
-        return await servirArchivo404();
+        return await servirArchivo404(shouldSetCookie, cartToken);
     }
 }
 
-// 📄 Función para servir archivo 404
-async function servirArchivo404(): Promise<Response> {
+// 📄 Función para servir archivo 404 (ACTUALIZADA CON COOKIES)
+async function servirArchivo404(shouldSetCookie: boolean, cartToken: string): Promise<Response> {
     try {
         const archivo404 = await Deno.readTextFile("server/themes/dev/dist/404.html");
+
+        const headers: HeadersInit = { "Content-Type": "text/html" };
+
+        if (shouldSetCookie) {
+            headers['Set-Cookie'] = createCookieHeader('cart_token', cartToken, {
+                maxAge: 60 * 60 * 24 * 30,
+                path: '/',
+                httpOnly: true,
+                sameSite: 'Lax'
+            });
+        }
+
         return new Response(archivo404, {
             status: 404,
-            headers: { "Content-Type": "text/html" }
+            headers
         });
     } catch {
         // Si no existe 404.html, devolver mensaje básico
+        const headers: HeadersInit = { "Content-Type": "text/html" };
+
+        if (shouldSetCookie) {
+            headers['Set-Cookie'] = createCookieHeader('cart_token', cartToken, {
+                maxAge: 60 * 60 * 24 * 30,
+                path: '/',
+                httpOnly: true,
+                sameSite: 'Lax'
+            });
+        }
+
         return new Response("404 - Página no encontrada", {
             status: 404,
-            headers: { "Content-Type": "text/html" }
+            headers
         });
     }
 }
@@ -176,21 +357,76 @@ export function iniciarServidor(puerto: number = 3000, callback: (changedTemplat
     Deno.serve({ port: puerto }, async (req) => {
         const url = new URL(req.url);
 
+        // 🍪 Obtener o generar token del carrito
+        const cookies = parseCookies(req.headers.get('cookie') || '');
+        let cartToken = cookies.cart_token;
+        let shouldSetCookie = false;
+
+        if (!cartToken) {
+            cartToken = generateCartToken();
+            shouldSetCookie = true;
+            console.log(`🆕 Nuevo token de carrito generado: ${cartToken}`);
+        }
+
         // POST /theme-update
         if (req.method === "POST" && url.pathname === "/theme-update") {
             return await manejarPeticionThemeUpdate(req, callback);
         }
 
+        // 🛒 NUEVA RUTA: POST /cart/add
+        if (req.method === "POST" && url.pathname === "/cart/add") {
+            const response = await manejarCartAdd(req, cartToken);
+
+            // Agregar cookie si es necesaria
+            if (shouldSetCookie) {
+                const currentHeaders = response.headers;
+                const newHeaders = new Headers(currentHeaders);
+                newHeaders.set('Set-Cookie', createCookieHeader('cart_token', cartToken, {
+                    maxAge: 60 * 60 * 24 * 30,
+                    path: '/',
+                    httpOnly: true,
+                    sameSite: 'Lax'
+                }));
+
+                return new Response(response.body, {
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: newHeaders
+                });
+            }
+
+            return response;
+        }
+
         // 🛒 Verificar si es un endpoint .js
         if (JS_ENDPOINTS.includes(url.pathname)) {
-            const jsResponse = await manejarEndpointsJs(url.pathname);
+            const jsResponse = await manejarEndpointsJs(url.pathname, cartToken);
             if (jsResponse) {
                 console.log(`🛒 Sirviendo endpoint JS: ${url.pathname}`);
+
+                // Agregar cookie si es necesaria
+                if (shouldSetCookie) {
+                    const currentHeaders = jsResponse.headers;
+                    const newHeaders = new Headers(currentHeaders);
+                    newHeaders.set('Set-Cookie', createCookieHeader('cart_token', cartToken, {
+                        maxAge: 60 * 60 * 24 * 30,
+                        path: '/',
+                        httpOnly: true,
+                        sameSite: 'Lax'
+                    }));
+
+                    return new Response(jsResponse.body, {
+                        status: jsResponse.status,
+                        statusText: jsResponse.statusText,
+                        headers: newHeaders
+                    });
+                }
+
                 return jsResponse;
             }
         }
 
         // 🎯 Manejar todas las demás rutas
-        return await manejarRutas(url);
+        return await manejarRutas(url, shouldSetCookie, cartToken);
     });
 }
