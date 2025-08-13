@@ -33,9 +33,9 @@
  *    - Ruta: `/cart/add`
  *    - Entrada (JSON): `{ id, quantity }`
  *    - Pasos:
- *      - Resuelve el producto por `id` usando tus datos de productos (usa `precio` como `price`).
+ *      - Resuelve el producto por `id` usando tus datos de productos.
  *      - Si el producto ya está en el carrito (misma `product_id`), incrementa su `quantity`.
- *      - Si no está, agrega un ítem con: `{ product_id: id, title, handle, price: producto.precio, quantity }`.
+ *      - Si no está, agrega un ítem con: `{ product_id: id, title, handle, price, quantity }`.
  *    - Respuesta:
  *      - Devuelve el carrito completo en JSON con `Content-Type: application/json`.
  *      - Estructura mínima alineada con el ejercicio 38:
