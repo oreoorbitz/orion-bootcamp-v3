@@ -21,7 +21,7 @@
  *
  * 2) **Crea un almacenamiento en memoria**
  *
- *    - Mantén un `Map` (o estructura equivalente) en el proceso del servidor:
+ *    - Mantén un `Map` (o estructura equivalente. La razon por usar un map es que Map automaticamente filtra duplicados) en el proceso del servidor:
  *      - clave: `cart_token`
  *      - valor: `{ items: Array<{ product_id, title, handle, price, quantity }> }`
  *    - Inicializa el carrito vacío cuando no exista para un token.
