@@ -54,15 +54,10 @@
  * 2. Para cada directiva `{% for item in lista %}`:
  *    - Identifica el bloque hasta el `{% endfor %}`
  *    - Extrae el nombre del item y de la lista (`for fruta in frutas`)
- *    - Busca `contexto['frutas']` y verifica que sea un arreglo
- *    - Por cada valor, renderiza una copia del bloque interno:
- *        - Reemplaza `{{ item }}` con el valor actual
- *        - Aplica `procesarCondicionales()` al bloque interno antes de renderizar
+ *    - Por cada valor, renderiza una copia del bloque interno Reemplaza `{{ item }}` con el valor actual
  * 3. El resultado debe ser un nuevo arreglo con los bloques repetidos y procesados
  *
  * Consejo:
- * - Puedes usar `renderizarVariables()` dentro del cuerpo del bucle
- * - Aplica `procesarCondicionales()` para manejar `if` dentro del `for`
  * - Haz un bucle externo para recorrer los tokens y detectar el inicio y fin del `for`
  * - Asegúrate de mantener el orden de ejecución: primero condicionales, luego variables
  */
