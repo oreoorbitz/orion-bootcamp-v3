@@ -38,27 +38,37 @@ async function addItemToCart(token: string, productId: number, quantity: number)
 
     // Obtener contexto para buscar el producto
     const context = await crearContexto();
-    const product = context.products?.find((p: any) => p.id === productId);
+
+    // Validar que all_products sea un Map
+    if (!(context.all_products instanceof Map)) {
+        throw new Error("❌ El contexto no contiene all_products como Map");
+    }
+
+    const productos = Array.from(context.all_products.values());
+    const product = productos.find((p: any) => Number(p.id) === Number(productId));
 
     if (!product) {
+        console.error(`❌ Producto con ID ${productId} no encontrado`);
         throw new Error(`Producto con ID ${productId} no encontrado`);
     }
+
+    console.log(`✅ Producto encontrado: ${product.title}`);
 
     // Verificar si el producto ya existe en el carrito
     const existingItem = cart.items.find(item => item.product_id === productId);
 
     if (existingItem) {
-        // Si existe, incrementar cantidad
         existingItem.quantity += quantity;
+        console.log(`🔁 Cantidad actualizada: ${existingItem.quantity}`);
     } else {
-        // Si no existe, agregar nuevo item
         cart.items.push({
             product_id: product.id,
             title: product.title,
             handle: product.handle,
-            price: product.price,
+            price: product.precio, // ← aquí estaba el error
             quantity: quantity
         });
+        console.log(`🆕 Producto agregado al carrito: ${product.title}`);
     }
 
     return cart;
@@ -137,7 +147,6 @@ async function manejarCartAdd(req: Request, cartToken: string): Promise<Response
     try {
         const requestBody = await req.json();
         const { id, quantity = 1 } = requestBody;
-
         if (!id) {
             return new Response(
                 JSON.stringify({ error: 'ID de producto requerido' }),

@@ -6,303 +6,268 @@ import { iniciarServidor } from "./slightlyLate.ts";
 import { notificarRecargaPagina } from "./wsServer.ts";
 import { crearContexto } from "./contextPlease.ts";
 
-const context = await crearContexto();
-
-function path(stl: string) {
-  return new URL(stl, import.meta.url).pathname
+async function getContext() {
+  return await crearContexto();
 }
 
-// Función para ubicar templates fácilmente
+function path(stl: string) {
+  return new URL(stl, import.meta.url).pathname;
+}
+
 function getTemplatePath(nombre: string): string {
   const templatesDir = path("../server/themes/dev/templates/");
   return `${templatesDir}${nombre}.liquid`;
 }
 
-// Función para determinar la carpeta de salida según el tipo de template
 function getOutputDirectory(templateType: string): string {
   const baseOutputDir = path("../server/themes/dev/dist/");
-
-  if (templateType === "product") {
-    return `${baseOutputDir}products/`;
-  } else if (templateType === "collection") {
-    return `${baseOutputDir}collections/`;
-  } else {
-    return baseOutputDir;
-  }
+  if (templateType === "product") return `${baseOutputDir}products/`;
+  if (templateType === "collection") return `${baseOutputDir}collections/`;
+  return baseOutputDir;
 }
 
-// Función para generar el nombre del archivo de salida
 function getOutputFileName(templateType: string, itemHandle?: string): string {
-  if (templateType === "content_for_index") {
-    return "content_for_index.html";
-  } else if (templateType === "product" && itemHandle) {
+  if (templateType === "content_for_index") return "content_for_index.html";
+  if ((templateType === "product" || templateType === "collection") && itemHandle) {
     return `${itemHandle}.html`;
-  } else if (templateType === "collection" && itemHandle) {
-    return `${itemHandle}.html`;
-  } else {
-    return `${templateType}.html`;
   }
+  return `${templateType}.html`;
 }
 
 const layoutPath = path("../server/themes/dev/layout/theme.liquid");
 
-// 🎯 FUNCIÓN CORREGIDA: Función para generar HTML con template_type en contexto
 async function generarHTMLDeTemplate(templateName: string, itemHandle?: string): Promise<string> {
+  try {
+    console.log(`✅ Generando HTML para template: ${templateName}${itemHandle ? ` (${itemHandle})` : ''}`);
+    const templatePath = getTemplatePath(templateName);
+
     try {
-        console.log(`✅ Generando HTML para template: ${templateName}${itemHandle ? ` (${itemHandle})` : ''}`);
+      await Deno.stat(templatePath);
+    } catch {
+      if (templateName === "404") {
+        console.log(`❌ Template 404 no encontrado`);
+        return "Template 404 no encontrado";
+      }
+      console.log(`❌ Template ${templateName} no encontrado, usando 404`);
+      return await generarHTMLDeTemplate("404");
+    }
 
-        // 1. Obtener la ruta del template
-        const templatePath = getTemplatePath(templateName);
+    const templateContent = await Deno.readTextFile(templatePath);
 
-        // 2. Verificar que el template existe
-        try {
-            await Deno.stat(templatePath);
-        } catch {
-            if (templateName === "404") {
-                console.log(`❌ Template 404 no encontrado`);
-                return "Template 404 no encontrado";
-            }
-            console.log(`❌ Template ${templateName} no encontrado, usando 404`);
-            return await generarHTMLDeTemplate("404");
-        }
+    const baseContext = await getContext();
+    let templateContext = { ...baseContext, template_type: templateName };
 
-        // 3. Leer la plantilla de contenido
-        const templateContent = await Deno.readTextFile(templatePath);
+   if (templateName === "product" && itemHandle) {
+    const baseContext: any = await getContext?.() ?? await crearContexto();
 
-        // 🔧 4. Crear el contexto específico para este template CON template_type
-        let templateContext = {
-            ...context,
-            template_type: templateName  // 🎯 Agregar template_type al contexto
-        };
+    // Sacar un array de productos desde varias rutas
+    const productsArray =
+        Array.isArray(baseContext?.products)
+            ? baseContext.products
+            : baseContext?.all_products && typeof baseContext.all_products === "object"
+                ? Object.values(baseContext.all_products)
+                : Array.isArray(baseContext?.data?.products)
+                    ? baseContext.data.products
+                    : [];
 
-        // Si es un template de producto, agregar el producto específico
-        if (templateName === "product" && itemHandle) {
-            const product = context.products?.find(p => p.handle === itemHandle);
-            if (product) {
-                templateContext = {
-                    ...context,
-                    product: product,
-                    template_type: 'product'  // 🎯 Especificar que es un template de producto
-                };
-            }
-        }
+    // Buscar producto por handle, slug o id
+    const product = productsArray.find(
+        (p: any) =>
+            p?.handle === itemHandle ||
+            p?.slug === itemHandle ||
+            String(p?.id ?? "") === itemHandle
+    );
 
-        // Si es un template de colección, agregar la colección específica
-        if (templateName === "collection" && itemHandle) {
-            const collection = context.collections?.find(c => c.handle === itemHandle);
-            if (collection) {
-                templateContext = {
-                    ...context,
-                    collection: collection,
-                    template_type: 'collection'  // 🎯 Especificar que es un template de colección
-                };
-            }
-        }
-
-        // 5. Renderizar la plantilla de contenido con el contexto
-        const renderedContent = await liquidEngine(templateContent, templateContext);
-
-        // 6. Crear un nuevo contexto que incluya el contenido renderizado
-        const layoutContext = {
+    if (product) {
+        templateContext = {
             ...templateContext,
-            content_for_layout: renderedContent
+            product,
+            template_type: "product"
         };
-
-        // 7. Leer el layout
-        const layoutContent = await Deno.readTextFile(layoutPath);
-
-        // 8. Renderizar el layout con el contexto que incluye content_for_layout
-        const finalTemplate = await liquidEngine(layoutContent, layoutContext);
-
-        // 9. Procesar el HTML final
-        const arbolDOM = htmlParser(finalTemplate);
-        const htmlFinal = renderDOM(arbolDOM);
-
-        // 10. Determinar la carpeta y nombre del archivo de salida
-        const outputDirectory = getOutputDirectory(templateName);
-        const outputFileName = getOutputFileName(templateName, itemHandle);
-        const outputPath = `${outputDirectory}${outputFileName}`;
-
-        // 11. Asegurar que la carpeta de salida existe
-        try {
-            await Deno.stat(outputDirectory);
-        } catch {
-            console.log(`📂 Creando carpeta: ${outputDirectory}`);
-            await Deno.mkdir(outputDirectory, { recursive: true });
-        }
-
-        // 12. Escribir el archivo final
-        await Deno.writeTextFile(outputPath, htmlFinal);
-        console.log(`✅ Archivo ${outputFileName} generado exitosamente en ${outputDirectory}`);
-
-        // 13. Inyectar `hotreload.ts` en el HTML
-        const tsPath = new URL("./hotreload.ts", import.meta.url).pathname;
-        await injector(tsPath, outputPath);
-        console.log(`✅ Hot Reload inyectado correctamente en ${outputFileName}.`);
-
-        return `HTML generado correctamente para ${templateName}${itemHandle ? ` (${itemHandle})` : ''}`;
-    } catch (error) {
-        console.error(`❌ Error al generar HTML para ${templateName}:`, error);
-        return `Error al generar HTML para ${templateName}`;
+    } else {
+        console.log(`⚠️ No se encontró el producto con handle "${itemHandle}"`);
     }
 }
 
-// Función para generar páginas de productos
+    if (templateName === "collection" && itemHandle) {
+      const collection = baseContext.collections?.find(c => c.handle === itemHandle);
+      if (collection) {
+        templateContext = { ...templateContext, collection, template_type: "collection" };
+      }
+    }
+
+    const renderedContent = await liquidEngine(templateContent, templateContext);
+    const layoutContext = { ...templateContext, content_for_layout: renderedContent };
+    const layoutContent = await Deno.readTextFile(layoutPath);
+    const finalTemplate = await liquidEngine(layoutContent, layoutContext);
+    const arbolDOM = htmlParser(finalTemplate);
+    const htmlFinal = renderDOM(arbolDOM);
+
+    const outputDirectory = getOutputDirectory(templateName);
+    const outputFileName = getOutputFileName(templateName, itemHandle);
+    const outputPath = `${outputDirectory}${outputFileName}`;
+
+    try {
+      await Deno.stat(outputDirectory);
+    } catch {
+      console.log(`📂 Creando carpeta: ${outputDirectory}`);
+      await Deno.mkdir(outputDirectory, { recursive: true });
+    }
+
+    await Deno.writeTextFile(outputPath, finalTemplate);
+    console.log(`✅ Archivo ${outputFileName} generado exitosamente en ${outputDirectory}`);
+
+    const tsPath = new URL("./hotreload.ts", import.meta.url).pathname;
+    await injector(tsPath, outputPath);
+    console.log(`✅ Hot Reload inyectado correctamente en ${outputFileName}.`);
+
+    return `HTML generado correctamente para ${templateName}${itemHandle ? ` (${itemHandle})` : ''}`;
+  } catch (error) {
+    console.error(`❌ Error al generar HTML para ${templateName}:`, error);
+    return `Error al generar HTML para ${templateName}`;
+  }
+}
+
+// Función para generar páginas de productos (versión compatible con all_products)
 async function generarPaginasDeProductos(): Promise<string[]> {
-    const resultados: string[] = [];
+  const resultados: string[] = [];
 
-    // Verificar si existe el template product.liquid
-    try {
-        const productTemplatePath = getTemplatePath("product");
-        await Deno.stat(productTemplatePath);
-
-        if (context.products && Array.isArray(context.products)) {
-            console.log(`🛍️ Generando ${context.products.length} páginas de productos...`);
-
-            for (const product of context.products) {
-                console.log(`🔄 Generando página para producto: ${product.handle}`);
-                const resultado = await generarHTMLDeTemplate("product", product.handle);
-                resultados.push(resultado);
-            }
-        } else {
-            console.log("⚠️ No se encontraron productos en el contexto");
-        }
-    } catch {
-        console.log("⚠️ No se encontró template product.liquid");
-    }
-
+  // 1) Verificar que exista product.liquid
+  try {
+    const productTemplatePath = getTemplatePath("product");
+    await Deno.stat(productTemplatePath);
+  } catch {
+    console.log("⚠️ No se encontró template product.liquid");
     return resultados;
+  }
+
+  // 2) Obtener SIEMPRE un contexto fresco
+  const baseContext: any = await getContext?.() ?? await crearContexto();
+
+  // 3) Localizar productos en distintas rutas comunes
+  let products: any[] = [];
+  if (Array.isArray(baseContext?.products)) {
+    products = baseContext.products;
+  } else if (Array.isArray(baseContext?.data?.products)) {
+    products = baseContext.data.products;
+  } else if (baseContext?.all_products && typeof baseContext.all_products === "object") {
+    // ⚠️ aquí convertimos el objeto a array
+    products = Object.values(baseContext.all_products);
+  } else if (Array.isArray(baseContext?.items)) {
+    products = baseContext.items;
+  }
+
+  // 4) Logs de diagnóstico
+  console.log("🔎 Keys del contexto:", Object.keys(baseContext ?? {}));
+  console.log("🔎 products es array?", Array.isArray(products), "len:", products.length);
+
+  if (!products.length) {
+    console.log("⚠️ No se encontraron productos en el contexto (post-zip)");
+    return resultados;
+  }
+
+  // 5) Generar páginas por cada producto
+  console.log(`🛍️ Generando ${products.length} páginas de productos...`);
+  for (const product of products) {
+    const handle = product?.handle ?? product?.slug ?? String(product?.id ?? "");
+    if (!handle) {
+      console.log("⚠️ Producto sin handle/slug/id; se omite.", product?.title ?? product?.name ?? "");
+      continue;
+    }
+    console.log(`🔄 Generando página para producto: ${handle}`);
+    const resultado = await generarHTMLDeTemplate("product", handle);
+    resultados.push(resultado);
+  }
+
+  return resultados;
 }
 
-// Función para generar páginas de colecciones
+
+
 async function generarPaginasDeColecciones(): Promise<string[]> {
+  const resultados: string[] = [];
+  try {
+    const collectionTemplatePath = getTemplatePath("collection");
+    await Deno.stat(collectionTemplatePath);
+
+    const baseContext = await getContext();
+    if (Array.isArray(baseContext.collections)) {
+      console.log(`📂 Generando ${baseContext.collections.length} páginas de colecciones...`);
+      for (const collection of baseContext.collections) {
+        console.log(`🔄 Generando página para colección: ${collection.handle}`);
+        const resultado = await generarHTMLDeTemplate("collection", collection.handle);
+        resultados.push(resultado);
+      }
+    } else {
+      console.log("⚠️ No se encontraron colecciones en el contexto");
+    }
+  } catch {
+    console.log("⚠️ No se encontró template collection.liquid");
+  }
+  return resultados;
+}
+
+async function regenerarTodosLosTemplates(): Promise<string> {
+  try {
+    console.log("🔄 Regenerando todos los templates...");
     const resultados: string[] = [];
 
-    // Verificar si existe el template collection.liquid
+    console.log("📋 Regenerando content_for_index...");
+    const resultadoIndex = await generarHTMLDeTemplate("content_for_index");
+    resultados.push(resultadoIndex);
+
     try {
-        const collectionTemplatePath = getTemplatePath("collection");
-        await Deno.stat(collectionTemplatePath);
-
-        if (context.collections && Array.isArray(context.collections)) {
-            console.log(`📂 Generando ${context.collections.length} páginas de colecciones...`);
-
-            for (const collection of context.collections) {
-                console.log(`🔄 Generando página para colección: ${collection.handle}`);
-                const resultado = await generarHTMLDeTemplate("collection", collection.handle);
-                resultados.push(resultado);
-            }
-        } else {
-            console.log("⚠️ No se encontraron colecciones en el contexto");
-        }
+      const template404Path = getTemplatePath("404");
+      await Deno.stat(template404Path);
+      console.log("📄 Regenerando template 404...");
+      const resultado404 = await generarHTMLDeTemplate("404");
+      resultados.push(resultado404);
     } catch {
-        console.log("⚠️ No se encontró template collection.liquid");
+      console.log("⚠️ No se encontró template 404.liquid");
     }
 
-    return resultados;
+    console.log("🛍️ Generando páginas de productos...");
+    resultados.push(...await generarPaginasDeProductos());
+
+    console.log("📂 Generando páginas de colecciones...");
+    resultados.push(...await generarPaginasDeColecciones());
+
+    notificarRecargaPagina();
+    console.log("📤 Señal de recarga enviada a los clientes WebSocket.");
+    return `Templates regenerados: ${resultados.length} archivos generados`;
+  } catch (error) {
+    console.error("❌ Error al regenerar templates:", error);
+    return "Error al regenerar templates";
+  }
 }
 
-// Función para regenerar todos los templates
-async function regenerarTodosLosTemplates(): Promise<string> {
-    try {
-        console.log("🔄 Regenerando todos los templates...");
-
-        const resultados: string[] = [];
-
-        // 1. Regenerar content_for_index (template principal)
-        console.log("📋 Regenerando content_for_index...");
-        const resultadoIndex = await generarHTMLDeTemplate("content_for_index");
-        resultados.push(resultadoIndex);
-
-        // 2. Regenerar 404 si existe
-        try {
-            const template404Path = getTemplatePath("404");
-            await Deno.stat(template404Path);
-            console.log("📄 Regenerando template 404...");
-            const resultado404 = await generarHTMLDeTemplate("404");
-            resultados.push(resultado404);
-        } catch {
-            console.log("⚠️ No se encontró template 404.liquid");
-        }
-
-        // 3. Generar páginas de productos
-        console.log("🛍️ Generando páginas de productos...");
-        const resultadosProductos = await generarPaginasDeProductos();
-        resultados.push(...resultadosProductos);
-
-        // 4. Generar páginas de colecciones
-        console.log("📂 Generando páginas de colecciones...");
-        const resultadosColecciones = await generarPaginasDeColecciones();
-        resultados.push(...resultadosColecciones);
-
-        // 5. Notificar recarga de página
-        notificarRecargaPagina();
-        console.log("📤 Señal de recarga enviada a los clientes WebSocket.");
-
-        return `Templates regenerados: ${resultados.length} archivos generados`;
-    } catch (error) {
-        console.error("❌ Error al regenerar templates:", error);
-        return "Error al regenerar templates";
-    }
-}
-
-// Función legacy para mantener compatibilidad
 export async function recargarYGenerarHTML() {
-    return await generarHTMLDeTemplate("content_for_index");
+  return await generarHTMLDeTemplate("content_for_index");
 }
 
 export async function onThemeUpdate(changedTemplate?: string) {
-    let resultado: string;
-
-    if (changedTemplate) {
-        // Se cambió un template específico, regenerar según el tipo
-        const templateName = changedTemplate.replace('.liquid', '');
-
-        if (templateName === "content_for_index" || templateName === "404") {
-            console.log(`🎨 Regenerando template específico: ${templateName}`);
-            resultado = await generarHTMLDeTemplate(templateName);
-        } else if (templateName === "product") {
-            console.log(`🛍️ Regenerando todas las páginas de productos...`);
-            const resultadosProductos = await generarPaginasDeProductos();
-            resultado = `Páginas de productos regeneradas: ${resultadosProductos.length}`;
-        } else if (templateName === "collection") {
-            console.log(`📂 Regenerando todas las páginas de colecciones...`);
-            const resultadosColecciones = await generarPaginasDeColecciones();
-            resultado = `Páginas de colecciones regeneradas: ${resultadosColecciones.length}`;
-        } else {
-            console.log(`⚠️ Template ${templateName} no reconocido, regenerando todos`);
-            resultado = await regenerarTodosLosTemplates();
-        }
+  let resultado: string;
+  if (changedTemplate) {
+    const templateName = changedTemplate.replace(/\.(liquid)$/i, "");
+    if (templateName === "content_for_index" || templateName === "404") {
+      console.log(`🎨 Regenerando template específico: ${templateName}`);
+      resultado = await generarHTMLDeTemplate(templateName);
+    } else if (templateName === "product") {
+      console.log(`🛍️ Regenerando todas las páginas de productos...`);
+      resultado = `Páginas de productos regeneradas: ${(await generarPaginasDeProductos()).length}`;
+    } else if (templateName === "collection") {
+      console.log(`📂 Regenerando todas las páginas de colecciones...`);
+      resultado = `Páginas de colecciones regeneradas: ${(await generarPaginasDeColecciones()).length}`;
     } else {
-        // Cambios generales (layout, assets, etc), regenerar todos
-        console.log("🎨 Regenerando todos los templates...");
-        resultado = await regenerarTodosLosTemplates();
+      console.log(`⚠️ Template ${templateName} no reconocido, regenerando todos`);
+      resultado = await regenerarTodosLosTemplates();
     }
-
-    console.log("✅ Tema actualizado correctamente.");
-    return new Response(resultado, { status: 200 });
+  } else {
+    console.log("🎨 Regenerando todos los templates...");
+    resultado = await regenerarTodosLosTemplates();
+  }
+  console.log("✅ Tema actualizado correctamente.");
+  return new Response(resultado, { status: 200 });
 }
 
-// Activar el servidor para escuchar las solicitudes
 iniciarServidor(3000, onThemeUpdate);
-
-/* LO DEJO AKI POR SI RROMPO ALGO ESTO HACE RECARGAS
-export async function observarCambios() {
-    const watcher = Deno.watchFs([
-        "typescript/ejercicio_26/content_for_index.liquid",
-        "typescript/ejercicio_26/theme.liquid",
-        "typescript/ejercicio_26/assets"
-    ]);
-
-    for await (const event of watcher) {
-        console.log(`🔄 Archivo(s) modificado(s): ${event.paths.join(", ")}`);
-
-        if (event.paths.some((path) => path.endsWith(".css"))) {
-            console.log("🔄 Cambios en CSS detectados, recargando estilos...");
-            notificarReloadCSS();
-        } else {
-            console.log("🔄 Cambio en la plantilla detectado, recargando página...");
-            await recargarYGenerarHTML();
-            notificarRecargaPagina();
-        }
-    }
-} */

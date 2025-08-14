@@ -51,6 +51,22 @@ let filtrosRegistrados: Record<string, Function> = {
   }
 };
 
+function preservarScripts(html: string): { html: string, scripts: string[] } {
+  const scripts: string[] = [];
+  const marcador = '__SCRIPT_BLOCK__';
+
+  const htmlSinScripts = html.replace(/<script[\s\S]*?<\/script>/gi, match => {
+    scripts.push(match);
+    return marcador + scripts.length;
+  });
+
+  return { html: htmlSinScripts, scripts };
+}
+
+function restaurarScripts(html: string, scripts: string[]): string {
+  return html.replace(/__SCRIPT_BLOCK__(\d+)/g, (_, index) => scripts[Number(index) - 1]);
+}
+
 function detectarTokensPlantilla(entrada: string): string[] {
     const regex = /({{.*?}}|{%.*?%})/g;
     let resultado: string[] = [];
@@ -655,11 +671,65 @@ function renderizarVariables(
   }).join('');
 }
 
+
 export async function liquidEngine(entradaInicial: string, contexto: Record<string, any>): Promise<string> {
+  //Contenido recibido
+    console.log("Entrada inicial en liquidEngine:\n", entradaInicial);
+    console.log("contexto pasado:", contexto);
+
+  // Paso 1️⃣ Tokenizar y clasificar
+    const entradaTokenizada = detectarTokensPlantilla(entradaInicial);
+    console.log("Entrada Tokenizada:",entradaTokenizada);
+
+    const entradaClasificada = clasificarTokensPlantilla(entradaTokenizada);
+    console.log("Entrada Clasificada:",entradaClasificada);
+
+    // 2️⃣ Procesar asignaciones, includes, bucles, sections, condicionales
+    const entradaProcesadaAsignacion = procesarAsignaciones(entradaClasificada, contexto);
+    console.log("Entrada Asignaciones Procesadas:", entradaProcesadaAsignacion);
+
+    const entradaConIncludes = await procesarIncludes(entradaProcesadaAsignacion, contexto);
+    console.log("Entrada con Includes:", entradaConIncludes);
+
+    const buclesProcesados = await procesarBucles(entradaConIncludes, contexto);
+    console.log("Bucles Procesados:",buclesProcesados);
+
+    const entradaConRender = await procesarRender(buclesProcesados, contexto);
+    console.log("Entrada con Render:", entradaConRender);
+
+    const entradaConSections = await procesarSection(entradaConRender, contexto);
+    console.log("Entrada con Sections:", entradaConSections);
+
+    const buclesFinales = await procesarBucles(entradaConSections, contexto);
+    console.log("Bucles Finales:", buclesFinales);
+
+    const entradaProcesada = procesarCondicionales(buclesFinales, contexto);
+    console.log("Entrada Procesada:", entradaProcesada);
+
+    // 3️⃣ Renderizar variables (¡aquí se sustituyen los {{ product.id }}!)
+    const entradaRenderizadaParcial = renderizarVariables(entradaProcesada, contexto, filtrosRegistrados);
+    console.log("Entrada Renderizada Parcial:", entradaRenderizadaParcial)
+
+    // 4️⃣ Preservar bloques <script> para proteger el =>
+    const { html: entradaSinScripts, scripts } = preservarScripts(entradaRenderizadaParcial);
+    console.log("Entrada sin scripts:",entradaSinScripts, "scripts:")
+
+    // 5️⃣ Restaurar los scripts al final
+    const resultadoFinal = restaurarScripts(entradaSinScripts, scripts);
+    console.log("Resultado Final",resultadoFinal )
+
+
+    return String(resultadoFinal);
+}
+
+
+/* export async function liquidEngine(entradaInicial: string, contexto: Record<string, any>): Promise<string> {
     console.log("Entrada inicial en liquidEngine:\n", entradaInicial);
     console.log("contexto pasado", contexto);
 
-    const entradaTokenizada = detectarTokensPlantilla(entradaInicial);
+    const { html: entradaSinScripts, scripts } = preservarScripts(entradaInicial);
+
+    const entradaTokenizada = detectarTokensPlantilla(entradaSinScripts);
     console.log("Tokens de Liquid:\n", entradaTokenizada);
 
     const entradaClasificada = clasificarTokensPlantilla(entradaTokenizada);
@@ -689,7 +759,8 @@ export async function liquidEngine(entradaInicial: string, contexto: Record<stri
     const entradaRenderizada = renderizarVariables(entradaProcesada, contexto, filtrosRegistrados);
     console.log("Resultado final de Liquid:\n", entradaRenderizada);
 
-    let resultadoFinal = entradaRenderizada;
-
+    let resultadoFinal = restaurarScripts(entradaRenderizada, scripts);
     return String(resultadoFinal);
+
 }
+*/

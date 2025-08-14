@@ -20,7 +20,8 @@
       body: JSON.stringify({
         id: {{ product.id }},
         quantity: 1
-      })
+      }),
+      credentials: 'include'
     });
 
     if (response.ok) {
