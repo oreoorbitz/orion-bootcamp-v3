@@ -8,7 +8,7 @@ db.exec(`
     id INTEGER PRIMARY KEY,
     title TEXT,
     handle TEXT,
-    precio INTEGER
+    price INTEGER
   );
 
   CREATE TABLE IF NOT EXISTS collections (
@@ -29,9 +29,9 @@ function isTableEmpty(table: string): boolean {
 }
 
 if (isTableEmpty("products")) {
-  const stmt = db.prepare("INSERT INTO products (id, title, handle, precio) VALUES (?, ?, ?, ?)");
+  const stmt = db.prepare("INSERT INTO products (id, title, handle, price) VALUES (?, ?, ?, ?)");
   for (const p of products) {
-    stmt.run(p.id, p.title, p.handle, p.precio);
+    stmt.run(p.id, p.title, p.handle, p.price);
   }
   console.log("✅ Productos insertados");
 }
