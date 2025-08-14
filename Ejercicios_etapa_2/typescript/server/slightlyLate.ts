@@ -65,7 +65,7 @@ async function addItemToCart(token: string, productId: number, quantity: number)
             product_id: product.id,
             title: product.title,
             handle: product.handle,
-            price: product.precio, // ← aquí estaba el error
+            price: product.price, // ← aquí estaba el error
             quantity: quantity
         });
         console.log(`🆕 Producto agregado al carrito: ${product.title}`);
