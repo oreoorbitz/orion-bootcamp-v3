@@ -1,0 +1,97 @@
+<!-- templates/42_cart.liquid -->
+<h1 class="text-2xl font-bold mb-6">Tu carrito</h1>
+
+{% if cart.item_count > 0 %}
+  <form id="cart-form">
+    <table class="w-full border-collapse mb-6">
+      <thead>
+        <tr class="border-b">
+          <th class="text-left py-2">Producto</th>
+          <th class="text-left py-2">Cantidad</th>
+          <th class="text-left py-2">Precio</th>
+          <th class="text-left py-2">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in cart.items %}
+          <tr class="border-b">
+            <td class="py-2">
+              <a href="/products/{{ item.handle }}" class="text-blue-600 hover:underline">
+                {{ item.title }}
+              </a>
+            </td>
+            <td class="py-2">
+              <input
+                type="number"
+                name="updates[{{ item.id }}]"
+                value="{{ item.quantity }}"
+                min="0"
+                class="border rounded p-1 w-16"
+              >
+            </td>
+            <td class="py-2">{{ item.price | money }}</td>
+            <td class="py-2">{{ item.price | times: item.quantity | money }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="flex justify-between items-center">
+      <button
+        type="submit"
+        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded shadow"
+      >
+        Actualizar carrito
+      </button>
+      <button
+        id="clear-cart-btn"
+        type="button"
+        class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded shadow"
+      >
+        Vaciar carrito
+      </button>
+      <div class="text-right text-lg font-semibold">
+        <div>Total artículos: {{ cart.item_count }}</div>
+        <div>Total: {{ cart.total_price | money }}</div>
+      </div>
+    </div>
+  </form>
+
+  <script>
+    document.getElementById('cart-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const updates = {};
+
+      for (const [key, value] of formData.entries()) {
+        if (key.startsWith('updates[')) {
+          const id = key.match(/updates\[(\d+)\]/)[1];
+          updates[id] = parseInt(value, 10);
+        }
+      }
+
+      const response = await fetch('/cart/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ updates })
+      });
+
+      if (response.ok) {
+        location.reload();
+      } else {
+        alert('Hubo un problema al actualizar el carrito');
+      }
+    });
+
+    document.getElementById('clear-cart-btn').addEventListener('click', async () => {
+      const response = await fetch('/cart/clear', { method: 'POST' });
+      if (response.ok) {
+        window.location.href = '/cart';
+      } else {
+        alert('Hubo un problema al vaciar el carrito');
+      }
+    });
+  </script>
+{% else %}
+  <p>Tu carrito está vacío.</p>
+{% endif %}
