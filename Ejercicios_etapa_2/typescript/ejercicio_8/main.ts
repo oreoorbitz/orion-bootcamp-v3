@@ -115,9 +115,9 @@
  *
  * ```ts
  * function clasificarDirectiva(token: TokenPlantilla): TipoDirectiva | null {
- *   if (token.tipo !== 'directiva') return null;
+ *   if (token.tipo != 'directiva') return null;
  *   if (token.contenido.startsWith('if')) return 'if';
- *   if (token.contenido === 'endif') return 'endif';
+ *   if (token.contenido == 'endif') return 'endif';
  *   return null;
  * }
  * ```
