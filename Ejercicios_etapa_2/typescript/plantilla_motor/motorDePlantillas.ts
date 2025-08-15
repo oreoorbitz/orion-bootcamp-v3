@@ -124,24 +124,75 @@ function clasificarTokensPlantilla(tokens: string[]): TokenPlantilla[] {
 function procesarAsignaciones(tokens: TokenPlantilla[], contexto: Record<string, any>): TokenPlantilla[] {
     let resultado: TokenPlantilla[] = [];
 
-    for (let token of tokens) {
-        if (token.tipo === "directiva" && token.contenido.startsWith("assign ")) {
-            let partes = token.contenido.split("=").map(p => p.trim());
-            let nombreVariable = partes[0].replace("assign ", "").trim();
-            let valorRaw = partes[1];
+    console.log(`🔧 procesarAsignaciones - Tokens recibidos:`, tokens.length);
 
-            if (/^['"].*['"]$/.test(valorRaw)) {
-                contexto[nombreVariable] = valorRaw.slice(1, -1);
-            } else if (!isNaN(Number(valorRaw))) {
-                contexto[nombreVariable] = Number(valorRaw);
-            } else {
-                contexto[nombreVariable] = contexto.hasOwnProperty(valorRaw) ? contexto[valorRaw] : valorRaw;
+    for (let token of tokens) {
+        if (token.tipo === "directiva") {
+            // 🔧 CORRECCIÓN: Detectar assign con espacios y guiones
+            let contenidoLimpio = token.contenido.trim();
+
+            // Manejar tanto "assign x = 3" como "- assign x = 3 -"
+            if (contenidoLimpio.includes('assign ')) {
+                console.log(`🎯 Procesando asignación: '${contenidoLimpio}'`);
+
+                // Extraer solo la parte del assign
+                let parteAssign = contenidoLimpio;
+                if (contenidoLimpio.startsWith('-')) {
+                    parteAssign = contenidoLimpio.substring(1).trim();
+                }
+                if (parteAssign.endsWith('-')) {
+                    parteAssign = parteAssign.substring(0, parteAssign.length - 1).trim();
+                }
+
+                console.log(`🔧 Parte assign extraída: '${parteAssign}'`);
+
+                // Dividir en nombre = valor
+                let partesAssign = parteAssign.split("=");
+                if (partesAssign.length >= 2) {
+                    let nombreVariable = partesAssign[0].replace("assign", "").trim();
+                    let valorRaw = partesAssign.slice(1).join("=").trim(); // Por si hay = en el valor
+
+                    console.log(`📝 Variable: '${nombreVariable}', Valor raw: '${valorRaw}'`);
+
+                    let valorFinal;
+
+                    // Detectar tipo de valor
+                    if (/^['"].*['"]$/.test(valorRaw)) {
+                        // String literal
+                        valorFinal = valorRaw.slice(1, -1);
+                        console.log(`📝 String detectado: '${valorFinal}'`);
+                    } else if (valorRaw === 'true') {
+                        valorFinal = true;
+                        console.log(`✅ Boolean true detectado`);
+                    } else if (valorRaw === 'false') {
+                        valorFinal = false;
+                        console.log(`❌ Boolean false detectado`);
+                    } else if (/^-?\d+(\.\d+)?$/.test(valorRaw)) {
+                        // Número
+                        valorFinal = Number(valorRaw);
+                        console.log(`🔢 Número detectado: ${valorFinal}`);
+                    } else {
+                        // Variable del contexto
+                        valorFinal = contexto.hasOwnProperty(valorRaw) ? contexto[valorRaw] : valorRaw;
+                        console.log(`🔗 Variable del contexto: ${valorRaw} = ${valorFinal}`);
+                    }
+
+                    // Asignar al contexto
+                    contexto[nombreVariable] = valorFinal;
+                    console.log(`✅ Asignado: ${nombreVariable} = ${valorFinal} (tipo: ${typeof valorFinal})`);
+                    console.log(`🎯 Contexto actualizado:`, Object.keys(contexto));
+                }
+
+                // No agregar el token de assign al resultado (se consume)
+                continue;
             }
-        } else {
-            resultado.push(token);
         }
+
+        // Si no es assign, agregar al resultado
+        resultado.push(token);
     }
 
+    console.log(`✅ procesarAsignaciones completado. Variables en contexto:`, Object.keys(contexto));
     return resultado;
 }
 
@@ -468,10 +519,17 @@ function procesarVariableConFiltros(token: TokenPlantilla, contexto: Record<stri
   return token;
 }
 
-// 🔧 CORRECCIÓN EN motorDePlantillas.ts - función resolverVariable
+// 🔧 FUNCIÓN MEJORADA: resolverVariable con mejor logging
 function resolverVariable(nombreVariable: string, contexto: Record<string, any>): any {
   console.log(`🔍 Resolviendo variable '${nombreVariable}'`);
   console.log(`🔍 Contexto disponible:`, Object.keys(contexto));
+
+  // Verificar si la variable existe directamente
+  if (Object.prototype.hasOwnProperty.call(contexto, nombreVariable)) {
+    const valor = contexto[nombreVariable];
+    console.log(`✅ Variable '${nombreVariable}' encontrada directamente: ${valor} (tipo: ${typeof valor})`);
+    return valor;
+  }
 
   // Manejar acceso con corchetes como collections["soft-shirts"]
   let segmentos = nombreVariable
@@ -482,6 +540,7 @@ function resolverVariable(nombreVariable: string, contexto: Record<string, any>)
 
   let valorFinal = segmentos.reduce((obj, key, index) => {
     console.log(`🔍 Paso ${index + 1}: Accediendo a '${key}' en:`, typeof obj);
+    console.log(`🔍 Valor actual del objeto:`, obj);
 
     if (obj === null || obj === undefined) {
       console.log(`⚠️ Objeto es null/undefined para clave '${key}'`);
@@ -495,7 +554,7 @@ function resolverVariable(nombreVariable: string, contexto: Record<string, any>)
       // Intentar acceso vía get() si es Map
       if (obj instanceof Map && obj.has(key)) {
         const resultado = obj.get(key);
-        console.log(`🔍 Map.get('${key}'):`, resultado);
+        console.log(`✅ Map.get('${key}'):`, resultado);
         return resultado;
       }
 
@@ -516,14 +575,14 @@ function resolverVariable(nombreVariable: string, contexto: Record<string, any>)
     if (typeof obj === 'object' && obj !== null) {
       if (Object.prototype.hasOwnProperty.call(obj, key)) {
         const resultado = obj[key];
-        console.log(`🔍 Acceso Object['${key}']:`, resultado);
+        console.log(`✅ Acceso Object['${key}']:`, resultado, `(tipo: ${typeof resultado})`);
         return resultado;
       }
 
       // Acceso directo como fallback
       const resultado = obj[key];
       if (resultado !== undefined) {
-        console.log(`🔍 Acceso directo fallback ['${key}']:`, resultado);
+        console.log(`✅ Acceso directo fallback ['${key}']:`, resultado);
         return resultado;
       }
 
@@ -536,11 +595,12 @@ function resolverVariable(nombreVariable: string, contexto: Record<string, any>)
   }, contexto);
 
   if (valorFinal === undefined || valorFinal === null) {
-    console.warn(`⚠️ Variable '${nombreVariable}' no encontrada`);
+    console.warn(`⚠️ Variable '${nombreVariable}' no encontrada, retornando string vacío`);
     valorFinal = "";
+  } else {
+    console.log(`✅ Variable '${nombreVariable}' resuelta como:`, valorFinal, `(tipo: ${typeof valorFinal})`);
   }
 
-  console.log(`✅ Valor final para '${nombreVariable}':`, valorFinal);
   return valorFinal;
 }
 
@@ -558,86 +618,275 @@ function saltarBloque(tokens: TokenPlantilla[], inicio: number): number {
   return j - 1;
 }
 
-function procesarCondicionales(tokens: TokenPlantilla[], contexto: Record<string, any>): TokenPlantilla[] {
-    let resultado: TokenPlantilla[] = [];
-    let i = 0;
+// 🎯 FUNCIÓN NUEVA: Evaluar expresión condicional
+function evaluarExpresionCondicional(expresion: string, contexto: Record<string, any>): boolean {
+  console.log(`🔍 Evaluando expresión: '${expresion}'`);
 
-    while (i < tokens.length) {
-        let token = tokens[i];
+  // Limpiar espacios extra
+  expresion = expresion.trim();
 
-        if (token.tipo === 'directiva' && token.directiva === 'if') {
-            let partes = token.contenido.split(/\s+/);
-            let nombreVariable = partes[1] || "";
+  // Detectar operadores de comparación (en orden de precedencia para evitar confusión)
+  const operadores = ['==', '!=', '>=', '<=', '>', '<'];
+  let operadorEncontrado: string | null = null;
+  let left: string = '';
+  let right: string = '';
 
-            let j = i + 1;
-            let bloqueActual: TokenPlantilla[] = [];
-            let mostrarBloque = contexto[nombreVariable] ?? false;
-            let procesandoElse = false;
-            let dentroDeBucles = false;
-
-            for (let k = i; k >= 0; k--) {
-                if (tokens[k].tipo === 'directiva' && tokens[k].directiva === 'for') {
-                    dentroDeBucles = true;
-                    break;
-                }
-            }
-
-            while (j < tokens.length) {
-                let siguienteToken = tokens[j];
-
-                if (siguienteToken.tipo === 'directiva' && siguienteToken.directiva === 'endif') {
-                    break;
-                }
-
-                if (siguienteToken.tipo === 'directiva' && siguienteToken.directiva === 'elsif') {
-                    if (!mostrarBloque) {
-                        let partesElsif = siguienteToken.contenido.split(/\s+/);
-                        let nombreVariableElsif = partesElsif[1] || "";
-                        mostrarBloque = contexto[nombreVariableElsif] ?? false;
-                    }
-                    bloqueActual = [];
-                }
-
-                if (siguienteToken.tipo === 'directiva' && siguienteToken.directiva === 'else') {
-                    if (!mostrarBloque) {
-                        procesandoElse = true;
-                    }
-                    bloqueActual = [];
-                }
-
-                if (!siguienteToken.directiva || dentroDeBucles) {
-                    bloqueActual.push({ ...siguienteToken });
-                }
-
-                j++;
-            }
-
-            if (mostrarBloque || procesandoElse || dentroDeBucles) {
-                resultado.push(...bloqueActual);
-            }
-
-            i = j;
-        } else {
-            resultado.push(token);
-        }
-
-        i++;
+  // Buscar el operador
+  for (const op of operadores) {
+    const index = expresion.indexOf(op);
+    if (index !== -1) {
+      operadorEncontrado = op;
+      left = expresion.substring(0, index).trim();
+      right = expresion.substring(index + op.length).trim();
+      break;
     }
+  }
 
+  // Si no hay operador, evaluar truthiness
+  if (!operadorEncontrado) {
+    console.log(`📋 Sin operador, evaluando truthiness de: '${expresion}'`);
+    const valor = resolverOperando(expresion, contexto);
+    const resultado = evaluarTruthiness(valor);
+    console.log(`✅ Truthiness de '${expresion}' = ${valor} → ${resultado}`);
     return resultado;
+  }
+
+  console.log(`🔧 Operador encontrado: '${operadorEncontrado}', left: '${left}', right: '${right}'`);
+
+  // Resolver operandos
+  const valorLeft = resolverOperando(left, contexto);
+  const valorRight = resolverOperando(right, contexto);
+
+  console.log(`📊 Valores resueltos: left=${valorLeft} (${typeof valorLeft}), right=${valorRight} (${typeof valorRight})`);
+
+  // Aplicar comparación
+  const resultado = ejecutarComparacion(valorLeft, valorRight, operadorEncontrado);
+  console.log(`✅ Resultado de comparación: ${valorLeft} ${operadorEncontrado} ${valorRight} → ${resultado}`);
+
+  return resultado;
 }
 
-// 🎯 FUNCIÓN CORREGIDA: renderizarVariables con manejo correcto de Maps
+// 🎯 FUNCIÓN NUEVA: Resolver operando (variable o literal)
+function resolverOperando(operando: string, contexto: Record<string, any>): any {
+  operando = operando.trim();
+
+  // Literal string
+  if ((operando.startsWith('"') && operando.endsWith('"')) ||
+      (operando.startsWith("'") && operando.endsWith("'"))) {
+    return operando.slice(1, -1);
+  }
+
+  // Literal boolean
+  if (operando === 'true') return true;
+  if (operando === 'false') return false;
+
+  // Literal numérico
+  if (/^-?\d+(\.\d+)?$/.test(operando)) {
+    return parseFloat(operando);
+  }
+
+  // Variable del contexto
+  return resolverVariable(operando, contexto);
+}
+
+// 🎯 FUNCIÓN NUEVA: Ejecutar comparación con coerción de tipos
+function ejecutarComparacion(left: any, right: any, operador: string): boolean {
+  // Convertir a números si ambos son numéricos
+  const leftEsNumerico = esNumerico(left);
+  const rightEsNumerico = esNumerico(right);
+
+  if (leftEsNumerico && rightEsNumerico) {
+    const numLeft = Number(left);
+    const numRight = Number(right);
+
+    console.log(`🔢 Comparación numérica: ${numLeft} ${operador} ${numRight}`);
+
+    switch (operador) {
+      case '==': return numLeft === numRight;
+      case '!=': return numLeft !== numRight;
+      case '>': return numLeft > numRight;
+      case '>=': return numLeft >= numRight;
+      case '<': return numLeft < numRight;
+      case '<=': return numLeft <= numRight;
+      default: return false;
+    }
+  }
+
+  // Para == y != también comparar como strings si no son ambos numéricos
+  if (operador === '==' || operador === '!=') {
+    const strLeft = String(left);
+    const strRight = String(right);
+    console.log(`📝 Comparación de igualdad como strings: '${strLeft}' ${operador} '${strRight}'`);
+
+    if (operador === '==') return strLeft === strRight;
+    if (operador === '!=') return strLeft !== strRight;
+  }
+
+  // Para otros operadores, comparar como strings
+  const strLeft = String(left);
+  const strRight = String(right);
+
+  console.log(`🔤 Comparación alfabética: '${strLeft}' ${operador} '${strRight}'`);
+
+  switch (operador) {
+    case '>': return strLeft > strRight;
+    case '>=': return strLeft >= strRight;
+    case '<': return strLeft < strRight;
+    case '<=': return strLeft <= strRight;
+    default: return false;
+  }
+}
+
+// 🎯 FUNCIÓN NUEVA: Verificar si un valor es numérico
+function esNumerico(valor: any): boolean {
+  if (typeof valor === 'number') return true;
+  if (typeof valor === 'string') {
+    return /^-?\d+(\.\d+)?$/.test(valor.trim());
+  }
+  return false;
+}
+
+// 🎯 FUNCIÓN NUEVA: Evaluar truthiness según las reglas de Liquid
+function evaluarTruthiness(valor: any): boolean {
+  // false, null, undefined → falsy
+  if (valor === false || valor === null || valor === undefined) return false;
+
+  // String vacío → falsy
+  if (typeof valor === 'string' && valor === '') return false;
+
+  // Número 0 → falsy
+  if (typeof valor === 'number' && valor === 0) return false;
+
+  // Todo lo demás → truthy
+  return true;
+}
+
+// 🔧 FUNCIÓN MODIFICADA: procesarCondicionales con soporte completo
+function procesarCondicionales(tokens: TokenPlantilla[], contexto: Record<string, any>): TokenPlantilla[] {
+  let resultado: TokenPlantilla[] = [];
+  let i = 0;
+
+  while (i < tokens.length) {
+    let token = tokens[i];
+
+    if (token.tipo === 'directiva' && token.directiva === 'if') {
+      console.log(`🔄 Procesando condicional: ${token.contenido}`);
+
+      // Extraer la expresión después de 'if'
+      const expresion = token.contenido.replace(/^if\s+/, '').trim();
+      console.log(`📝 Expresión extraída: '${expresion}'`);
+
+      // Evaluar la condición inicial
+      let condicionActual = evaluarExpresionCondicional(expresion, contexto);
+      console.log(`🎯 Condición inicial evaluada: ${condicionActual}`);
+
+      let j = i + 1;
+      let bloquesCondicionales: Array<{ tipo: 'if' | 'elsif' | 'else', tokens: TokenPlantilla[], condicion?: boolean }> = [];
+      let bloqueActual: TokenPlantilla[] = [];
+      let nivel = 1;
+
+      // Recopilar todos los bloques del condicional
+      while (j < tokens.length && nivel > 0) {
+        let siguienteToken = tokens[j];
+
+        if (siguienteToken.tipo === 'directiva') {
+          if (siguienteToken.directiva === 'if') {
+            nivel++;
+            bloqueActual.push(siguienteToken);
+          } else if (siguienteToken.directiva === 'endif') {
+            nivel--;
+            if (nivel === 0) {
+              // Guardar el bloque actual antes de terminar
+              if (bloquesCondicionales.length === 0) {
+                bloquesCondicionales.push({ tipo: 'if', tokens: bloqueActual, condicion: condicionActual });
+              } else {
+                const ultimoBloque = bloquesCondicionales[bloquesCondicionales.length - 1];
+                ultimoBloque.tokens = bloqueActual;
+              }
+              break;
+            } else {
+              bloqueActual.push(siguienteToken);
+            }
+          } else if (nivel === 1 && siguienteToken.directiva === 'elsif') {
+            // Guardar bloque anterior
+            if (bloquesCondicionales.length === 0) {
+              bloquesCondicionales.push({ tipo: 'if', tokens: bloqueActual, condicion: condicionActual });
+            } else {
+              const ultimoBloque = bloquesCondicionales[bloquesCondicionales.length - 1];
+              ultimoBloque.tokens = bloqueActual;
+            }
+
+            // Evaluar nueva condición elsif
+            const expresionElsif = siguienteToken.contenido.replace(/^elsif\s+/, '').trim();
+            const condicionElsif = evaluarExpresionCondicional(expresionElsif, contexto);
+            console.log(`🔄 Evaluando elsif '${expresionElsif}': ${condicionElsif}`);
+
+            bloquesCondicionales.push({ tipo: 'elsif', tokens: [], condicion: condicionElsif });
+            bloqueActual = [];
+          } else if (nivel === 1 && siguienteToken.directiva === 'else') {
+            // Guardar bloque anterior
+            if (bloquesCondicionales.length === 0) {
+              bloquesCondicionales.push({ tipo: 'if', tokens: bloqueActual, condicion: condicionActual });
+            } else {
+              const ultimoBloque = bloquesCondicionales[bloquesCondicionales.length - 1];
+              ultimoBloque.tokens = bloqueActual;
+            }
+
+            bloquesCondicionales.push({ tipo: 'else', tokens: [], condicion: true }); // else siempre es true
+            bloqueActual = [];
+          } else {
+            bloqueActual.push(siguienteToken);
+          }
+        } else {
+          bloqueActual.push(siguienteToken);
+        }
+
+        j++;
+      }
+
+      console.log(`📋 Bloques condicionales encontrados:`, bloquesCondicionales.map(b => ({ tipo: b.tipo, condicion: b.condicion, tokens: b.tokens.length })));
+
+      // Seleccionar qué bloque ejecutar
+      let bloqueAEjecutar: TokenPlantilla[] = [];
+      for (const bloque of bloquesCondicionales) {
+        if (bloque.condicion) {
+          bloqueAEjecutar = bloque.tokens;
+          console.log(`✅ Ejecutando bloque ${bloque.tipo}`);
+          break;
+        }
+      }
+
+      // Añadir tokens del bloque seleccionado
+      resultado.push(...bloqueAEjecutar);
+
+      i = j; // Saltar hasta después del endif
+    } else {
+      resultado.push(token);
+    }
+
+    i++;
+  }
+
+  return resultado;
+}
+
+// 🔧 FUNCIÓN MEJORADA: renderizarVariables con mejor logging
 function renderizarVariables(
   tokens: TokenPlantilla[],
   contexto: Record<string, any>,
   filtrosRegistrados: Record<string, Function>
 ): string {
-  return tokens.map(token => {
+  console.log(`🎨 renderizarVariables - Contexto disponible:`, Object.keys(contexto));
+
+  return tokens.map((token, index) => {
     if (token.tipo === "variable") {
+      console.log(`🎨 Renderizando variable ${index}: '${token.contenido}'`);
+
       let partes = token.contenido.split('|').map(p => p.trim());
       let nombreVariable = partes.shift() ?? '';
       let filtros = partes;
+
+      console.log(`🔍 Variable: '${nombreVariable}', Filtros: [${filtros.join(', ')}]`);
 
       let valorFinal: any;
 
@@ -645,26 +894,35 @@ function renderizarVariables(
       if ((nombreVariable.startsWith("'") && nombreVariable.endsWith("'")) ||
           (nombreVariable.startsWith('"') && nombreVariable.endsWith('"'))) {
         valorFinal = nombreVariable.slice(1, -1);
+        console.log(`📝 Literal string detectado: '${valorFinal}'`);
       } else {
-        // 🔧 USAR LA NUEVA FUNCIÓN resolverVariable
+        // 🔧 USAR LA FUNCIÓN resolverVariable
         valorFinal = resolverVariable(nombreVariable, contexto);
+        console.log(`🔍 Variable '${nombreVariable}' resuelta como:`, valorFinal, `(tipo: ${typeof valorFinal})`);
       }
 
       // Aplicar filtros
       for (let filtro of filtros) {
         let filtroLimpio = filtro.trim();
         if (!filtrosRegistrados[filtroLimpio]) {
+          console.error(`❌ Filtro '${filtroLimpio}' no encontrado`);
           throw new Error(`Error: El filtro '${filtroLimpio}' no está definido.`);
         }
+
+        console.log(`🔧 Aplicando filtro '${filtroLimpio}' a:`, valorFinal);
 
         if (filtroLimpio === 'asset_url' || filtroLimpio === 't' || filtroLimpio === 'translate') {
           valorFinal = filtrosRegistrados[filtroLimpio](valorFinal, contexto);
         } else {
           valorFinal = filtrosRegistrados[filtroLimpio](valorFinal);
         }
+
+        console.log(`✅ Resultado después de filtro '${filtroLimpio}':`, valorFinal);
       }
 
-      return String(valorFinal);
+      const resultado = String(valorFinal);
+      console.log(`✅ Variable '${token.contenido}' renderizada como: '${resultado}'`);
+      return resultado;
     }
 
     return token.contenido;
