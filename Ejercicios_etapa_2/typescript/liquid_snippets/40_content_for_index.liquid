@@ -1,0 +1,56 @@
+{% section 'featured_collection' %}
+
+{%- assign x = 3 -%}
+{%- assign y = 5 -%}
+{%- assign fruit = "apple" -%}
+{%- assign active = true -%}
+
+<h2>Conditional Tests</h2>
+
+<p>
+  {% if x > 2 %}
+    ✅ x ({{ x }}) is greater than 2
+  {% else %}
+    ❌ x ({{ x }}) is NOT greater than 2
+  {% endif %}
+</p>
+
+<p>
+  {% if x == "3" %}
+    ✅ x ({{ x }}) is equal to "3"
+  {% else %}
+    ❌ x ({{ x }}) is NOT equal to "3"
+  {% endif %}
+</p>
+
+<p>
+  {% if y <= 5 %}
+    ✅ y ({{ y }}) is less than or equal to 5
+  {% else %}
+    ❌ y ({{ y }}) is greater than 5
+  {% endif %}
+</p>
+
+<p>
+  {% if fruit != "banana" %}
+    ✅ fruit ({{ fruit }}) is NOT "banana"
+  {% else %}
+    ❌ fruit ({{ fruit }}) is "banana"
+  {% endif %}
+</p>
+
+<p>
+  {% if fruit < "banana" %}
+    ✅ "{{ fruit }}" comes before "banana" alphabetically
+  {% else %}
+    ❌ "{{ fruit }}" does not come before "banana" alphabetically
+  {% endif %}
+</p>
+
+<p>
+  {% if active %}
+    ✅ active is truthy
+  {% else %}
+    ❌ active is falsy
+  {% endif %}
+</p>
