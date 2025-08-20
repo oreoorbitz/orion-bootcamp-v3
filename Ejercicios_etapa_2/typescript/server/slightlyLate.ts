@@ -77,13 +77,61 @@ async function addItemToCart(token: string, productId: number, quantity: number)
     return cart;
 }
 
-// Función para convertir carrito a JSON
-function cartToJson(token: string, cart: Cart) {
-    return {
-        token: token,
-        items: cart.items
-    };
+// 🛒 --- NUEVAS UTILIDADES DE CARRITO ---
+
+// Recalcular totales
+function recalculate(cart: Cart) {
+  let item_count = 0;
+  let total_price = 0;
+  for (const it of cart.items) {
+    item_count += it.quantity;
+    total_price += it.price * it.quantity;
+  }
+  return { item_count, total_price };
 }
+
+// Establecer cantidad (remueve si qty <= 0)
+function setQuantity(token: string, productId: number, quantity: number): Cart {
+  const cart = getCart(token);
+
+  if (!Number.isFinite(productId)) {
+    console.warn(`⚠️ ID de producto inválido: ${productId}`);
+    return cart;
+  }
+
+  const qty = Number.isFinite(quantity) ? quantity : 0;
+  const idx = cart.items.findIndex(i => i.product_id === productId);
+
+  if (idx === -1) {
+    console.warn(`⚠️ Producto con ID ${productId} no está en el carrito`);
+    return cart;
+  }
+
+  if (qty > 0) {
+    cart.items[idx].quantity = qty;
+    console.log(`🔁 Cantidad actualizada para producto ${productId}: ${qty}`);
+  } else {
+    cart.items.splice(idx, 1);
+    console.log(`🗑️ Producto ${productId} eliminado del carrito`);
+  }
+
+  return cart;
+}
+
+// Vaciar carrito
+function clearCart(token: string) {
+  const cart = getCart(token);
+  cart.items = [];
+  return cart;
+}
+
+// Convertir carrito a JSON extendido
+// JSON extendido para /cart.js y respuestas
+function cartToJson(token: string, cart: Cart) {
+  const { item_count, total_price } = recalculate(cart);
+  return { token, items: cart.items, item_count, total_price };
+}
+
 
 // Función para parsear cookies
 function parseCookies(cookieHeader: string): Record<string, string> {
@@ -236,6 +284,8 @@ async function manejarRutaCart(cartToken: string, shouldSetCookie: boolean): Pro
         });
     }
 }
+
+
 
 // 🛒 TAMBIÉN ACTUALIZAR manejarRutas para usar el contexto con carrito en otras páginas
 async function manejarRutas(url: URL, shouldSetCookie: boolean, cartToken: string): Promise<Response> {
@@ -442,28 +492,56 @@ export function iniciarServidor(puerto: number = 3000, callback: (changedTemplat
         if (req.method === "POST" && url.pathname === "/cart/add") {
             const response = await manejarCartAdd(req, cartToken);
 
-            // Agregar cookie si es necesaria
             if (shouldSetCookie) {
-                const currentHeaders = response.headers;
-                const newHeaders = new Headers(currentHeaders);
+                const newHeaders = new Headers(response.headers);
                 newHeaders.set('Set-Cookie', createCookieHeader('cart_token', cartToken, {
                     maxAge: 60 * 60 * 24 * 30,
                     path: '/',
                     httpOnly: true,
                     sameSite: 'Lax'
                 }));
-
-                return new Response(response.body, {
-                    status: response.status,
-                    statusText: response.statusText,
-                    headers: newHeaders
-                });
+                return new Response(response.body, { status: response.status, headers: newHeaders });
             }
 
             return response;
         }
 
-        // 🛒 NUEVA RUTA: GET /cart
+        // 🛒 POST /cart/update
+        if (req.method === "POST" && url.pathname === "/cart/update") {
+            try {
+                const body = await req.json();
+                const updates = body.updates || {};
+
+                for (const [pid, qty] of Object.entries(updates)) {
+                    setQuantity(cartToken, parseInt(pid), parseInt(qty as any));
+                }
+
+                const updatedCart = getCart(cartToken);
+                const responseData = cartToJson(cartToken, updatedCart);
+
+                return new Response(JSON.stringify(responseData), {
+                    status: 200,
+                    headers: { "Content-Type": "application/json" }
+                });
+            } catch (error) {
+                console.error("❌ Error en /cart/update:", error);
+                return new Response(JSON.stringify({ error: "Error al actualizar carrito" }), {
+                    status: 500,
+                    headers: { "Content-Type": "application/json" }
+                });
+            }
+        }
+
+        // 🛒 POST /cart/clear
+        if (req.method === "POST" && url.pathname === "/cart/clear") {
+            clearCart(cartToken);
+            return new Response(null, {
+                status: 302,
+                headers: { Location: "/cart" }
+            });
+        }
+
+        // 🛒 GET /cart
         if (req.method === "GET" && url.pathname === "/cart") {
             return await manejarRutaCart(cartToken, shouldSetCookie);
         }
@@ -472,26 +550,16 @@ export function iniciarServidor(puerto: number = 3000, callback: (changedTemplat
         if (JS_ENDPOINTS.includes(url.pathname)) {
             const jsResponse = await manejarEndpointsJs(url.pathname, cartToken);
             if (jsResponse) {
-                console.log(`🛒 Sirviendo endpoint JS: ${url.pathname}`);
-
-                // Agregar cookie si es necesaria
                 if (shouldSetCookie) {
-                    const currentHeaders = jsResponse.headers;
-                    const newHeaders = new Headers(currentHeaders);
+                    const newHeaders = new Headers(jsResponse.headers);
                     newHeaders.set('Set-Cookie', createCookieHeader('cart_token', cartToken, {
                         maxAge: 60 * 60 * 24 * 30,
                         path: '/',
                         httpOnly: true,
                         sameSite: 'Lax'
                     }));
-
-                    return new Response(jsResponse.body, {
-                        status: jsResponse.status,
-                        statusText: jsResponse.statusText,
-                        headers: newHeaders
-                    });
+                    return new Response(jsResponse.body, { status: jsResponse.status, headers: newHeaders });
                 }
-
                 return jsResponse;
             }
         }
