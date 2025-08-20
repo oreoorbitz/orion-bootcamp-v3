@@ -48,7 +48,8 @@ let filtrosRegistrados: Record<string, Function> = {
       if (actual === undefined) break;
     }
     return actual ?? clave;
-  }
+  },
+  times: (x: number, y: number) => x * y,
 };
 
 function preservarScripts(html: string): { html: string, scripts: string[] } {
@@ -486,29 +487,31 @@ function procesarVariableConFiltros(token: TokenPlantilla, contexto: Record<stri
 
     let valorFinal: any;
 
-    // Si es una cadena literal (entre comillas), usar el valor literal
-    if (nombreVariable.startsWith("'") && nombreVariable.endsWith("'")) {
-      valorFinal = nombreVariable.slice(1, -1);
-    } else if (nombreVariable.startsWith('"') && nombreVariable.endsWith('"')) {
+    // Detectar si es literal
+    if ((nombreVariable.startsWith("'") && nombreVariable.endsWith("'")) ||
+        (nombreVariable.startsWith('"') && nombreVariable.endsWith('"'))) {
       valorFinal = nombreVariable.slice(1, -1);
     } else {
-      // 🔧 CORRECCIÓN PRINCIPAL: Resolver la variable del contexto
       valorFinal = resolverVariable(nombreVariable, contexto);
     }
 
     // Aplicar filtros secuencialmente
     for (let filtro of filtros) {
-      let filtroLimpio = filtro.trim();
-      if (!filtrosRegistrados[filtroLimpio]) {
-        throw new Error(`Error: El filtro '${filtroLimpio}' no está definido.`);
+      let [nombreFiltro, argumentoRaw] = filtro.split(':').map(s => s.trim());
+
+      if (!filtrosRegistrados[nombreFiltro]) {
+        throw new Error(`Error: El filtro '${nombreFiltro}' no está definido.`);
       }
 
-      console.log(`🔧 Aplicando filtro '${filtroLimpio}' a:`, valorFinal);
+      console.log(`🔧 Aplicando filtro '${nombreFiltro}' a:`, valorFinal, argumentoRaw ? `con argumento '${argumentoRaw}'` : '');
 
-      if (filtroLimpio === 'asset_url' || filtroLimpio === 't' || filtroLimpio === 'translate') {
-        valorFinal = filtrosRegistrados[filtroLimpio](valorFinal, contexto);
+      if (argumentoRaw !== undefined) {
+        let argumento = resolverVariable(argumentoRaw, contexto);
+        valorFinal = filtrosRegistrados[nombreFiltro](valorFinal, argumento);
+      } else if (nombreFiltro === 'asset_url' || nombreFiltro === 't' || nombreFiltro === 'translate') {
+        valorFinal = filtrosRegistrados[nombreFiltro](valorFinal, contexto);
       } else {
-        valorFinal = filtrosRegistrados[filtroLimpio](valorFinal);
+        valorFinal = filtrosRegistrados[nombreFiltro](valorFinal);
       }
     }
 

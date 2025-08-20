@@ -19,6 +19,26 @@ type Producto = { id: number; title: string; handle: string; precio: number; [ke
 type Coleccion = { id: number; title: string; handle: string; [key: string]: any };
 type Relacion = { productId: number; collectionId: number };
 
+// 🛒 TIPOS PARA EL CARRITO
+interface CartItem {
+    product_id: number;
+    title: string;
+    handle: string;
+    price: number;
+    quantity: number;
+}
+
+interface Cart {
+    items: CartItem[];
+}
+
+interface LiquidCart {
+    token: string;
+    items: CartItem[];
+    item_count: number;
+    total_price: number;
+}
+
 async function agruparProductos(
   productos: Producto[],
   colecciones: Coleccion[],
@@ -108,7 +128,21 @@ function crearDrop<T extends { handle: string }>(items: T[]): any {
   });
 }
 
-export async function crearContexto() {
+// 🛒 FUNCIÓN PARA CONSTRUIR EL CARRITO LIQUID
+function buildLiquidCart(token: string, cart: Cart): LiquidCart {
+    const item_count = cart.items.reduce((total, item) => total + item.quantity, 0);
+    const total_price = cart.items.reduce((total, item) => total + (item.price * item.quantity), 0);
+
+    return {
+        token,
+        items: cart.items,
+        item_count,
+        total_price
+    };
+}
+
+// 🛒 FUNCIÓN MODIFICADA: crearContexto ahora recibe cartToken y cartsStorage
+export async function crearContexto(cartToken?: string, cartsStorage?: Map<string, Cart>) {
   const data = JSON.parse(fs.readFileSync(path.join(rutaConfig, "settings_data.json"), "utf-8"));
   const current = data.current;
 
@@ -126,20 +160,29 @@ export async function crearContexto() {
   const collecciones = crearDrop(coleccionesConProductos);
   const todosProductos = crearDrop(products);
 
-  /* // 🔍 DEBUG: Verificar que los drops funcionan
-  console.log("🔍 DEBUG: Testing drops...");
-  console.log("🔍 collections.isDrop:", collecciones.isDrop);
-  console.log("🔍 collections keys:", Array.from(collecciones.keys()));
-  console.log("🔍 soft-shirts collection:", collecciones.get("soft-shirts"));
-  console.log("🔍 soft-shirts direct access:", collecciones["soft-shirts"]);
+  // 🛒 CONSTRUIR EL OBJETO CART PARA LIQUID
+  let cart: LiquidCart = {
+    token: cartToken || '',
+    items: [],
+    item_count: 0,
+    total_price: 0
+  };
 
-  if (collecciones["soft-shirts"]) {
-    console.log("🔍 soft-shirts products:", collecciones["soft-shirts"].products);
-  } */
+  // Si tenemos token y storage, obtener el carrito real
+  if (cartToken && cartsStorage) {
+    if (!cartsStorage.has(cartToken)) {
+      cartsStorage.set(cartToken, { items: [] });
+    }
+    const cartFromStorage = cartsStorage.get(cartToken)!;
+    cart = buildLiquidCart(cartToken, cartFromStorage);
+
+    console.log(`🛒 Carrito cargado en contexto: ${cart.item_count} items, total: $${cart.total_price}`);
+  }
 
   const contexto = {
     collections: collecciones,
     all_products: todosProductos,
+    cart: cart, // 🛒 AGREGAR EL CARRITO AL CONTEXTO
     Mockify: {
       locale: "es"
     },
@@ -150,17 +193,9 @@ export async function crearContexto() {
     settings,
   };
 
-  /* // 🔍 DEBUG: Verificar el contexto final
-  console.log("🔍 DEBUG: Contexto final:");
-  console.log("- shop:", contexto.shop);
-  console.log("- settings:", contexto.settings);
-  console.log("- sections:", Object.keys(contexto.sections));
-  console.log("- collections type:", typeof contexto.collections);
-  console.log("- collections isDrop:", contexto.collections.isDrop); */
-
   return contexto;
 }
 
-//Para probar que funciona
-const contexto = await crearContexto();
-console.log("🔍 Contexto completo:", contexto);
+//Para probar que funciona (comentado para evitar ejecución en import)
+// const contexto = await crearContexto();
+// console.log("🔍 Contexto completo:", contexto);

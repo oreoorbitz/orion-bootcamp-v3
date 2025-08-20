@@ -5,9 +5,12 @@ import { injector } from "../injector.ts";
 import { iniciarServidor } from "./slightlyLate.ts";
 import { notificarRecargaPagina } from "./wsServer.ts";
 import { crearContexto } from "./contextPlease.ts";
+// 🛒 EXPORTAR la función para que pueda ser usada desde slightlyLate.ts
+export { generarHTMLDeCarrito };
 
-async function getContext() {
-  return await crearContexto();
+// 🛒 MODIFICAR getContext para incluir soporte de carrito
+async function getContext(cartToken?: string, cartsStorage?: Map<string, any>) {
+  return await crearContexto(cartToken, cartsStorage);
 }
 
 function path(stl: string) {
@@ -128,6 +131,65 @@ async function generarHTMLDeTemplate(templateName: string, itemHandle?: string):
   }
 }
 
+// 🛒 NUEVA FUNCIÓN: Generar HTML para el carrito con contexto dinámico
+async function generarHTMLDeCarrito(cartToken?: string, cartsStorage?: Map<string, any>): Promise<string> {
+  try {
+    console.log(`✅ Generando HTML para carrito con token: ${cartToken}`);
+    const templatePath = getTemplatePath("cart"); // Buscar cart.liquid
+
+    try {
+      await Deno.stat(templatePath);
+    } catch {
+      console.log(`⚠️ Template cart no encontrado, usando plantilla básica`);
+      return `
+        <html>
+          <body>
+            <h1>Carrito no disponible</h1>
+            <p>La plantilla del carrito no se encuentra.</p>
+            <a href="/">Volver a la tienda</a>
+          </body>
+        </html>
+      `;
+    }
+
+    const templateContent = await Deno.readTextFile(templatePath);
+
+    // 🛒 Obtener contexto CON el carrito
+    const baseContext = await crearContexto(cartToken, cartsStorage);
+    const templateContext = { ...baseContext, template_type: "cart" };
+
+    console.log(`🛒 Procesando carrito con ${templateContext.cart.item_count} items`);
+
+    // Procesar el contenido con Liquid
+    const renderedContent = await liquidEngine(templateContent, templateContext);
+
+    // Usar el layout como las otras páginas
+    const layoutContext = { ...templateContext, content_for_layout: renderedContent };
+    const layoutContent = await Deno.readTextFile(layoutPath);
+    const finalTemplate = await liquidEngine(layoutContent, layoutContext);
+
+    // Parsear y renderizar el DOM
+    const arbolDOM = htmlParser(finalTemplate);
+    const htmlFinal = renderDOM(arbolDOM);
+
+    console.log(`✅ HTML del carrito generado exitosamente`);
+    return finalTemplate;
+
+  } catch (error) {
+    console.error(`⚠️ Error al generar HTML del carrito:`, error);
+    return `
+      <html>
+        <body>
+          <h1>Error en el carrito</h1>
+          <p>Error: ${error.message}</p>
+          <a href="/">Volver a la tienda</a>
+        </body>
+      </html>
+    `;
+  }
+}
+
+
 // Función para generar páginas de productos (versión compatible con all_products)
 async function generarPaginasDeProductos(): Promise<string[]> {
   const resultados: string[] = [];
@@ -181,8 +243,6 @@ async function generarPaginasDeProductos(): Promise<string[]> {
 
   return resultados;
 }
-
-
 
 async function generarPaginasDeColecciones(): Promise<string[]> {
   const resultados: string[] = [];

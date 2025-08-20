@@ -1,7 +1,10 @@
 import { zip } from "jsr:@deno-library/compress";
 import { notificarReloadCSS } from "./wsServer.ts";
 import { router } from "./router.ts";
+// ⚠️ IMPORTANTE: Quitar la línea de prueba al final de contextPlease.ts antes de importar
 import { crearContexto } from "./contextPlease.ts";
+// 🛒 IMPORTAR la función del controlador
+import { generarHTMLDeCarrito } from "./controller.ts";
 
 // 🛒 SISTEMA DE CARRITO EN MEMORIA
 interface CartItem {
@@ -196,7 +199,45 @@ async function manejarEndpointsJs(pathname: string, cartToken: string): Promise<
     }
 }
 
-// 🎯 Función para manejar todas las rutas estáticas y dinámicas (ACTUALIZADA CON COOKIES)
+// 🛒 REEMPLAZAR la función manejarRutaCart anterior con esta nueva versión
+async function manejarRutaCart(cartToken: string, shouldSetCookie: boolean): Promise<Response> {
+    try {
+        console.log(`🛒 Procesando ruta /cart con token: ${cartToken}`);
+
+        // 🎨 USAR EL CONTROLADOR para procesar la plantilla correctamente
+        const htmlProcessed = await generarHTMLDeCarrito(cartToken, cartsStorage);
+
+        const headers: HeadersInit = { "Content-Type": "text/html" };
+
+        if (shouldSetCookie) {
+            headers['Set-Cookie'] = createCookieHeader('cart_token', cartToken, {
+                maxAge: 60 * 60 * 24 * 30,
+                path: '/',
+                httpOnly: true,
+                sameSite: 'Lax'
+            });
+        }
+
+        return new Response(htmlProcessed, { headers });
+
+    } catch (error) {
+        console.error("⚠️ Error sirviendo /cart:", error);
+        return new Response(`
+            <html>
+                <body>
+                    <h1>Error en el carrito</h1>
+                    <p>Error: ${error.message}</p>
+                    <a href="/">Volver a la tienda</a>
+                </body>
+            </html>
+        `, {
+            status: 500,
+            headers: { "Content-Type": "text/html" }
+        });
+    }
+}
+
+// 🛒 TAMBIÉN ACTUALIZAR manejarRutas para usar el contexto con carrito en otras páginas
 async function manejarRutas(url: URL, shouldSetCookie: boolean, cartToken: string): Promise<Response> {
     let filePath: string;
 
@@ -221,7 +262,7 @@ async function manejarRutas(url: URL, shouldSetCookie: boolean, cartToken: strin
             }
         } else {
             // Si no se encuentra, servir 404.html directamente
-            console.log(`❌ Ruta no encontrada: ${url.pathname}`);
+            console.log(`⚠️ Ruta no encontrada: ${url.pathname}`);
             return await servirArchivo404(shouldSetCookie, cartToken);
         }
     }
@@ -229,11 +270,25 @@ async function manejarRutas(url: URL, shouldSetCookie: boolean, cartToken: strin
     console.log(`📂 Intentando servir archivo: ${filePath}`);
 
     try {
-        const archivo = await Deno.readTextFile(filePath);
+        let archivo = await Deno.readTextFile(filePath);
+
+        // 🛒 NOTA: Los archivos HTML ya están pre-procesados por el controlador
+        // Pero podrías inyectar información del carrito aquí si es necesario
+        // Por ejemplo, para mostrar el contador de items en el header
+
+        if (filePath.endsWith(".html")) {
+            // Opcionalmente, podrías inyectar datos del carrito en el HTML
+            const cart = getCart(cartToken);
+            const itemCount = cart.items.reduce((total, item) => total + item.quantity, 0);
+
+            // Ejemplo: reemplazar un placeholder en el HTML con el contador
+            archivo = archivo.replace(/\{\{cart_item_count\}\}/g, itemCount.toString());
+
+            console.log(`🛒 HTML servido con ${itemCount} items en carrito`);
+        }
 
         // Determinar el Content-Type
         const contentType = filePath.endsWith(".css") ? "text/css" : "text/html";
-
         const headers: HeadersInit = { "Content-Type": contentType };
 
         // 🍪 Establecer cookie si es necesaria
@@ -250,7 +305,7 @@ async function manejarRutas(url: URL, shouldSetCookie: boolean, cartToken: strin
         return new Response(archivo, { headers });
 
     } catch (error) {
-        console.log(`❌ Archivo no encontrado: ${filePath}`);
+        console.log(`⚠️ Archivo no encontrado: ${filePath}`);
         return await servirArchivo404(shouldSetCookie, cartToken);
     }
 }
@@ -360,6 +415,7 @@ async function manejarPeticionThemeUpdate(req: Request, callback: (changedTempla
     }
 }
 
+// 🔄 MODIFICAR iniciarServidor para agregar la ruta /cart
 export function iniciarServidor(puerto: number = 3000, callback: (changedTemplate?: string) => Promise<Response>) {
     console.log(`✅ Servidor iniciado en http://localhost:${puerto}/`);
 
@@ -382,7 +438,7 @@ export function iniciarServidor(puerto: number = 3000, callback: (changedTemplat
             return await manejarPeticionThemeUpdate(req, callback);
         }
 
-        // 🛒 NUEVA RUTA: POST /cart/add
+        // 🛒 POST /cart/add
         if (req.method === "POST" && url.pathname === "/cart/add") {
             const response = await manejarCartAdd(req, cartToken);
 
@@ -405,6 +461,11 @@ export function iniciarServidor(puerto: number = 3000, callback: (changedTemplat
             }
 
             return response;
+        }
+
+        // 🛒 NUEVA RUTA: GET /cart
+        if (req.method === "GET" && url.pathname === "/cart") {
+            return await manejarRutaCart(cartToken, shouldSetCookie);
         }
 
         // 🛒 Verificar si es un endpoint .js
