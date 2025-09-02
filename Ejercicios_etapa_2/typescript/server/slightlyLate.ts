@@ -8,7 +8,7 @@ import { generarHTMLDeCarrito } from "./controller.ts";
 
 // 🛒 SISTEMA DE CARRITO EN MEMORIA
 interface CartItem {
-    product_id: number;
+    id: number;
     title: string;
     handle: string;
     price: number;
@@ -36,7 +36,7 @@ function getCart(token: string): Cart {
 }
 
 // Función para agregar item al carrito
-async function addItemToCart(token: string, productId: number, quantity: number): Promise<Cart> {
+async function addItemToCart(token: string, Id: number, quantity: number): Promise<Cart> {
     const cart = getCart(token);
 
     // Obtener contexto para buscar el producto
@@ -48,24 +48,24 @@ async function addItemToCart(token: string, productId: number, quantity: number)
     }
 
     const productos = Array.from(context.all_products.values());
-    const product = productos.find((p: any) => Number(p.id) === Number(productId));
+    const product = productos.find((p: any) => Number(p.id) === Number(Id));
 
     if (!product) {
-        console.error(`❌ Producto con ID ${productId} no encontrado`);
-        throw new Error(`Producto con ID ${productId} no encontrado`);
+        console.error(`❌ Producto con ID ${Id} no encontrado`);
+        throw new Error(`Producto con ID ${Id} no encontrado`);
     }
 
     console.log(`✅ Producto encontrado: ${product.title}`);
 
     // Verificar si el producto ya existe en el carrito
-    const existingItem = cart.items.find(item => item.product_id === productId);
+    const existingItem = cart.items.find(item => item.id === Id);
 
     if (existingItem) {
         existingItem.quantity += quantity;
         console.log(`🔁 Cantidad actualizada: ${existingItem.quantity}`);
     } else {
         cart.items.push({
-            product_id: product.id,
+            id: product.id,
             title: product.title,
             handle: product.handle,
             price: product.price, // ← aquí estaba el error
@@ -91,28 +91,28 @@ function recalculate(cart: Cart) {
 }
 
 // Establecer cantidad (remueve si qty <= 0)
-function setQuantity(token: string, productId: number, quantity: number): Cart {
+function setQuantity(token: string, Id: number, quantity: number): Cart {
   const cart = getCart(token);
 
-  if (!Number.isFinite(productId)) {
-    console.warn(`⚠️ ID de producto inválido: ${productId}`);
+  if (!Number.isFinite(Id)) {
+    console.warn(`⚠️ ID de producto inválido: ${Id}`);
     return cart;
   }
 
   const qty = Number.isFinite(quantity) ? quantity : 0;
-  const idx = cart.items.findIndex(i => i.product_id === productId);
+  const idx = cart.items.findIndex(i => i.id === Id);
 
   if (idx === -1) {
-    console.warn(`⚠️ Producto con ID ${productId} no está en el carrito`);
+    console.warn(`⚠️ Producto con ID ${Id} no está en el carrito`);
     return cart;
   }
 
   if (qty > 0) {
     cart.items[idx].quantity = qty;
-    console.log(`🔁 Cantidad actualizada para producto ${productId}: ${qty}`);
+    console.log(`🔁 Cantidad actualizada para producto ${Id}: ${qty}`);
   } else {
     cart.items.splice(idx, 1);
-    console.log(`🗑️ Producto ${productId} eliminado del carrito`);
+    console.log(`🗑️ Producto ${Id} eliminado del carrito`);
   }
 
   return cart;

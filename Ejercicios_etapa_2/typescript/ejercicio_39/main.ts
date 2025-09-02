@@ -23,7 +23,7 @@
  *
  *    - Mantén un `Map` (o estructura equivalente. La razon por usar un map es que Map automaticamente filtra duplicados) en el proceso del servidor:
  *      - clave: `cart_token`
- *      - valor: `{ items: Array<{ product_id, title, handle, price, quantity }> }`
+ *      - valor: `{ items: Array<{ id, title, handle, price, quantity }> }`
  *    - Inicializa el carrito vacío cuando no exista para un token.
  *
  *    💡 Recomendación: encapsula estas operaciones en una pequeña utilidad (getCart, addItem, toJson).
@@ -34,8 +34,8 @@
  *    - Entrada (JSON): `{ id, quantity }`
  *    - Pasos:
  *      - Resuelve el producto por `id` usando tus datos de productos.
- *      - Si el producto ya está en el carrito (misma `product_id`), incrementa su `quantity`.
- *      - Si no está, agrega un ítem con: `{ product_id: id, title, handle, price, quantity }`.
+ *      - Si el producto ya está en el carrito (misma `id`), incrementa su `quantity`.
+ *      - Si no está, agrega un ítem con: `{ id: id, title, handle, price, quantity }`.
  *    - Respuesta:
  *      - Devuelve el carrito completo en JSON con `Content-Type: application/json`.
  *      - Estructura mínima alineada con el ejercicio 38:
@@ -43,7 +43,7 @@
  *        {
  *          "token": "<cart_token>",
  *          "items": [
- *            { "product_id": 1, "title": "Camisa suave A", "handle": "camisa-suave-a", "price": 2500, "quantity": 2 }
+ *            { "id": 1, "title": "Camisa suave A", "handle": "camisa-suave-a", "price": 2500, "quantity": 2 }
  *          ]
  *        }
  *        ```
@@ -63,7 +63,7 @@
  *    - Observa que se dispara `POST /cart/add` con un cuerpo como:
  *      `{ id: <product.id>, quantity: 1 }` y responde **200** con el carrito actualizado.
  *    - Visita **`/cart.js`** y confirma que incluye el ítem con:
- *      `product_id`, `title`, `handle`, `price` y `quantity`.
+ *      `id`, `title`, `handle`, `price` y `quantity`.
  *    - Haz clic nuevamente en **“Añadir al carrito”** y vuelve a consultar **`/cart.js`** para verificar que la `quantity` aumentó.
  *    - Verifica que el alert **“Producto añadido al carrito”** aparece tras cada respuesta exitosa.
  *
