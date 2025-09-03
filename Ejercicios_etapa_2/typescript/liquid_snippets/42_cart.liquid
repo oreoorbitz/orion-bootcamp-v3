@@ -1,4 +1,4 @@
-<!-- templates/42_cart.liquid -->
+<!-- templates/43_cart.liquid -->
 <h1 class="text-2xl font-bold mb-6">Tu carrito</h1>
 
 {% if cart.item_count > 0 %}
@@ -14,12 +14,26 @@
       </thead>
       <tbody>
         {% for item in cart.items %}
-          <tr class="border-b">
+          <tr class="border-b align-top">
             <td class="py-2">
               <a href="/products/{{ item.handle }}" class="text-blue-600 hover:underline">
                 {{ item.title }}
               </a>
+              <!-- Line item properties (solo lectura en el carrito; se definen en /cart/add) -->
+              {% if item.properties and item.properties != empty %}
+                <ul class="mt-1 text-sm text-gray-600 space-y-0.5">
+                  {% for key in item.properties %}
+                    {% assign value = item.properties[key] %}
+                    <li><span class="font-medium">{{ key }}:</span> {{ value }}</li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <div class="mt-1 text-sm text-gray-500 italic">
+                  Sin propiedades
+                </div>
+              {% endif %}
             </td>
+
             <td class="py-2">
               <input
                 type="number"
@@ -27,8 +41,10 @@
                 value="{{ item.quantity }}"
                 min="0"
                 class="border rounded p-1 w-16"
+                aria-label="Cantidad para {{ item.title }}"
               >
             </td>
+
             <td class="py-2">{{ item.price | money }}</td>
             <td class="py-2">{{ item.price | times: item.quantity | money }}</td>
           </tr>
@@ -36,20 +52,52 @@
       </tbody>
     </table>
 
-    <div class="flex justify-between items-center">
-      <button
-        type="submit"
-        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded shadow"
-      >
-        Actualizar carrito
-      </button>
-      <button
-        id="clear-cart-btn"
-        type="button"
-        class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded shadow"
-      >
-        Vaciar carrito
-      </button>
+    <!-- Cart attributes (editables) -->
+    <div class="mb-6 p-4 border rounded bg-gray-50">
+      <h2 class="font-semibold mb-3">Opciones del carrito</h2>
+
+      <label class="block mb-3">
+        <span class="block text-sm text-gray-700 mb-1">Nota de regalo</span>
+        <textarea
+          name="attributes[gift_note]"
+          rows="3"
+          class="w-full border rounded p-2"
+          placeholder="Escribe un mensaje para quien recibirá el pedido"
+        >{{ cart.attributes.gift_note }}</textarea>
+      </label>
+
+      <label class="inline-flex items-center space-x-2">
+        <input
+          type="checkbox"
+          id="rush_delivery"
+          class="border rounded"
+          {% if cart.attributes.rush_delivery == 'true' or cart.attributes.rush_delivery == '1' %}checked{% endif %}
+        >
+        <span class="text-sm text-gray-700">Entrega urgente</span>
+      </label>
+      <p class="mt-1 text-xs text-gray-500">
+        (La entrega urgente es una preferencia; no ajusta el precio en este ejercicio)
+      </p>
+    </div>
+
+    <div class="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+      <div class="flex gap-3">
+        <button
+          type="submit"
+          class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded shadow"
+        >
+          Actualizar carrito
+        </button>
+
+        <button
+          id="clear-cart-btn"
+          type="button"
+          class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded shadow"
+        >
+          Vaciar carrito
+        </button>
+      </div>
+
       <div class="text-right text-lg font-semibold">
         <div>Total artículos: {{ cart.item_count }}</div>
         <div>Total: {{ cart.total_price | money }}</div>
@@ -58,39 +106,60 @@
   </form>
 
   <script>
-    document.getElementById('cart-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const formData = new FormData(e.target);
-      const updates = {};
+    (function () {
+      const form = document.getElementById('cart-form');
+      const clearBtn = document.getElementById('clear-cart-btn');
+      const rushCheckbox = document.getElementById('rush_delivery');
 
-      for (const [key, value] of formData.entries()) {
-        if (key.startsWith('updates[')) {
-          const id = key.match(/updates\[(\d+)\]/)[1];
-          updates[id] = parseInt(value, 10);
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // 1) Recolectar updates[n] -> cantidades
+        const formData = new FormData(form);
+        const updates = {};
+        for (const [key, value] of formData.entries()) {
+          if (key.startsWith('updates[')) {
+            const m = key.match(/updates\[(\d+)\]/);
+            if (m) updates[m[1]] = parseInt(value, 10);
+          }
         }
-      }
 
-      const response = await fetch('/cart/update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ updates })
+        // 2) Recolectar attributes[...] -> atributos del carrito
+        // gift_note viene del <textarea name="attributes[gift_note]">
+        // rush_delivery lo leemos del checkbox y lo normalizamos a string ('true'/'false')
+        const attributes = {};
+        for (const [key, value] of formData.entries()) {
+          if (key.startsWith('attributes[')) {
+            const m = key.match(/attributes\[(.+)\]/);
+            if (m) attributes[m[1]] = String(value ?? '');
+          }
+        }
+        // Inyectar rush_delivery desde checkbox (no aparece en FormData si está desmarcado)
+        attributes['rush_delivery'] = rushCheckbox && rushCheckbox.checked ? 'true' : 'false';
+
+        // 3) Enviar a /cart/update con el formato del Ej. 43
+        const response = await fetch('/cart/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ updates, attributes })
+        });
+
+        if (response.ok) {
+          location.reload();
+        } else {
+          alert('Hubo un problema al actualizar el carrito');
+        }
       });
 
-      if (response.ok) {
-        location.reload();
-      } else {
-        alert('Hubo un problema al actualizar el carrito');
-      }
-    });
-
-    document.getElementById('clear-cart-btn').addEventListener('click', async () => {
-      const response = await fetch('/cart/clear', { method: 'POST' });
-      if (response.ok) {
-        window.location.href = '/cart';
-      } else {
-        alert('Hubo un problema al vaciar el carrito');
-      }
-    });
+      clearBtn.addEventListener('click', async () => {
+        const response = await fetch('/cart/clear', { method: 'POST' });
+        if (response.ok) {
+          window.location.href = '/cart';
+        } else {
+          alert('Hubo un problema al vaciar el carrito');
+        }
+      });
+    })();
   </script>
 {% else %}
   <p>Tu carrito está vacío.</p>
