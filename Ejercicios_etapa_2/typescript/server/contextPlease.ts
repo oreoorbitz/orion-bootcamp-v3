@@ -19,22 +19,25 @@ type Producto = { id: number; title: string; handle: string; precio: number; [ke
 type Coleccion = { id: number; title: string; handle: string; [key: string]: any };
 type Relacion = { productId: number; collectionId: number };
 
-// 🛒 TIPOS PARA EL CARRITO
+// 🛒 TIPOS ACTUALIZADOS PARA EL CARRITO CON PROPERTIES Y ATTRIBUTES
 interface CartItem {
-    product_id: number;
+    id: number; // ✨ Usar solo 'id' para consistencia
     title: string;
     handle: string;
     price: number;
     quantity: number;
+    properties?: { [k: string]: string }; // ✨ NUEVO: Properties por línea
 }
 
 interface Cart {
     items: CartItem[];
+    attributes?: { [k: string]: string }; // ✨ NUEVO: Attributes globales del carrito
 }
 
 interface LiquidCart {
     token: string;
     items: CartItem[];
+    attributes?: { [k: string]: string }; // ✨ NUEVO: Attributes en respuesta Liquid
     item_count: number;
     total_price: number;
 }
@@ -128,14 +131,15 @@ function crearDrop<T extends { handle: string }>(items: T[]): any {
   });
 }
 
-// 🛒 FUNCIÓN PARA CONSTRUIR EL CARRITO LIQUID
+// ✨ FUNCIÓN ACTUALIZADA: buildLiquidCart ahora incluye properties y attributes
 function buildLiquidCart(token: string, cart: Cart): LiquidCart {
     const item_count = cart.items.reduce((total, item) => total + item.quantity, 0);
     const total_price = cart.items.reduce((total, item) => total + (item.price * item.quantity), 0);
 
     return {
         token,
-        items: cart.items,
+        items: cart.items, // Ya incluyen properties si las tienen
+        attributes: cart.attributes || {}, // ✨ NUEVO: Incluir attributes del carrito
         item_count,
         total_price
     };
@@ -160,10 +164,11 @@ export async function crearContexto(cartToken?: string, cartsStorage?: Map<strin
   const collecciones = crearDrop(coleccionesConProductos);
   const todosProductos = crearDrop(products);
 
-  // 🛒 CONSTRUIR EL OBJETO CART PARA LIQUID
+  // ✨ CONSTRUIR EL OBJETO CART PARA LIQUID CON PROPERTIES Y ATTRIBUTES
   let cart: LiquidCart = {
     token: cartToken || '',
     items: [],
+    attributes: {}, // ✨ Inicializar attributes vacíos
     item_count: 0,
     total_price: 0
   };
@@ -171,18 +176,28 @@ export async function crearContexto(cartToken?: string, cartsStorage?: Map<strin
   // Si tenemos token y storage, obtener el carrito real
   if (cartToken && cartsStorage) {
     if (!cartsStorage.has(cartToken)) {
-      cartsStorage.set(cartToken, { items: [] });
+      cartsStorage.set(cartToken, { items: [], attributes: {} }); // ✨ Incluir attributes por defecto
     }
     const cartFromStorage = cartsStorage.get(cartToken)!;
     cart = buildLiquidCart(cartToken, cartFromStorage);
 
     console.log(`🛒 Carrito cargado en contexto: ${cart.item_count} items, total: $${cart.total_price}`);
+
+    // 🏷️ Log adicional para properties y attributes si existen
+    const itemsWithProperties = cart.items.filter(item => item.properties && Object.keys(item.properties).length > 0);
+    if (itemsWithProperties.length > 0) {
+      console.log(`🏷️ Items con properties: ${itemsWithProperties.length}`);
+    }
+
+    if (cart.attributes && Object.keys(cart.attributes).length > 0) {
+      console.log(`🏷️ Cart attributes:`, Object.keys(cart.attributes));
+    }
   }
 
   const contexto = {
     collections: collecciones,
     all_products: todosProductos,
-    cart: cart, // 🛒 AGREGAR EL CARRITO AL CONTEXTO
+    cart: cart, // 🛒 CARRITO AHORA INCLUYE PROPERTIES Y ATTRIBUTES
     Mockify: {
       locale: "es"
     },

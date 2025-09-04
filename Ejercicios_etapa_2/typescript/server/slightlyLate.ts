@@ -6,17 +6,20 @@ import { crearContexto } from "./contextPlease.ts";
 // 🛒 IMPORTAR la función del controlador
 import { generarHTMLDeCarrito } from "./controller.ts";
 
-// 🛒 SISTEMA DE CARRITO EN MEMORIA
+// 🛒 SISTEMA DE CARRITO EN MEMORIA - ACTUALIZADO CON PROPERTIES Y ATTRIBUTES
 interface CartItem {
     id: number;
+    product_id: number; // Alias para compatibilidad
     title: string;
     handle: string;
     price: number;
     quantity: number;
+    properties?: { [k: string]: string }; // ✨ NUEVO: Properties por línea
 }
 
 interface Cart {
     items: CartItem[];
+    attributes?: { [k: string]: string }; // ✨ NUEVO: Attributes globales del carrito
 }
 
 // Map para almacenar carritos por token
@@ -30,13 +33,113 @@ function generateCartToken(): string {
 // Función para obtener o crear carrito
 function getCart(token: string): Cart {
     if (!cartsStorage.has(token)) {
-        cartsStorage.set(token, { items: [] });
+        cartsStorage.set(token, { items: [], attributes: {} });
     }
     return cartsStorage.get(token)!;
 }
 
-// Función para agregar item al carrito
-async function addItemToCart(token: string, Id: number, quantity: number): Promise<Cart> {
+// 🛒 --- UTILIDADES DE CARRITO ACTUALIZADAS ---
+
+// Recalcular totales
+function recalculate(cart: Cart) {
+    let item_count = 0;
+    let total_price = 0;
+    for (const item of cart.items) {
+        item_count += item.quantity;
+        total_price += item.price * item.quantity;
+    }
+    return { item_count, total_price };
+}
+
+// ✨ NUEVA: Establecer properties de una línea específica
+function setLineItemProperties(token: string, productId: number, properties: { [k: string]: string }): Cart {
+    const cart = getCart(token);
+    const item = cart.items.find(item => item.product_id === productId);
+
+    if (item) {
+        // Fusionar properties existentes con las nuevas
+        item.properties = { ...item.properties, ...properties };
+        console.log(`🏷️ Properties actualizadas para producto ${productId}:`, item.properties);
+    } else {
+        console.warn(`⚠️ No se encontró item con product_id ${productId} para actualizar properties`);
+    }
+
+    return cart;
+}
+
+// ✨ NUEVA: Establecer attributes globales del carrito
+function setCartAttributes(token: string, attributes: { [k: string]: string }): Cart {
+    const cart = getCart(token);
+    // Fusionar attributes existentes con los nuevos
+    cart.attributes = { ...cart.attributes, ...attributes };
+    console.log(`🏷️ Cart attributes actualizados:`, cart.attributes);
+    return cart;
+}
+
+// Establecer cantidad (remueve si qty <= 0) - ACTUALIZADA para conservar properties
+function setQuantity(token: string, productId: number, quantity: number): Cart {
+    const cart = getCart(token);
+
+    if (!Number.isFinite(productId)) {
+        console.warn(`⚠️ ID de producto inválido: ${productId}`);
+        return cart;
+    }
+
+    const qty = Number.isFinite(quantity) ? quantity : 0;
+    const idx = cart.items.findIndex(i => i.product_id === productId);
+
+    if (idx === -1) {
+        console.warn(`⚠️ Producto con ID ${productId} no está en el carrito`);
+        return cart;
+    }
+
+    if (qty > 0) {
+        cart.items[idx].quantity = qty;
+        console.log(`🔢 Cantidad actualizada para producto ${productId}: ${qty}`);
+        // Las properties se conservan automáticamente
+    } else {
+        cart.items.splice(idx, 1);
+        console.log(`🗑️ Producto ${productId} eliminado del carrito`);
+    }
+
+    return cart;
+}
+
+// Vaciar carrito
+function clearCart(token: string) {
+    const cart = getCart(token);
+    cart.items = [];
+    cart.attributes = {};
+    return cart;
+}
+
+// ✨ ACTUALIZADA: Convertir carrito a JSON extendido con properties y attributes
+function cartToJson(token: string, cart: Cart) {
+    const { item_count, total_price } = recalculate(cart);
+
+    // Mapear items para incluir product_id como id para compatibilidad con Liquid
+    const itemsWithId = cart.items.map(item => ({
+        ...item,
+        id: item.product_id, // Alias requerido por Liquid templates
+        product_id: item.product_id
+    }));
+
+    return {
+        token,
+        items: itemsWithId,
+        attributes: cart.attributes || {},
+        item_count,
+        total_price
+    };
+}
+
+// ✨ ACTUALIZADA: Función para agregar item al carrito con properties
+async function addItemToCart(
+    token: string,
+    productId: number,
+    quantity: number,
+    properties?: { [k: string]: string }
+): Promise<Cart> {
     const cart = getCart(token);
 
     // Obtener contexto para buscar el producto
@@ -48,90 +151,55 @@ async function addItemToCart(token: string, Id: number, quantity: number): Promi
     }
 
     const productos = Array.from(context.all_products.values());
-    const product = productos.find((p: any) => Number(p.id) === Number(Id));
+    const product = productos.find((p: any) => Number(p.id) === Number(productId));
 
     if (!product) {
-        console.error(`❌ Producto con ID ${Id} no encontrado`);
-        throw new Error(`Producto con ID ${Id} no encontrado`);
+        console.error(`❌ Producto con ID ${productId} no encontrado`);
+        throw new Error(`Producto con ID ${productId} no encontrado`);
     }
 
     console.log(`✅ Producto encontrado: ${product.title}`);
 
     // Verificar si el producto ya existe en el carrito
-    const existingItem = cart.items.find(item => item.id === Id);
+    const existingItem = cart.items.find(item => item.id === productId);
 
     if (existingItem) {
+        // Incrementar cantidad
         existingItem.quantity += quantity;
-        console.log(`🔁 Cantidad actualizada: ${existingItem.quantity}`);
+
+        // Fusionar properties si vienen nuevas
+        if (properties) {
+            existingItem.properties = { ...existingItem.properties, ...properties };
+        }
+
+        console.log(`🔢 Cantidad actualizada: ${existingItem.quantity}`);
+        if (properties) {
+            console.log(`🏷️ Properties fusionadas:`, existingItem.properties);
+        }
     } else {
-        cart.items.push({
-            id: product.id,
+        // Crear nuevo item
+        const newItem: CartItem = {
+            id: product.id, // Usamos directamente product.id
             title: product.title,
             handle: product.handle,
-            price: product.price, // ← aquí estaba el error
+            price: product.price,
             quantity: quantity
-        });
+        };
+
+        // Agregar properties si las hay
+        if (properties) {
+            newItem.properties = { ...properties };
+        }
+
+        cart.items.push(newItem);
         console.log(`🆕 Producto agregado al carrito: ${product.title}`);
+        if (properties) {
+            console.log(`🏷️ Con properties:`, properties);
+        }
     }
 
     return cart;
 }
-
-// 🛒 --- NUEVAS UTILIDADES DE CARRITO ---
-
-// Recalcular totales
-function recalculate(cart: Cart) {
-  let item_count = 0;
-  let total_price = 0;
-  for (const it of cart.items) {
-    item_count += it.quantity;
-    total_price += it.price * it.quantity;
-  }
-  return { item_count, total_price };
-}
-
-// Establecer cantidad (remueve si qty <= 0)
-function setQuantity(token: string, Id: number, quantity: number): Cart {
-  const cart = getCart(token);
-
-  if (!Number.isFinite(Id)) {
-    console.warn(`⚠️ ID de producto inválido: ${Id}`);
-    return cart;
-  }
-
-  const qty = Number.isFinite(quantity) ? quantity : 0;
-  const idx = cart.items.findIndex(i => i.id === Id);
-
-  if (idx === -1) {
-    console.warn(`⚠️ Producto con ID ${Id} no está en el carrito`);
-    return cart;
-  }
-
-  if (qty > 0) {
-    cart.items[idx].quantity = qty;
-    console.log(`🔁 Cantidad actualizada para producto ${Id}: ${qty}`);
-  } else {
-    cart.items.splice(idx, 1);
-    console.log(`🗑️ Producto ${Id} eliminado del carrito`);
-  }
-
-  return cart;
-}
-
-// Vaciar carrito
-function clearCart(token: string) {
-  const cart = getCart(token);
-  cart.items = [];
-  return cart;
-}
-
-// Convertir carrito a JSON extendido
-// JSON extendido para /cart.js y respuestas
-function cartToJson(token: string, cart: Cart) {
-  const { item_count, total_price } = recalculate(cart);
-  return { token, items: cart.items, item_count, total_price };
-}
-
 
 // Función para parsear cookies
 function parseCookies(cookieHeader: string): Record<string, string> {
@@ -167,13 +235,12 @@ function createCookieHeader(name: string, value: string, options: any = {}): str
     return cookieStr;
 }
 
-// 📋 Lista de endpoints .js soportados (ACTUALIZADA)
+// 📋 Lista de endpoints .js soportados
 const JS_ENDPOINTS = ['/cart.js'];
 
-// 🛒 Función para manejar el endpoint /cart.js (ACTUALIZADA PARA USAR MEMORIA)
+// 🛒 Función para manejar el endpoint /cart.js - ACTUALIZADA
 async function manejarCartJs(cartToken: string): Promise<Response> {
     try {
-        // Obtener carrito desde memoria en lugar del archivo
         const cart = getCart(cartToken);
         const responseData = cartToJson(cartToken, cart);
 
@@ -193,11 +260,12 @@ async function manejarCartJs(cartToken: string): Promise<Response> {
     }
 }
 
-// 🛒 NUEVA FUNCIÓN: Manejar POST /cart/add
+// ✨ ACTUALIZADA: Manejar POST /cart/add con properties
 async function manejarCartAdd(req: Request, cartToken: string): Promise<Response> {
     try {
         const requestBody = await req.json();
-        const { id, quantity = 1 } = requestBody;
+        const { id, quantity = 1, properties } = requestBody;
+
         if (!id) {
             return new Response(
                 JSON.stringify({ error: 'ID de producto requerido' }),
@@ -208,8 +276,13 @@ async function manejarCartAdd(req: Request, cartToken: string): Promise<Response
             );
         }
 
-        // Agregar item al carrito
-        const updatedCart = await addItemToCart(cartToken, parseInt(id), parseInt(quantity));
+        // Agregar item al carrito con properties opcionales
+        const updatedCart = await addItemToCart(
+            cartToken,
+            parseInt(id),
+            parseInt(quantity),
+            properties
+        );
         const responseData = cartToJson(cartToken, updatedCart);
 
         console.log(`✅ Producto ${id} agregado al carrito. Items en carrito: ${updatedCart.items.length}`);
@@ -237,7 +310,7 @@ async function manejarCartAdd(req: Request, cartToken: string): Promise<Response
     }
 }
 
-// 🔧 Función para manejar todos los endpoints .js (ACTUALIZADA)
+// 🔧 Función para manejar todos los endpoints .js
 async function manejarEndpointsJs(pathname: string, cartToken: string): Promise<Response | null> {
     switch (pathname) {
         case '/cart.js':
@@ -247,7 +320,7 @@ async function manejarEndpointsJs(pathname: string, cartToken: string): Promise<
     }
 }
 
-// 🛒 REEMPLAZAR la función manejarRutaCart anterior con esta nueva versión
+// 🛒 ACTUALIZADA: Función para manejar la ruta /cart
 async function manejarRutaCart(cartToken: string, shouldSetCookie: boolean): Promise<Response> {
     try {
         console.log(`🛒 Procesando ruta /cart con token: ${cartToken}`);
@@ -285,9 +358,7 @@ async function manejarRutaCart(cartToken: string, shouldSetCookie: boolean): Pro
     }
 }
 
-
-
-// 🛒 TAMBIÉN ACTUALIZAR manejarRutas para usar el contexto con carrito en otras páginas
+// 🛒 Función para manejar todas las demás rutas
 async function manejarRutas(url: URL, shouldSetCookie: boolean, cartToken: string): Promise<Response> {
     let filePath: string;
 
@@ -322,16 +393,12 @@ async function manejarRutas(url: URL, shouldSetCookie: boolean, cartToken: strin
     try {
         let archivo = await Deno.readTextFile(filePath);
 
-        // 🛒 NOTA: Los archivos HTML ya están pre-procesados por el controlador
-        // Pero podrías inyectar información del carrito aquí si es necesario
-        // Por ejemplo, para mostrar el contador de items en el header
-
         if (filePath.endsWith(".html")) {
-            // Opcionalmente, podrías inyectar datos del carrito en el HTML
+            // Inyectar datos del carrito en el HTML
             const cart = getCart(cartToken);
             const itemCount = cart.items.reduce((total, item) => total + item.quantity, 0);
 
-            // Ejemplo: reemplazar un placeholder en el HTML con el contador
+            // Reemplazar placeholder en el HTML con el contador
             archivo = archivo.replace(/\{\{cart_item_count\}\}/g, itemCount.toString());
 
             console.log(`🛒 HTML servido con ${itemCount} items en carrito`);
@@ -360,7 +427,7 @@ async function manejarRutas(url: URL, shouldSetCookie: boolean, cartToken: strin
     }
 }
 
-// 📄 Función para servir archivo 404 (ACTUALIZADA CON COOKIES)
+// 📄 Función para servir archivo 404
 async function servirArchivo404(shouldSetCookie: boolean, cartToken: string): Promise<Response> {
     try {
         const archivo404 = await Deno.readTextFile("server/themes/dev/dist/404.html");
@@ -465,7 +532,7 @@ async function manejarPeticionThemeUpdate(req: Request, callback: (changedTempla
     }
 }
 
-// 🔄 MODIFICAR iniciarServidor para agregar la ruta /cart
+// 📄 FUNCIÓN PRINCIPAL: iniciar servidor - ACTUALIZADA CON NUEVOS ENDPOINTS
 export function iniciarServidor(puerto: number = 3000, callback: (changedTemplate?: string) => Promise<Response>) {
     console.log(`✅ Servidor iniciado en http://localhost:${puerto}/`);
 
@@ -488,7 +555,7 @@ export function iniciarServidor(puerto: number = 3000, callback: (changedTemplat
             return await manejarPeticionThemeUpdate(req, callback);
         }
 
-        // 🛒 POST /cart/add
+        // 🛒 POST /cart/add - ACTUALIZADA
         if (req.method === "POST" && url.pathname === "/cart/add") {
             const response = await manejarCartAdd(req, cartToken);
 
@@ -506,18 +573,27 @@ export function iniciarServidor(puerto: number = 3000, callback: (changedTemplat
             return response;
         }
 
-        // 🛒 POST /cart/update
+        // ✨ NUEVO: POST /cart/update - CON SUPPORT PARA UPDATES Y ATTRIBUTES
         if (req.method === "POST" && url.pathname === "/cart/update") {
             try {
                 const body = await req.json();
                 const updates = body.updates || {};
+                const attributes = body.attributes;
 
+                // Aplicar updates de cantidades
                 for (const [pid, qty] of Object.entries(updates)) {
                     setQuantity(cartToken, parseInt(pid), parseInt(qty as any));
                 }
 
+                // Aplicar attributes si los hay
+                if (attributes) {
+                    setCartAttributes(cartToken, attributes);
+                }
+
                 const updatedCart = getCart(cartToken);
                 const responseData = cartToJson(cartToken, updatedCart);
+
+                console.log(`✅ Carrito actualizado - Updates: ${Object.keys(updates).length}, Attributes: ${attributes ? Object.keys(attributes).length : 0}`);
 
                 return new Response(JSON.stringify(responseData), {
                     status: 200,
@@ -567,4 +643,15 @@ export function iniciarServidor(puerto: number = 3000, callback: (changedTemplat
         // 🎯 Manejar todas las demás rutas
         return await manejarRutas(url, shouldSetCookie, cartToken);
     });
+
+    // 📤 EXPORTAR LAS UTILIDADES PARA QUE EL CONTROLADOR PUEDA USARLAS
+    return {
+        getCart,
+        setQuantity,
+        setLineItemProperties,
+        setCartAttributes,
+        clearCart,
+        cartToJson,
+        cartsStorage
+    };
 }

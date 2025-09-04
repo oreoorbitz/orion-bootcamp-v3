@@ -10,21 +10,27 @@ interface Token {
   nombre: string | null;
   contenido: string | null;
   atributos: Record<string, string> | null;
-};
+}
 
 interface NodoElemento {
   tipo: "elemento";
   nombre: string;
   atributos: Record<string, string>;
   hijos: Nodo[];
-};
+}
 
 interface NodoTexto {
   tipo: "texto";
   contenido: string;
-};
+}
 
 type Nodo = NodoElemento | NodoTexto;
+
+// Elementos HTML que no requieren etiqueta de cierre (void elements)
+const ELEMENTOS_VOID = new Set([
+  'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input',
+  'link', 'meta', 'param', 'source', 'track', 'wbr'
+]);
 
 function tokenizarHTML(html: string): string[] {
   // Esta expresión regular captura tanto etiquetas (abiertas, cerradas o autocierre)
@@ -36,9 +42,7 @@ function tokenizarHTML(html: string): string[] {
     .filter(token => token !== "");
 }
 
-
 //Clasificando los tokens para construir el árbol
-
 function clasificarTokens(tokens: string[]): Token[] {
   // Estas expresiones distinguen entre etiquetas de apertura, cierre y autocierre.
   const regexApertura: RegExp = /^<([a-zA-Z0-9]+)(\s+[^>]+)?>$/;
@@ -49,32 +53,6 @@ function clasificarTokens(tokens: string[]): Token[] {
   const regexAtributos: RegExp = /([a-zA-Z0-9-]+)=["']([^"']+)["']/g;
 
   return tokens.map(token => {
-    if (regexApertura.test(token)) {
-      const match = token.match(regexApertura);
-      const atributos: Record<string, string> = {};
-      if (match && match[2]) {
-        for (const attr of match[2].matchAll(regexAtributos)) {
-          atributos[attr[1]] = attr[2];
-        }
-      }
-      return {
-        tipo: TokenType.Apertura,
-        nombre: match?.[1] ?? null,
-        contenido: null,
-        atributos: Object.keys(atributos).length ? atributos : null
-      };
-    }
-
-    if (regexCierre.test(token)) {
-      const match = token.match(regexCierre);
-      return {
-        tipo: TokenType.Cierre,
-        nombre: match?.[1] ?? null,
-        contenido: null,
-        atributos: {}
-      };
-    }
-
     if (regexAutocierre.test(token)) {
       const match = token.match(regexAutocierre);
       const atributos: Record<string, string> = {};
@@ -91,23 +69,79 @@ function clasificarTokens(tokens: string[]): Token[] {
       };
     }
 
+    if (regexApertura.test(token)) {
+      const match = token.match(regexApertura);
+      const nombreElemento = match?.[1]?.toLowerCase();
+      const atributos: Record<string, string> = {};
+      if (match && match[2]) {
+        for (const attr of match[2].matchAll(regexAtributos)) {
+          atributos[attr[1]] = attr[2];
+        }
+      }
+
+      // Si es un elemento void, lo tratamos como autocierre
+      if (nombreElemento && ELEMENTOS_VOID.has(nombreElemento)) {
+        return {
+          tipo: TokenType.Autocierre,
+          nombre: match?.[1] ?? null,
+          contenido: null,
+          atributos: Object.keys(atributos).length ? atributos : null
+        };
+      }
+
+      return {
+        tipo: TokenType.Apertura,
+        nombre: match?.[1] ?? null,
+        contenido: null,
+        atributos: Object.keys(atributos).length ? atributos : null
+      };
+    }
+
+    if (regexCierre.test(token)) {
+      const match = token.match(regexCierre);
+      const nombreElemento = match?.[1]?.toLowerCase();
+
+      // Si intentan cerrar un elemento void, lo ignoramos
+      if (nombreElemento && ELEMENTOS_VOID.has(nombreElemento)) {
+        console.warn(`Advertencia: Se encontró etiqueta de cierre </${nombreElemento}> para un elemento void. Se ignorará.`);
+        return {
+          tipo: TokenType.Texto,
+          nombre: null,
+          contenido: "", // Token vacío que será filtrado
+          atributos: {}
+        };
+      }
+
+      return {
+        tipo: TokenType.Cierre,
+        nombre: match?.[1] ?? null,
+        contenido: null,
+        atributos: null
+      };
+    }
+
     // Si no coincide con ningún patrón de etiqueta, se trata como texto.
     return {
       tipo: TokenType.Texto,
       nombre: null,
       contenido: token,
-      atributos: {}
+      atributos: null
     };
   });
 }
-
 
 //Ahora construyendo el árbol
 function construirArbol(tokens: Token[]): Nodo {
   const stack: NodoElemento[] = []; // Pila para mantener la jerarquía
   let root: NodoElemento | null = null;
 
-  tokens.forEach(token => {
+  // Filtrar tokens de texto vacíos
+  const tokensValidos = tokens.filter(token =>
+    token.tipo !== TokenType.Texto ||
+    (token.contenido !== null && token.contenido.trim() !== "")
+  );
+
+  tokensValidos.forEach(token => {
     if (token.tipo === TokenType.Apertura) {
       // Crear un nodo de elemento con sus atributos y una lista vacía de hijos
       const nodo: NodoElemento = {
@@ -148,7 +182,7 @@ function construirArbol(tokens: Token[]): Nodo {
         throw new Error(`Se encontró una etiqueta de cierre </${token.nombre}> sin su correspondiente apertura.`);
       }
       const nodoCerrado = stack.pop();
-      // Opcional: Verifica que la etiqueta de cierre coincida con la de apertura.
+      // Verifica que la etiqueta de cierre coincida con la de apertura.
       if (nodoCerrado && nodoCerrado.nombre !== token.nombre) {
         throw new Error(`Error de sintaxis: etiqueta de cierre </${token.nombre}> no coincide con la etiqueta abierta <${nodoCerrado.nombre}>.`);
       }
@@ -191,7 +225,6 @@ function construirArbol(tokens: Token[]): Nodo {
 }
 
 //console.log(JSON.stringify(arbolConstruido, null, 2)); USAR ESTO PARA VER EL CONTENIDO COMPLETO
-
 
 export function htmlParser(entradaRenderizada: string): Nodo {
   //console.log("HTML a procesar en htmlParser:\n", entradaRenderizada); // ← Aquí ya tendrá un valor válido
