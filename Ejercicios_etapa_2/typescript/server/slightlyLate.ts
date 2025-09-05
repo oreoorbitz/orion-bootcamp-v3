@@ -113,15 +113,15 @@ function clearCart(token: string) {
     return cart;
 }
 
-// ✨ ACTUALIZADA: Convertir carrito a JSON extendido con properties y attributes
+// También actualiza la función cartToJson para asegurar que el id esté presente:
 function cartToJson(token: string, cart: Cart) {
     const { item_count, total_price } = recalculate(cart);
 
-    // Mapear items para incluir product_id como id para compatibilidad con Liquid
+    // ✅ Asegurar que cada item tenga tanto id como product_id
     const itemsWithId = cart.items.map(item => ({
         ...item,
-        id: item.product_id, // Alias requerido por Liquid templates
-        product_id: item.product_id
+        id: item.id || item.product_id, // Usar id si existe, sino product_id
+        product_id: item.product_id || item.id // Mantener compatibilidad
     }));
 
     return {
@@ -134,6 +134,7 @@ function cartToJson(token: string, cart: Cart) {
 }
 
 // ✨ ACTUALIZADA: Función para agregar item al carrito con properties
+
 async function addItemToCart(
     token: string,
     productId: number,
@@ -172,24 +173,21 @@ async function addItemToCart(
             existingItem.properties = { ...existingItem.properties, ...properties };
         }
 
-        console.log(`🔢 Cantidad actualizada: ${existingItem.quantity}`);
+        console.log(`📢 Cantidad actualizada: ${existingItem.quantity}`);
         if (properties) {
             console.log(`🏷️ Properties fusionadas:`, existingItem.properties);
         }
     } else {
-        // Crear nuevo item
+        // Crear nuevo item - ¡AQUÍ ESTABA EL BUG!
         const newItem: CartItem = {
-            id: product.id, // Usamos directamente product.id
+            id: Number(product.id), // ✅ Asegurar que sea número
+            product_id: Number(product.id), // ✅ Mantener ambos campos
             title: product.title,
             handle: product.handle,
             price: product.price,
-            quantity: quantity
+            quantity: quantity,
+            properties: properties || {} // ✅ Inicializar properties aunque sea vacío
         };
-
-        // Agregar properties si las hay
-        if (properties) {
-            newItem.properties = { ...properties };
-        }
 
         cart.items.push(newItem);
         console.log(`🆕 Producto agregado al carrito: ${product.title}`);
