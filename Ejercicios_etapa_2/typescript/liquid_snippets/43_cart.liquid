@@ -22,8 +22,8 @@
               <!-- Line item properties (solo lectura en el carrito; se definen en /cart/add) -->
                 <ul class="mt-1 text-sm text-gray-600 space-y-0.5">
                   {% for property in item.properties %}
-                    <li><span class="font-medium">{{ property[0] }}:</span> {{ property[1] }}</li>
-                  {% endfor %}
+                    <li><span class="font-medium">{{ property.first }}:</span> {{ property.last }}</li>
+                  {% endfor %} 
                 </ul>
             </td>
 
