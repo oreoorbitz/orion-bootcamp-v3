@@ -21,9 +21,8 @@
               </a>
               <!-- Line item properties (solo lectura en el carrito; se definen en /cart/add) -->
                 <ul class="mt-1 text-sm text-gray-600 space-y-0.5">
-                  {% for key in item.properties %}
-                    {% assign value = item.properties[key] %}
-                    <li><span class="font-medium">{{ key }}:</span> {{ value }}</li>
+                  {% for property in item.properties %}
+                    <li><span class="font-medium">{{ property.first }}:</span> {{ property.last }}</li>
                   {% endfor %}
                 </ul>
             </td>
@@ -65,7 +64,7 @@
           type="checkbox"
           id="rush_delivery"
           class="border rounded"
-          {% if cart.attributes.rush_delivery == 'true' or cart.attributes.rush_delivery == '1' %}checked{% endif %}
+          {% if cart.attributes.rush_delivery == 'true' %}checked{% endif %}
         >
         <span class="text-sm text-gray-700">Entrega urgente</span>
       </label>

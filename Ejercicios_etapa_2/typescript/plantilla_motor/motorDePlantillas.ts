@@ -294,18 +294,32 @@ async function procesarBucles(tokens: TokenPlantilla[], contexto: Record<string,
       console.log(`🔍 Es array:`, Array.isArray(valoresLista));
 
       // 🔸 Si es Drop, intentar acceso directo
-      if (valoresLista?.isDrop || (valoresLista && typeof valoresLista[segmentos[segmentos.length - 1]] !== 'undefined')) {
-        console.log(`🔍 Intentando acceso Drop para '${nombreLista}'`);
-        // Para Drops, intentar acceso directo
+      if (valoresLista?.isDrop || (valoresLista instanceof Map)) {
+        console.log(`🔍 Objeto es Drop/Map, intentando acceso a '${nombreLista}'`);
         const ultimaPropiedad = segmentos[segmentos.length - 1];
         if (valoresLista[ultimaPropiedad]) {
           valoresLista = valoresLista[ultimaPropiedad];
         }
       }
 
-      // 🔸 Si no es array, saltamos el bucle
+      // 🔧 DEBUG TEMPORAL: Verificar conversión de objeto a pares {first, last}
+      // 🧹 Puedes borrar este bloque cuando confirmes que item.properties se renderiza bien
+      if (!Array.isArray(valoresLista) && valoresLista && typeof valoresLista === 'object') {
+      console.log(`🔄 Convirtiendo objeto a array de pares first/last`);
+
+  const entries = Object.entries(valoresLista);
+  valoresLista = entries.map(([key, value]) => {
+    const par = { first: key, last: value };
+    console.log("🧩 Par generado:", par); // ← DEBUG: muestra cada par
+    return par;
+  });
+
+  console.log(`✅ Objeto convertido a array:`, valoresLista);
+}
+
+      // 🔸 Si no es array después de la conversión, saltamos el bucle
       if (!Array.isArray(valoresLista)) {
-        console.warn(`Advertencia: '${nombreLista}' no es un array. Valor:`, valoresLista);
+        console.warn(`Advertencia: '${nombreLista}' no es iterable. Valor:`, valoresLista);
         i = saltarBloque(tokens, i);
         continue;
       }
@@ -334,7 +348,7 @@ async function procesarBucles(tokens: TokenPlantilla[], contexto: Record<string,
 
       console.log(`🔍 Bloque interno del bucle:`, bloqueInterno);
 
-      // 🔧 CORRECCIÓN CLAVE: Procesar cada elemento con render incluido
+      // 🔧 Procesar cada elemento con render incluido
       for (let index = 0; index < valoresLista.length; index++) {
         let valor = valoresLista[index];
         let contextoLocal = {
@@ -346,8 +360,7 @@ async function procesarBucles(tokens: TokenPlantilla[], contexto: Record<string,
         console.log(`🔄 Iteración ${index + 1}:`, {
           nombreItem,
           valor,
-          tieneTitle: valor?.title,
-          tienePrecio: valor?.precio
+          esParFirstLast: valor?.hasOwnProperty('first') && valor?.hasOwnProperty('last')
         });
 
         let bloqueProcesado = await procesarBloqueEnBucle(bloqueInterno, contextoLocal);
@@ -356,7 +369,7 @@ async function procesarBucles(tokens: TokenPlantilla[], contexto: Record<string,
 
       i = j - 1; // j ya apunta después del endfor
     } else if (token.tipo === 'directiva' && token.directiva === 'endfor') {
-      // 🔧 CORRECCIÓN: No añadir endfor sueltos al resultado
+      // 🔧 No añadir endfor sueltos al resultado
       console.log(`🔧 Eliminando endfor suelto`);
       // No hacer nada, simplemente saltarlo
     } else {
@@ -596,6 +609,16 @@ function resolverVariable(nombreVariable: string, contexto: Record<string, any>)
     console.log(`⚠️ No se puede acceder a '${key}' en tipo:`, typeof obj);
     return undefined;
   }, contexto);
+
+  // 🔧 DEBUG TEMPORAL: Verificar resolución de variables anidadas en bucles
+  // 🧹 Puedes borrar este bloque cuando confirmes que property.first y property.last se resuelven bien
+  if (typeof valorFinal === 'object' && valorFinal !== null) {
+    if ('first' in valorFinal || 'last' in valorFinal) {
+      console.log("🔍 Resolviendo variable anidada:");
+      console.log("   → first:", valorFinal.first);
+      console.log("   → last:", valorFinal.last);
+    }
+  }
 
   if (valorFinal === undefined || valorFinal === null) {
     console.warn(`⚠️ Variable '${nombreVariable}' no encontrada, retornando string vacío`);

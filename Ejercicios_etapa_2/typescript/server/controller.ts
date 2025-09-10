@@ -99,6 +99,8 @@ async function generarHTMLDeTemplate(templateName: string, itemHandle?: string):
       }
     }
 
+    console.log("TEST0RR",JSON.stringify(templateContext.cart.items, null, 2))
+
     const renderedContent = await liquidEngine(templateContent, templateContext);
     const layoutContext = { ...templateContext, content_for_layout: renderedContent };
     const layoutContent = await Deno.readTextFile(layoutPath);
