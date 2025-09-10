@@ -15,14 +15,31 @@
  * - Extender el modelo de carrito para soportar:
  *   - `item.properties: { [k: string]: string }`
  *   - `cart.attributes: { [k: string]: string }`
- * - Asegurar que `/cart.add`, `/cart/update`, `/cart.js` y `context.cart` trabajen con estos datos.
+ * - Asegurar que `/cart.add`, `/cart.update`, `/cart.js` y `context.cart` trabajen con estos datos.
  * - Actualizar plantillas para:
  *   - En producto: enviar `properties` junto con `id` y `quantity`.
  *   - En carrito: renderizar `properties` por línea (read-only) y editar `attributes` globales.
  *
  * ✅ Instrucciones:
  *
- * 1) **Servicio de carrito**
+ * 1) **Soporte de iteración sobre objetos con `.first` y `.last` (para Liquid)**
+ *
+ *    - Al iterar un objeto en Liquid (por ejemplo `for p in item.properties`), cada elemento del bucle
+ *      debe exponer:
+ *        - `p.first` → **la clave** (key) del par
+ *        - `p.last`  → **el valor** (value) del par
+ *    - Implementación sugerida en tu runtime:
+ *        - Cuando el `for` reciba un objeto (no array), conviértelo a una lista de pares:
+ *          `[{ first: key, last: value }, ...]` usando `Object.entries`.
+ *        - Asegúrate de que `p.first` y `p.last` sean accesibles en plantillas.
+ *    - Uso esperado en `43_cart.liquid`:
+ *        ```liquid
+ *        {% for p in item.properties %}
+ *          {{ p.first }}: {{ p.last }}
+ *        {% endfor %}
+ *        ```
+ *
+ * 2) **Servicio de carrito**
  *
  *    Estructura requerida:
  *    - Item:
@@ -47,13 +64,13 @@
  *
  *    Utilidades mínimas:
  *    - getCart(token)
- * - setQuantity(token, productId, quantity)        // conserva properties existentes
- * - setLineItemProperties(token, productId, obj)   // fusiona/establece propiedades por línea
- * - setCartAttributes(token, obj)                  // fusiona/establece atributos globales
- * - recalculate(cart)
- * - toJson(token) → incluir `items[*].properties` y `attributes` en la salida
+ *    - setQuantity(token, productId, quantity)        // conserva properties existentes
+ *    - setLineItemProperties(token, productId, obj)   // fusiona/establece propiedades por línea
+ *    - setCartAttributes(token, obj)                  // fusiona/establece atributos globales
+ *    - recalculate(cart)
+ *    - toJson(token) → incluir `items[*].properties` y `attributes` en la salida
  *
- * 2) **Endpoint `/cart/add` (POST)**
+ * 3) **Endpoint `/cart/add` (POST)**
  *
  *    - Acepta: { id: number, quantity: number, properties?: { [k: string]: string } }
  *    - Lógica:
@@ -61,7 +78,7 @@
  *      - Si vienen `properties`, adjúntalas/actualízalas en esa línea.
  *      - Recalcula y responde 200 (puede ser JSON o redirección según tu flujo).
  *
- * 3) **Endpoint `/cart/update` (POST)**
+ * 4) **Endpoint `/cart/update` (POST)**
  *
  *    - Acepta:
  *      {
@@ -74,7 +91,7 @@
  *      - Si `attributes` existe, llama a `setCartAttributes`.
  *      - Responde 200 con JSON del carrito (`toJson(token)`).
  *
- * 4) **Endpoint `/cart.js`**
+ * 5) **Endpoint `/cart.js`**
  *
  *    - Debe exponer:
  *      {
@@ -85,7 +102,7 @@
  *        attributes?: { ... }
  *      }
  *
- * 5) **Plantillas**
+ * 6) **Plantillas**
  *
  *    - **Producto**: usa `templates/43_product.liquid`
  *      - Contiene un formulario con `quantity` y campos opcionales de `properties`
@@ -100,7 +117,7 @@
  *      - Envío: `POST /cart/update` con `{ updates, attributes }`.
  *      - Mantiene botón **Vaciar carrito** → `POST /cart/clear` + redirección a `/cart`.
  *
- * 6) **Pruebas sugeridas**
+ * 7) **Pruebas sugeridas**
  *
  *    A) **Añadir con properties desde producto**
  *       - En `/products/:handle`, elige Color/Talla/Grabado y añade `quantity = 1`.
