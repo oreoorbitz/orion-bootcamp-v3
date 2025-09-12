@@ -11,13 +11,46 @@ const rutaConfig = path.resolve(__dirname, "themes/dev/config");
 
 const db = new DatabaseSync("data.db");
 
+// 🆕 CONSULTAS ACTUALIZADAS PARA INCLUIR VARIANTES Y OPCIONES
 const products = db.prepare('SELECT * FROM products ORDER BY id').all();
 const collectionss = db.prepare('SELECT * FROM collections ORDER BY id').all();
 const collectionsProducts = db.prepare('SELECT * FROM product_collections ORDER BY productId').all();
 
+// 🆕 NUEVAS CONSULTAS PARA VARIANTES Y OPCIONES
+const variants = db.prepare('SELECT * FROM variants ORDER BY productId, id').all();
+const productOptions = db.prepare('SELECT * FROM product_options ORDER BY productId, position').all();
+const productOptionValues = db.prepare('SELECT * FROM product_option_values ORDER BY productId, position').all();
+
 type Producto = { id: number; title: string; handle: string; precio: number; [key: string]: any };
 type Coleccion = { id: number; title: string; handle: string; [key: string]: any };
 type Relacion = { productId: number; collectionId: number };
+
+// 🆕 NUEVOS TIPOS PARA VARIANTES Y OPCIONES
+type Variante = {
+  id: number;
+  productId: number;
+  title: string;
+  option1?: string;
+  option2?: string;
+  option3?: string;
+  price: number;
+  sku?: string;
+  available: number; // 0 o 1 en SQLite
+};
+
+type OpcionProducto = {
+  id: number;
+  productId: number;
+  name: string;
+  position: number;
+};
+
+type ValorOpcion = {
+  id: number;
+  productId: number;
+  position: number;
+  value: string;
+};
 
 // 🛒 TIPOS ACTUALIZADOS PARA EL CARRITO CON PROPERTIES Y ATTRIBUTES
 interface CartItem {
@@ -40,6 +73,80 @@ interface LiquidCart {
     attributes?: { [k: string]: string }; // ✨ NUEVO: Attributes en respuesta Liquid
     item_count: number;
     total_price: number;
+}
+
+// 🆕 FUNCIÓN NUEVA: Agrupar variantes por producto
+function agruparVariantesPorProducto(variantes: Variante[]): Map<number, Variante[]> {
+  const mapa = new Map<number, Variante[]>();
+
+  for (const variante of variantes) {
+    if (!mapa.has(variante.productId)) {
+      mapa.set(variante.productId, []);
+    }
+    mapa.get(variante.productId)!.push({
+      ...variante,
+      available: Boolean(variante.available) // Convertir 0/1 a boolean
+    });
+  }
+
+  return mapa;
+}
+
+// 🆕 FUNCIÓN NUEVA: Agrupar opciones por producto
+function agruparOpcionesPorProducto(opciones: OpcionProducto[], valores: ValorOpcion[]): Map<number, any[]> {
+  const mapa = new Map<number, any[]>();
+
+  for (const opcion of opciones) {
+    if (!mapa.has(opcion.productId)) {
+      mapa.set(opcion.productId, []);
+    }
+
+    // Encontrar valores para esta opción
+    const valoresOpcion = valores
+      .filter(v => v.productId === opcion.productId && v.position === opcion.position)
+      .map(v => v.value);
+
+    mapa.get(opcion.productId)!.push({
+      name: opcion.name,
+      position: opcion.position,
+      values: valoresOpcion
+    });
+  }
+
+  // Ordenar opciones por posición
+  for (const opciones of mapa.values()) {
+    opciones.sort((a, b) => a.position - b.position);
+  }
+
+  return mapa;
+}
+
+// 🔧 FUNCIÓN ACTUALIZADA: Enriquecer productos con variantes y opciones
+function enriquecerProductosConVariantes(
+  productos: Producto[],
+  variantesMap: Map<number, Variante[]>,
+  opcionesMap: Map<number, any[]>
+): Producto[] {
+  return productos.map(producto => {
+    const variantes = variantesMap.get(producto.id) || [];
+    const opciones = opcionesMap.get(producto.id) || [];
+
+    console.log(`🔍 Producto: ${producto.title} (ID: ${producto.id})`);
+    console.log(`   📦 Variantes: ${variantes.length}`);
+    console.log(`   ⚙️ Opciones: ${opciones.length}`);
+
+    if (variantes.length > 0) {
+      console.log(`   📋 Variantes detalle:`, variantes.map(v => `${v.title} ($${v.price/100}) disponible:${v.available}`));
+    }
+
+    return {
+      ...producto,
+      variants: variantes,
+      options: opciones,
+      // Para compatibilidad, mantener el precio del producto como el precio de la primera variante disponible
+      price: variantes.find(v => v.available)?.price || producto.precio || 0
+    };
+  });
 }
 
 async function agruparProductos(
@@ -145,8 +252,10 @@ function buildLiquidCart(token: string, cart: Cart): LiquidCart {
     };
 }
 
-// 🛒 FUNCIÓN MODIFICADA: crearContexto ahora recibe cartToken y cartsStorage
+// 🔧 FUNCIÓN PRINCIPAL ACTUALIZADA: crearContexto con variantes y opciones
 export async function crearContexto(cartToken?: string, cartsStorage?: Map<string, Cart>) {
+  console.log("🚀 Iniciando creación de contexto con variantes...");
+
   const data = JSON.parse(fs.readFileSync(path.join(rutaConfig, "settings_data.json"), "utf-8"));
   const current = data.current;
 
@@ -160,9 +269,22 @@ export async function crearContexto(cartToken?: string, cartsStorage?: Map<strin
     }
   }
 
-  const coleccionesConProductos = await agruparProductos(products, collectionss, collectionsProducts);
+  // 🆕 PROCESAR VARIANTES Y OPCIONES
+  console.log("📦 Procesando variantes...");
+  const variantesMap = agruparVariantesPorProducto(variants as Variante[]);
+  console.log(`✅ Variantes agrupadas para ${variantesMap.size} productos`);
+
+  console.log("⚙️ Procesando opciones...");
+  const opcionesMap = agruparOpcionesPorProducto(productOptions as OpcionProducto[], productOptionValues as ValorOpcion[]);
+  console.log(`✅ Opciones agrupadas para ${opcionesMap.size} productos`);
+
+  // 🔧 ENRIQUECER PRODUCTOS CON VARIANTES Y OPCIONES
+  const productosEnriquecidos = enriquecerProductosConVariantes(products as Producto[], variantesMap, opcionesMap);
+  console.log(`✅ ${productosEnriquecidos.length} productos enriquecidos con variantes`);
+
+  const coleccionesConProductos = await agruparProductos(productosEnriquecidos, collectionss, collectionsProducts);
   const collecciones = crearDrop(coleccionesConProductos);
-  const todosProductos = crearDrop(products);
+  const todosProductos = crearDrop(productosEnriquecidos);
 
   // ✨ CONSTRUIR EL OBJETO CART PARA LIQUID CON PROPERTIES Y ATTRIBUTES
   let cart: LiquidCart = {
@@ -208,9 +330,10 @@ export async function crearContexto(cartToken?: string, cartsStorage?: Map<strin
     settings,
   };
 
+  console.log("✅ Contexto creado exitosamente");
   return contexto;
 }
 
-//Para probar que funciona (comentado para evitar ejecución en import)
+// Para probar que funciona (comentado para evitar ejecución en import)
 // const contexto = await crearContexto();
 // console.log("🔍 Contexto completo:", contexto);
