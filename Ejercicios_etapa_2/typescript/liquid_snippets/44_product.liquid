@@ -11,7 +11,6 @@
   
     <form id="add-to-cart-form" class="space-y-4">
       <!-- Option selectors (render if product has options) -->
-      {% if product.options %}
         <div class="p-4 border rounded bg-gray-50 space-y-3">
           <h2 class="font-semibold">Opciones</h2>
   
@@ -33,7 +32,6 @@
           <p id="availability" class="text-sm text-gray-600"></p>
           <p id="sku" class="text-xs text-gray-500"></p>
         </div>
-      {% endif %}
   
       <!-- Quantity -->
       <label class="block">
