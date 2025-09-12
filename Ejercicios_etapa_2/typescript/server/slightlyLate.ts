@@ -8,13 +8,14 @@ import { generarHTMLDeCarrito } from "./controller.ts";
 
 // 🛒 SISTEMA DE CARRITO EN MEMORIA - ACTUALIZADO CON PROPERTIES Y ATTRIBUTES
 interface CartItem {
-    id: number;
-    product_id: number; // Alias para compatibilidad
-    title: string;
-    handle: string;
-    price: number;
+    id: number;           // id de la variante (clave de la línea)
+    product_id: number;   // id del producto padre
+    title: string;        // "Producto - Variante" (combinado)
+    handle: string;       // del producto
+    sku?: string;         // de la variante
+    price: number;        // de la variante (centavos)
     quantity: number;
-    properties?: { [k: string]: string }; // ✨ NUEVO: Properties por línea
+    properties?: { [k: string]: string }; // conservamos para compatibilidad
 }
 
 interface Cart {
@@ -28,6 +29,37 @@ const cartsStorage = new Map<string, Cart>();
 // Función para generar UUID simple
 function generateCartToken(): string {
     return 'cart_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+}
+
+// ✨ NUEVA FUNCIÓN: Buscar variante + su producto
+async function getVariant(variantId: number): Promise<{variant: any, product: any} | null> {
+    try {
+        const context = await crearContexto();
+
+        // Validar que all_products sea un Map
+        if (!(context.all_products instanceof Map)) {
+            console.error("❌ El contexto no contiene all_products como Map");
+            return null;
+        }
+
+        // Buscar en todos los productos
+        for (const product of context.all_products.values()) {
+            if (product.variants && Array.isArray(product.variants)) {
+              console.log(`TEST00RProducto: ${product.title}, Variantes:`, product.variants.map(v => `ID:${v.id} - ${v.title} (available:${v.available})`));
+                const variant = product.variants.find((v: any) => Number(v.id) === Number(variantId));
+                if (variant) {
+                    console.log(`✅ Variante encontrada: ${variant.title} del producto ${product.title}`);
+                    return { variant, product };
+                }
+            }
+        }
+
+        console.error(`❌ Variante con ID ${variantId} no encontrada`);
+        return null;
+    } catch (error) {
+        console.error("❌ Error buscando variante:", error);
+        return null;
+    }
 }
 
 // Función para obtener o crear carrito
@@ -76,30 +108,29 @@ function setCartAttributes(token: string, attributes: { [k: string]: string }): 
     return cart;
 }
 
-// Establecer cantidad (remueve si qty <= 0) - ACTUALIZADA para conservar properties
-function setQuantity(token: string, productId: number, quantity: number): Cart {
+
+function setQuantity(token: string, variantId: number, quantity: number): Cart {
     const cart = getCart(token);
 
-    if (!Number.isFinite(productId)) {
-        console.warn(`⚠️ ID de producto inválido: ${productId}`);
+    if (!Number.isFinite(variantId)) {
+        console.warn(`⚠️ ID de variante inválido: ${variantId}`);
         return cart;
     }
 
     const qty = Number.isFinite(quantity) ? quantity : 0;
-    const idx = cart.items.findIndex(i => i.product_id === productId);
+    const idx = cart.items.findIndex(i => i.id === variantId); // CAMBIO: usar i.id en lugar de i.product_id
 
     if (idx === -1) {
-        console.warn(`⚠️ Producto con ID ${productId} no está en el carrito`);
+        console.warn(`⚠️ Variante con ID ${variantId} no está en el carrito`);
         return cart;
     }
 
     if (qty > 0) {
         cart.items[idx].quantity = qty;
-        console.log(`🔢 Cantidad actualizada para producto ${productId}: ${qty}`);
-        // Las properties se conservan automáticamente
+        console.log(`🔢 Cantidad actualizada para variante ${variantId}: ${qty}`);
     } else {
         cart.items.splice(idx, 1);
-        console.log(`🗑️ Producto ${productId} eliminado del carrito`);
+        console.log(`🗑️ Variante ${variantId} eliminada del carrito`);
     }
 
     return cart;
@@ -113,56 +144,57 @@ function clearCart(token: string) {
     return cart;
 }
 
-// También actualiza la función cartToJson para asegurar que el id esté presente:
+// ACTUALIZADA: cartToJson con datos de variante
 function cartToJson(token: string, cart: Cart) {
     const { item_count, total_price } = recalculate(cart);
 
-    // ✅ Asegurar que cada item tenga tanto id como product_id
-    const itemsWithId = cart.items.map(item => ({
-        ...item,
-        id: item.id || item.product_id, // Usar id si existe, sino product_id
-        product_id: item.product_id || item.id // Mantener compatibilidad
+    // Asegurar que cada item tenga el formato correcto
+    const itemsFormatted = cart.items.map(item => ({
+        id: item.id,              // id de la variante
+        product_id: item.product_id,
+        title: item.title,        // título combinado "Producto - Variante"
+        handle: item.handle,
+        sku: item.sku,           // SKU de la variante
+        price: item.price,       // precio de la variante
+        quantity: item.quantity,
+        properties: item.properties || {}
     }));
 
     return {
         token,
-        items: itemsWithId,
+        items: itemsFormatted,
         attributes: cart.attributes || {},
         item_count,
         total_price
     };
 }
 
-// ✨ ACTUALIZADA: Función para agregar item al carrito con properties
-
+// ACTUALIZADA: Función para agregar item al carrito con variantes
 async function addItemToCart(
     token: string,
-    productId: number,
+    variantId: number,
     quantity: number,
     properties?: { [k: string]: string }
 ): Promise<Cart> {
     const cart = getCart(token);
 
-    // Obtener contexto para buscar el producto
-    const context = await crearContexto();
-
-    // Validar que all_products sea un Map
-    if (!(context.all_products instanceof Map)) {
-        throw new Error("❌ El contexto no contiene all_products como Map");
+    // Buscar la variante y su producto
+    const result = await getVariant(variantId);
+    if (!result) {
+        throw new Error(`Variante con ID ${variantId} no encontrada`);
     }
 
-    const productos = Array.from(context.all_products.values());
-    const product = productos.find((p: any) => Number(p.id) === Number(productId));
+    const { variant, product } = result;
 
-    if (!product) {
-        console.error(`❌ Producto con ID ${productId} no encontrado`);
-        throw new Error(`Producto con ID ${productId} no encontrado`);
+    // Validar disponibilidad
+    if (!variant.available) {
+        throw new Error(`La variante ${variant.title} no está disponible`);
     }
 
-    console.log(`✅ Producto encontrado: ${product.title}`);
+    console.log(`Variante válida: ${variant.title} - ${product.title}`);
 
-    // Verificar si el producto ya existe en el carrito
-    const existingItem = cart.items.find(item => item.id === productId);
+    // Verificar si la variante ya existe en el carrito
+    const existingItem = cart.items.find(item => item.id === variantId);
 
     if (existingItem) {
         // Incrementar cantidad
@@ -173,26 +205,27 @@ async function addItemToCart(
             existingItem.properties = { ...existingItem.properties, ...properties };
         }
 
-        console.log(`📢 Cantidad actualizada: ${existingItem.quantity}`);
-        if (properties) {
-            console.log(`🏷️ Properties fusionadas:`, existingItem.properties);
-        }
+        console.log(`Cantidad actualizada: ${existingItem.quantity}`);
     } else {
-        // Crear nuevo item - ¡AQUÍ ESTABA EL BUG!
+        // Crear título combinado: "Producto - Variante"
+        const combinedTitle = `${product.title} - ${variant.title}`;
+
+        // Crear nuevo item con datos de la variante
         const newItem: CartItem = {
-            id: Number(product.id), // ✅ Asegurar que sea número
-            product_id: Number(product.id), // ✅ Mantener ambos campos
-            title: product.title,
-            handle: product.handle,
-            price: product.price,
+            id: Number(variant.id),           // id de la variante
+            product_id: Number(product.id),   // id del producto padre
+            title: combinedTitle,             // título combinado
+            handle: product.handle,           // handle del producto
+            sku: variant.sku,                 // SKU de la variante
+            price: variant.price,             // precio de la variante
             quantity: quantity,
-            properties: properties || {} // ✅ Inicializar properties aunque sea vacío
+            properties: properties || {}
         };
 
         cart.items.push(newItem);
-        console.log(`🆕 Producto agregado al carrito: ${product.title}`);
+        console.log(`Variante agregada al carrito: ${combinedTitle}`);
         if (properties) {
-            console.log(`🏷️ Con properties:`, properties);
+            console.log(`Con properties:`, properties);
         }
     }
 
@@ -258,15 +291,17 @@ async function manejarCartJs(cartToken: string): Promise<Response> {
     }
 }
 
-// ✨ ACTUALIZADA: Manejar POST /cart/add con properties
+// ACTUALIZADA: Manejar POST /cart/add con variantes
 async function manejarCartAdd(req: Request, cartToken: string): Promise<Response> {
     try {
         const requestBody = await req.json();
-        const { id, quantity = 1, properties } = requestBody;
+        // Soporte para ambos formatos: { id: n } y { variant_id: n }
+        const variantId = requestBody.id ?? requestBody.variant_id;
+        const { quantity = 1, properties } = requestBody;
 
-        if (!id) {
+        if (!variantId) {
             return new Response(
-                JSON.stringify({ error: 'ID de producto requerido' }),
+                JSON.stringify({ error: 'ID de variante requerido' }),
                 {
                     status: 400,
                     headers: { 'Content-Type': 'application/json' }
@@ -274,16 +309,38 @@ async function manejarCartAdd(req: Request, cartToken: string): Promise<Response
             );
         }
 
-        // Agregar item al carrito con properties opcionales
+        // Verificar que la variante existe y está disponible
+        const result = await getVariant(parseInt(variantId));
+        if (!result) {
+            return new Response(
+                JSON.stringify({ error: `Variante con ID ${variantId} no encontrada` }),
+                {
+                    status: 422,
+                    headers: { 'Content-Type': 'application/json' }
+                }
+            );
+        }
+
+        if (!result.variant.available) {
+            return new Response(
+                JSON.stringify({ error: `La variante ${result.variant.title} no está disponible` }),
+                {
+                    status: 422,
+                    headers: { 'Content-Type': 'application/json' }
+                }
+            );
+        }
+
+        // Agregar item al carrito
         const updatedCart = await addItemToCart(
             cartToken,
-            parseInt(id),
+            parseInt(variantId),
             parseInt(quantity),
             properties
         );
         const responseData = cartToJson(cartToken, updatedCart);
 
-        console.log(`✅ Producto ${id} agregado al carrito. Items en carrito: ${updatedCart.items.length}`);
+        console.log(`Variante ${variantId} agregada al carrito. Items en carrito: ${updatedCart.items.length}`);
 
         return new Response(
             JSON.stringify(responseData),
@@ -297,11 +354,11 @@ async function manejarCartAdd(req: Request, cartToken: string): Promise<Response
         );
 
     } catch (error) {
-        console.error('❌ Error en /cart/add:', error);
+        console.error('Error en /cart/add:', error);
         return new Response(
-            JSON.stringify({ error: 'Error al agregar producto al carrito' }),
+            JSON.stringify({ error: error.message || 'Error al agregar variante al carrito' }),
             {
-                status: 500,
+                status: 422,
                 headers: { 'Content-Type': 'application/json' }
             }
         );
@@ -571,39 +628,40 @@ export function iniciarServidor(puerto: number = 3000, callback: (changedTemplat
             return response;
         }
 
-        // ✨ NUEVO: POST /cart/update - CON SUPPORT PARA UPDATES Y ATTRIBUTES
+        // ACTUALIZADO: POST /cart/update - CON SUPPORT PARA VARIANTES
         if (req.method === "POST" && url.pathname === "/cart/update") {
-            try {
-                const body = await req.json();
-                const updates = body.updates || {};
-                const attributes = body.attributes;
+        try {
+          const body = await req.json();
+          const updates = body.updates || {};
+          const attributes = body.attributes;
 
-                // Aplicar updates de cantidades
-                for (const [pid, qty] of Object.entries(updates)) {
-                    setQuantity(cartToken, parseInt(pid), parseInt(qty as any));
-                }
+          // Aplicar updates de cantidades (las claves son IDs de variante)
+          for (const [variantIdStr, qty] of Object.entries(updates)) {
+            const variantId = parseInt(variantIdStr);
+            setQuantity(cartToken, variantId, parseInt(qty as any));
+          }
 
-                // Aplicar attributes si los hay
-                if (attributes) {
-                    setCartAttributes(cartToken, attributes);
-                }
+          // Aplicar attributes si los hay
+          if (attributes) {
+            setCartAttributes(cartToken, attributes);
+          }
 
-                const updatedCart = getCart(cartToken);
-                const responseData = cartToJson(cartToken, updatedCart);
+          const updatedCart = getCart(cartToken);
+          const responseData = cartToJson(cartToken, updatedCart);
 
-                console.log(`✅ Carrito actualizado - Updates: ${Object.keys(updates).length}, Attributes: ${attributes ? Object.keys(attributes).length : 0}`);
+          console.log(`Carrito actualizado - Updates: ${Object.keys(updates).length}, Attributes: ${attributes ? Object.keys(attributes).length : 0}`);
 
-                return new Response(JSON.stringify(responseData), {
-                    status: 200,
-                    headers: { "Content-Type": "application/json" }
-                });
-            } catch (error) {
-                console.error("❌ Error en /cart/update:", error);
-                return new Response(JSON.stringify({ error: "Error al actualizar carrito" }), {
-                    status: 500,
-                    headers: { "Content-Type": "application/json" }
-                });
-            }
+          return new Response(JSON.stringify(responseData), {
+            status: 200,
+            headers: { "Content-Type": "application/json" }
+          });
+        } catch (error) {
+            console.error("Error en /cart/update:", error);
+            return new Response(JSON.stringify({ error: "Error al actualizar carrito" }), {
+            status: 500,
+            headers: { "Content-Type": "application/json" }
+            });
+          }
         }
 
         // 🛒 POST /cart/clear
