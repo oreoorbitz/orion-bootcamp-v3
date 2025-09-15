@@ -1,0 +1,214 @@
+<!-- templates/45_product.liquid -->
+<div class="max-w-4xl mx-auto p-4 grid gap-6 md:grid-cols-2">
+    <!-- Main image -->
+    <div>
+      {%- assign initial_variant = product.variants[0] -%}
+      <div id="image-wrap" class="border rounded overflow-hidden">
+        {{ initial_variant.image
+          | image_url: width: 'large'
+          | image_tag: id: 'main-image', class: 'w-full object-cover', alt: product.title | strip_html }}
+      </div>
+    </div>
+  
+    <!-- Info + options -->
+    <div>
+      <h1 class="text-2xl md:text-3xl font-bold mb-2">{{ product.title }}</h1>
+      <p class="text-gray-700 mb-1">ID: {{ product.id }}</p>
+      <p class="text-gray-700 mb-1">Handle: {{ product.handle }}</p>
+  
+      <p class="text-lg font-semibold mb-6">
+        Precio: <span id="price">{{ product.price | money }}</span>
+      </p>
+  
+      <form id="add-to-cart-form" class="space-y-4">
+        <div class="p-4 border rounded bg-gray-50 space-y-3">
+          <h2 class="font-semibold">Opciones</h2>
+  
+          {% for opt in product.options %}
+            <label class="block">
+              <span class="block text-sm text-gray-700 mb-1">{{ opt.name }}</span>
+              <select
+                class="option-select border rounded p-2 w-full"
+                id="option-{{ opt.position }}"
+                data-position="{{ opt.position }}"
+              >
+                {% for val in opt.values %}
+                  <option value="{{ val }}">{{ val }}</option>
+                {% endfor %}
+              </select>
+            </label>
+          {% endfor %}
+  
+          <p id="availability" class="text-sm text-gray-600"></p>
+          <p id="sku" class="text-xs text-gray-500"></p>
+        </div>
+  
+        <label class="block">
+          <span class="block text-sm text-gray-700 mb-1">Cantidad</span>
+          <input type="number" id="qty" value="1" min="1" class="border rounded p-2 w-24" />
+        </label>
+  
+        <button
+          id="add-to-cart-btn"
+          class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded shadow w-full md:w-auto disabled:opacity-60 disabled:cursor-not-allowed"
+          type="submit"
+        >
+          Añadir al carrito
+        </button>
+      </form>
+    </div>
+  </div>
+  
+  <!-- Variants data (include image info for switching) -->
+  <div id="variant-data" class="hidden">
+    {% for v in product.variants %}
+      <div
+        data-id="{{ v.id }}"
+        data-o1="{{ v.option1 }}"
+        data-o2="{{ v.option2 }}"
+        data-o3="{{ v.option3 }}"
+        data-price="{{ v.price }}"
+        data-available="{{ v.available }}"
+        data-sku="{{ v.sku }}"
+        data-img-small="{{ v.image.small }}"
+        data-img-medium="{{ v.image.medium }}"
+        data-img-large="{{ v.image.large }}"
+        data-img-alt="{{ v.image.alt | strip_html }}"
+        data-img-width="{{ v.image.width }}"
+        data-img-height="{{ v.image.height }}"
+      ></div>
+    {% endfor %}
+  </div>
+  
+  <script>
+  (function () {
+    const form = document.getElementById('add-to-cart-form');
+    const addBtn = document.getElementById('add-to-cart-btn');
+    const priceEl = document.getElementById('price');
+    const availEl = document.getElementById('availability');
+    const skuEl   = document.getElementById('sku');
+    const qtyEl   = document.getElementById('qty');
+    const mainImg = document.getElementById('main-image');
+  
+    const optionSelects = Array.from(document.querySelectorAll('.option-select'));
+    const variantNodes  = Array.from(document.querySelectorAll('#variant-data > div'));
+  
+    // Parse variants (include image data)
+    const variants = variantNodes.map(n => ({
+      id: Number(n.dataset.id),
+      option1: n.dataset.o1 || null,
+      option2: n.dataset.o2 || null,
+      option3: n.dataset.o3 || null,
+      price: Number(n.dataset.price),
+      available: String(n.dataset.available) === '1' || String(n.dataset.available).toLowerCase() === 'true',
+      sku: n.dataset.sku || '',
+      image: {
+        small: n.dataset.imgSmall,
+        medium: n.dataset.imgMedium,
+        large: n.dataset.imgLarge,
+        alt: n.dataset.imgAlt || '',
+        width: Number(n.dataset.imgWidth || 0),
+        height: Number(n.dataset.imgHeight || 0)
+      }
+    }));
+  
+    function formatMoney(cents) {
+      try { return new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(cents/100); }
+      catch { return '$' + (cents/100).toFixed(2); }
+    }
+  
+    function optionCount(){ return optionSelects.length; }
+  
+    function currentSelection() {
+      const vals = {};
+      optionSelects.forEach(sel => {
+        const pos = Number(sel.dataset.position);
+        vals['option' + pos] = (sel.value || '').trim();
+      });
+      return vals;
+    }
+  
+    function findVariantBySelection(sel) {
+      return variants.find(v =>
+        (optionCount() < 1 || v.option1 === (sel.option1 ?? v.option1)) &&
+        (optionCount() < 2 || v.option2 === (sel.option2 ?? v.option2)) &&
+        (optionCount() < 3 || v.option3 === (sel.option3 ?? v.option3))
+      );
+    }
+  
+    function firstAvailableVariant(){ return variants.find(v => v.available) || variants[0] || null; }
+  
+    function setSelectsToVariant(v) {
+      if (!v) return;
+      optionSelects.forEach(sel => {
+        const pos = Number(sel.dataset.position);
+        const val = v['option' + pos];
+        const opt = Array.from(sel.options).find(o => o.value === val);
+        if (opt) sel.value = val;
+      });
+    }
+  
+    function updateImage(img) {
+      if (!img) return;
+      // swap to medium/large as you prefer; we'll use large for main
+      if (mainImg) {
+        mainImg.src = img.large;
+        mainImg.alt = img.alt || '';
+        // preserve width/height attributes to reduce CLS
+        if (img.width && img.height) {
+          mainImg.setAttribute('width', String(img.width));
+          mainImg.setAttribute('height', String(img.height));
+        }
+      }
+    }
+  
+    function updateUIForVariant(v) {
+      if (!v) {
+        priceEl.textContent = '—';
+        availEl.textContent = 'No disponible';
+        skuEl.textContent = '';
+        addBtn.disabled = true;
+        return;
+      }
+      priceEl.textContent = formatMoney(v.price);
+      availEl.textContent = v.available ? 'Disponible' : 'Agotado';
+      skuEl.textContent = v.sku ? ('SKU: ' + v.sku) : '';
+      addBtn.disabled = !v.available;
+      addBtn.dataset.variantId = String(v.id);
+      updateImage(v.image);
+    }
+  
+    const initialVariant = firstAvailableVariant();
+    setSelectsToVariant(initialVariant);
+    updateUIForVariant(initialVariant);
+  
+    optionSelects.forEach(sel => {
+      sel.addEventListener('change', () => {
+        const selObj = currentSelection();
+        const v = findVariantBySelection(selObj);
+        updateUIForVariant(v || null);
+      });
+    });
+  
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const qty = Math.max(1, parseInt(qtyEl.value || '1', 10));
+      const variantId = Number(addBtn.dataset.variantId || 0);
+      if (!variantId) { alert('Selecciona una combinación válida.'); return; }
+  
+      const response = await fetch('/cart/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: variantId, quantity: qty })
+      });
+  
+      if (response.ok) {
+        alert('Producto añadido al carrito');
+        // window.location.href = '/cart';
+      } else {
+        alert('Hubo un problema al añadir el producto');
+      }
+    });
+  })();
+  </script>
+  
