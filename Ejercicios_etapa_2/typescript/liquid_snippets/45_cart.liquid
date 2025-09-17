@@ -17,21 +17,18 @@
         {% for item in cart.items %}
           <tr class="border-b align-top">
             <td class="py-2 pr-2">
-              {{ item.image
-                | image_url: width: 'small'
-                | image_tag: class: 'w-16 h-16 object-cover rounded', alt: item.title | strip_html }}
+              {% assign alt = item.title | strip_html %}
+              {{ item.image | image_url: width: 'small' | image_tag: class: 'w-16 h-16 object-cover rounded', alt: alt, width: item.image.width, height: item.image.height }}
             </td>
             <td class="py-2">
               <a href="/products/{{ item.handle }}" class="text-blue-600 hover:underline">
                 {{ item.title }}
               </a>
-              {% if item.properties and item.properties != empty %}
                 <ul class="mt-1 text-sm text-gray-600 space-y-0.5">
                   {% for property in item.properties %}
                     <li><span class="font-medium">{{ property.first }}:</span> {{ property.last }}</li>
                   {% endfor %}
                 </ul>
-              {% endif %}
             </td>
             <td class="py-2">
               <input

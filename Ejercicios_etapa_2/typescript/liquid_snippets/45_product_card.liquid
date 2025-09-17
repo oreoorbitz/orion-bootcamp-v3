@@ -1,9 +1,8 @@
 {%- assign p = producto -%}
 <article class="border rounded overflow-hidden bg-white">
   <a href="/products/{{ p.handle }}" class="block">
-    {{ p.image
-      | image_url: width: 'medium'
-      | image_tag: class: 'w-full aspect-square object-cover', alt: p.title | strip_html }}
+    {% assign alt = p.image.alt | strip_html %}
+    {{ p.image | image_url: width: 'medium' | image_tag: class: 'w-full aspect-square object-cover', alt: alt }}
   </a>
   <div class="p-3">
     <a href="/products/{{ p.handle }}" class="block text-sm font-semibold hover:underline">

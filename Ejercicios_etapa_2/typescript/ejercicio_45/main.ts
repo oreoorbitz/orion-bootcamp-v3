@@ -29,6 +29,7 @@
  * - Re-ejecuta **`planter.ts`** para crear/llenar tablas de imágenes:
  *   - `collection_images`, `product_images`, `variant_images`.
  * - No necesitas modificar el seed; ya incluye imágenes para TODAS las variantes (evitamos checks vacíos).
+ * 
  *
  * 1) **Contexto (`contextPlease.ts`)**
  *    Asegúrate de construir estos campos (ajusta tus queries SQL si hace falta):
@@ -104,7 +105,7 @@
  *       - Añadir dos variantes distintas → cada línea muestra su imagen (small).
  *    D) Filtros:
  *       - `image_url` sin parámetro → medium; con `width: 'large'` → large.
- *       - `image_tag` incluye siempre `width` y `height` y respeta `alt`/`class`.
+ *       - `image_tag` con supporte para todo los parametros en el snippet proporcionado.
  *       - `strip_html` elimina etiquetas de un `alt` con HTML.
  *
  * ✅ Resultado esperado

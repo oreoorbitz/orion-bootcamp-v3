@@ -100,3 +100,64 @@ export const variants = [
   { id: 20001, productId: 20, title: "Default Title", option1: null, option2: null, option3: null, price: 5500, sku: "BLAZER-T-DEFAULT", available: 1 },
   { id: 21001, productId: 21, title: "Default Title", option1: null, option2: null, option3: null, price: 4900, sku: "VESTIDO-LANA-U-DEFAULT", available: 1 },
 ];
+
+/** ---------- NEW: Images ---------- **/
+/** ---------- Images (minimal files; all sizes point to same URL) ---------- **/
+
+export const collectionImages = [
+  {
+    collectionId: 1,
+    small:  "/images/c-soft-shirts.jpg",
+    medium: "/images/c-soft-shirts.jpg",
+    large:  "/images/c-soft-shirts.jpg",
+    alt: "Colección Camisas suaves",
+    width: 1600,
+    height: 900
+  },
+  {
+    collectionId: 2,
+    small:  "/images/c-sale.jpg",
+    medium: "/images/c-sale.jpg",
+    large:  "/images/c-sale.jpg",
+    alt: "Colección Promociones",
+    width: 1600,
+    height: 900
+  }
+];
+
+// Featured product image (position=1).
+// Product 1 has its own unique image; all others reuse a single default.
+export const productImages = products.map(p => ({
+  productId: p.id,
+  position: 1,
+  small:  p.id === 1 ? "/images/p1.jpg" : "/images/p-default.jpg",
+  medium: p.id === 1 ? "/images/p1.jpg" : "/images/p-default.jpg",
+  large:  p.id === 1 ? "/images/p1.jpg" : "/images/p-default.jpg",
+  alt: p.title,
+  width: 1200,
+  height: 1200
+}));
+
+// Variant images:
+// - Product 1 (Color): Rojo → v-red.jpg, Azul → v-blue.jpg
+// - All other variants → v-default.jpg
+export const variantImages = variants.map(v => {
+  const prod = products.find(p => p.id === v.productId);
+  const title = (prod?.title || "Producto") + " - " + v.title;
+
+  let url = "/images/v-default.jpg";
+  if (v.productId === 1) {
+    if (v.option1 === "Rojo") url = "/images/v-red.jpg";
+    else if (v.option1 === "Azul") url = "/images/v-blue.jpg";
+  }
+
+  return {
+    variantId: v.id,
+    small:  url,
+    medium: url,
+    large:  url,
+    alt: title,
+    width: 1200,
+    height: 1200
+  };
+});

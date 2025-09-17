@@ -1,9 +1,8 @@
 <section class="p-0 bg-white rounded shadow overflow-hidden">
     <!-- Header banner with collection image -->
     <div class="w-full">
-      {{ collections["soft-shirts"].image
-        | image_url: width: 'large'
-        | image_tag: class: 'w-full h-48 md:h-64 object-cover', alt: collections["soft-shirts"].title | strip_html }}
+      {% assign alt = collections["soft-shirts"].title | strip_html %}
+      {{ collections["soft-shirts"].image | image_url: width: 'large' | image_tag: class: 'w-full h-48 md:h-64 object-cover', alt: alt, width: collections["soft-shirts"].image.width, height: collections["soft-shirts"].image.height }}
     </div>
   
     <div class="p-6">
