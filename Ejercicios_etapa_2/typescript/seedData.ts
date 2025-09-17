@@ -102,54 +102,50 @@ export const variants = [
 ];
 
 /** ---------- NEW: Images ---------- **/
-
-// One featured image per collection
 export const collectionImages = [
   {
     collectionId: 1,
-    small:  "/images/collections/soft-shirts-small.jpg",
-    medium: "/images/collections/soft-shirts-medium.jpg",
-    large:  "/images/collections/soft-shirts-large.jpg",
+    small:  "/images/c-soft-shirts-small.jpg",
+    medium: "/images/c-soft-shirts-medium.jpg",
+    large:  "/images/c-soft-shirts-large.jpg",
     alt: "Colección Camisas suaves",
     width: 1600,
     height: 900
   },
   {
     collectionId: 2,
-    small:  "/images/collections/sale-small.jpg",
-    medium: "/images/collections/sale-medium.jpg",
-    large:  "/images/collections/sale-large.jpg",
+    small:  "/images/c-sale-small.jpg",
+    medium: "/images/c-sale-medium.jpg",
+    large:  "/images/c-sale-large.jpg",
     alt: "Colección Promociones",
     width: 1600,
     height: 900
   }
 ];
 
-// At least one image per product (position = 1 as featured)
-export const productImages = [
-  // You can add more per product (position 2,3...), but at least one featured exists
-  ...products.map(p => ({
-    productId: p.id,
-    position: 1,
-    small:  `/images/products/${p.id}-1-small.jpg`,
-    medium: `/images/products/${p.id}-1-medium.jpg`,
-    large:  `/images/products/${p.id}-1-large.jpg`,
-    alt: p.title,
-    width: 1200,
-    height: 1200
-  }))
-];
+// Featured product image (position=1). Product 1 gets its own; others reuse a default.
+export const productImages = products.map(p => ({
+  productId: p.id,
+  position: 1,
+  small:  p.id === 1 ? "/images/p1-1-small.jpg"  : "/images/p-default-small.jpg",
+  medium: p.id === 1 ? "/images/p1-1-medium.jpg" : "/images/p-default-medium.jpg",
+  large:  p.id === 1 ? "/images/p1-1-large.jpg"  : "/images/p-default-large.jpg",
+  alt: p.title,
+  width: 1200,
+  height: 1200
+}));
 
-// Exactly one image per variant (required by the exercise, no empty checks)
-export const variantImages = [
-  // For simplicity, file names based on variant id
-  ...variants.map(v => ({
+// Variant images: only product 1's six variants (1001..1006) have unique files; others reuse v-default.
+export const variantImages = variants.map(v => {
+  const isProd1 = v.productId === 1; // variant ids 1001..1006
+  const base = isProd1 ? `/images/v-${v.id}` : "/images/v-default";
+  return {
     variantId: v.id,
-    small:  `/images/variants/${v.id}-small.jpg`,
-    medium: `/images/variants/${v.id}-medium.jpg`,
-    large:  `/images/variants/${v.id}-large.jpg`,
-    alt: `${products.find(p => p.id === v.productId)?.title || "Producto"} - ${v.title}`,
+    small:  `${base}-small.jpg`,
+    medium: `${base}-medium.jpg`,
+    large:  `${base}-large.jpg`,
+    alt: `${(products.find(p => p.id === v.productId)?.title) || "Producto"} - ${v.title}`,
     width: 1200,
     height: 1200
-  }))
-];
+  };
+});
