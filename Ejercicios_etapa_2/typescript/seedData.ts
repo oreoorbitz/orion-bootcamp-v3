@@ -102,49 +102,61 @@ export const variants = [
 ];
 
 /** ---------- NEW: Images ---------- **/
+/** ---------- Images (minimal files; all sizes point to same URL) ---------- **/
+
 export const collectionImages = [
   {
     collectionId: 1,
-    small:  "/images/c-soft-shirts-small.jpg",
-    medium: "/images/c-soft-shirts-medium.jpg",
-    large:  "/images/c-soft-shirts-large.jpg",
+    small:  "/images/c-soft-shirts.jpg",
+    medium: "/images/c-soft-shirts.jpg",
+    large:  "/images/c-soft-shirts.jpg",
     alt: "Colección Camisas suaves",
     width: 1600,
     height: 900
   },
   {
     collectionId: 2,
-    small:  "/images/c-sale-small.jpg",
-    medium: "/images/c-sale-medium.jpg",
-    large:  "/images/c-sale-large.jpg",
+    small:  "/images/c-sale.jpg",
+    medium: "/images/c-sale.jpg",
+    large:  "/images/c-sale.jpg",
     alt: "Colección Promociones",
     width: 1600,
     height: 900
   }
 ];
 
-// Featured product image (position=1). Product 1 gets its own; others reuse a default.
+// Featured product image (position=1).
+// Product 1 has its own unique image; all others reuse a single default.
 export const productImages = products.map(p => ({
   productId: p.id,
   position: 1,
-  small:  p.id === 1 ? "/images/p1-1-small.jpg"  : "/images/p-default-small.jpg",
-  medium: p.id === 1 ? "/images/p1-1-medium.jpg" : "/images/p-default-medium.jpg",
-  large:  p.id === 1 ? "/images/p1-1-large.jpg"  : "/images/p-default-large.jpg",
+  small:  p.id === 1 ? "/images/p1.jpg" : "/images/p-default.jpg",
+  medium: p.id === 1 ? "/images/p1.jpg" : "/images/p-default.jpg",
+  large:  p.id === 1 ? "/images/p1.jpg" : "/images/p-default.jpg",
   alt: p.title,
   width: 1200,
   height: 1200
 }));
 
-// Variant images: only product 1's six variants (1001..1006) have unique files; others reuse v-default.
+// Variant images:
+// - Product 1 (Color): Rojo → v-red.jpg, Azul → v-blue.jpg
+// - All other variants → v-default.jpg
 export const variantImages = variants.map(v => {
-  const isProd1 = v.productId === 1; // variant ids 1001..1006
-  const base = isProd1 ? `/images/v-${v.id}` : "/images/v-default";
+  const prod = products.find(p => p.id === v.productId);
+  const title = (prod?.title || "Producto") + " - " + v.title;
+
+  let url = "/images/v-default.jpg";
+  if (v.productId === 1) {
+    if (v.option1 === "Rojo") url = "/images/v-red.jpg";
+    else if (v.option1 === "Azul") url = "/images/v-blue.jpg";
+  }
+
   return {
     variantId: v.id,
-    small:  `${base}-small.jpg`,
-    medium: `${base}-medium.jpg`,
-    large:  `${base}-large.jpg`,
-    alt: `${(products.find(p => p.id === v.productId)?.title) || "Producto"} - ${v.title}`,
+    small:  url,
+    medium: url,
+    large:  url,
+    alt: title,
     width: 1200,
     height: 1200
   };

@@ -4,9 +4,8 @@
     <div>
       {%- assign initial_variant = product.variants[0] -%}
       <div id="image-wrap" class="border rounded overflow-hidden">
-        {{ initial_variant.image
-          | image_url: width: 'large'
-          | image_tag: id: 'main-image', class: 'w-full object-cover', alt: product.title | strip_html }}
+        {% assign alt = initial_variant.image.alt | strip_html %}
+        {{ initial_variant.image | image_url: width: 'large' | image_tag: id: 'main-image', class: 'w-full object-cover', alt: alt, width: initial_variant.image.width, height: initial_variant.image.height }}
       </div>
     </div>
   
