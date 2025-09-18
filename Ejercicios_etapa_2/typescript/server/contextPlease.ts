@@ -11,21 +11,70 @@ const rutaConfig = path.resolve(__dirname, "themes/dev/config");
 
 const db = new DatabaseSync("data.db");
 
-// 🆕 CONSULTAS ACTUALIZADAS PARA INCLUIR VARIANTES Y OPCIONES
+// 🆕 CONSULTAS ACTUALIZADAS PARA INCLUIR VARIANTES, OPCIONES E IMÁGENES
 const products = db.prepare('SELECT * FROM products ORDER BY id').all();
 const collectionss = db.prepare('SELECT * FROM collections ORDER BY id').all();
 const collectionsProducts = db.prepare('SELECT * FROM product_collections ORDER BY productId').all();
 
-// 🆕 NUEVAS CONSULTAS PARA VARIANTES Y OPCIONES
+// 🆕 CONSULTAS PARA VARIANTES Y OPCIONES
 const variants = db.prepare('SELECT * FROM variants ORDER BY productId, id').all();
 const productOptions = db.prepare('SELECT * FROM product_options ORDER BY productId, position').all();
 const productOptionValues = db.prepare('SELECT * FROM product_option_values ORDER BY productId, position').all();
+
+// 🖼️ NUEVAS CONSULTAS PARA IMÁGENES
+const collectionImages = db.prepare('SELECT * FROM collection_images ORDER BY collectionId').all();
+const productImages = db.prepare('SELECT * FROM product_images ORDER BY productId, position').all();
+const variantImages = db.prepare('SELECT * FROM variant_images ORDER BY variantId').all();
 
 type Producto = { id: number; title: string; handle: string; precio: number; [key: string]: any };
 type Coleccion = { id: number; title: string; handle: string; [key: string]: any };
 type Relacion = { productId: number; collectionId: number };
 
-// 🆕 NUEVOS TIPOS PARA VARIANTES Y OPCIONES
+// 🖼️ NUEVOS TIPOS PARA IMÁGENES
+interface ImageObject {
+  small: string;
+  medium: string;
+  large: string;
+  alt: string;
+  width: number;
+  height: number;
+}
+
+interface CollectionImage {
+  id: number;
+  collectionId: number;
+  small: string;
+  medium: string;
+  large: string;
+  alt: string;
+  width: number;
+  height: number;
+}
+
+interface ProductImage {
+  id: number;
+  productId: number;
+  position: number;
+  small: string;
+  medium: string;
+  large: string;
+  alt: string;
+  width: number;
+  height: number;
+}
+
+interface VariantImage {
+  id: number;
+  variantId: number;
+  small: string;
+  medium: string;
+  large: string;
+  alt: string;
+  width: number;
+  height: number;
+}
+
+// 🆕 TIPOS ACTUALIZADOS PARA VARIANTES CON IMÁGENES
 type Variante = {
   id: number;
   productId: number;
@@ -36,6 +85,7 @@ type Variante = {
   price: number;
   sku?: string;
   available: number; // 0 o 1 en SQLite
+  image?: ImageObject; // 🖼️ NUEVO: Imagen de la variante
 };
 
 type OpcionProducto = {
@@ -52,47 +102,116 @@ type ValorOpcion = {
   value: string;
 };
 
-// 🛒 TIPOS ACTUALIZADOS PARA EL CARRITO CON PROPERTIES Y ATTRIBUTES
+// 🛒 TIPOS ACTUALIZADOS PARA EL CARRITO CON PROPERTIES, ATTRIBUTES E IMÁGENES
 interface CartItem {
-    id: number; // ✨ Usar solo 'id' para consistencia
+    id: number; // ✨ Usar solo 'id' para consistencia (variant_id)
     title: string;
     handle: string;
     price: number;
     quantity: number;
-    properties?: { [k: string]: string }; // ✨ NUEVO: Properties por línea
+    properties?: { [k: string]: string }; // ✨ Properties por línea
+    image?: ImageObject; // 🖼️ NUEVO: Imagen de la variante en el carrito
 }
 
 interface Cart {
     items: CartItem[];
-    attributes?: { [k: string]: string }; // ✨ NUEVO: Attributes globales del carrito
+    attributes?: { [k: string]: string }; // ✨ Attributes globales del carrito
 }
 
 interface LiquidCart {
     token: string;
     items: CartItem[];
-    attributes?: { [k: string]: string }; // ✨ NUEVO: Attributes en respuesta Liquid
+    attributes?: { [k: string]: string }; // ✨ Attributes en respuesta Liquid
     item_count: number;
     total_price: number;
 }
 
-// 🆕 FUNCIÓN NUEVA: Agrupar variantes por producto
-function agruparVariantesPorProducto(variantes: Variante[]): Map<number, Variante[]> {
+// 🖼️ NUEVA FUNCIÓN: Agrupar imágenes de colecciones
+function agruparImagenesColecciones(imagenes: CollectionImage[]): Map<number, ImageObject> {
+  const mapa = new Map<number, ImageObject>();
+
+  for (const img of imagenes) {
+    const imageObject: ImageObject = {
+      small: img.small,
+      medium: img.medium,
+      large: img.large,
+      alt: img.alt,
+      width: img.width,
+      height: img.height
+    };
+    mapa.set(img.collectionId, imageObject);
+  }
+
+  return mapa;
+}
+
+// 🖼️ NUEVA FUNCIÓN: Agrupar imágenes de productos (imagen destacada = position 1)
+function agruparImagenesProductos(imagenes: ProductImage[]): Map<number, ImageObject> {
+  const mapa = new Map<number, ImageObject>();
+
+  for (const img of imagenes) {
+    // Solo tomar la imagen con position = 1 (imagen destacada)
+    if (img.position === 1) {
+      const imageObject: ImageObject = {
+        small: img.small,
+        medium: img.medium,
+        large: img.large,
+        alt: img.alt,
+        width: img.width,
+        height: img.height
+      };
+      mapa.set(img.productId, imageObject);
+    }
+  }
+
+  return mapa;
+}
+
+// 🖼️ NUEVA FUNCIÓN: Agrupar imágenes de variantes
+function agruparImagenesVariantes(imagenes: VariantImage[]): Map<number, ImageObject> {
+  const mapa = new Map<number, ImageObject>();
+
+  for (const img of imagenes) {
+    const imageObject: ImageObject = {
+      small: img.small,
+      medium: img.medium,
+      large: img.large,
+      alt: img.alt,
+      width: img.width,
+      height: img.height
+    };
+    mapa.set(img.variantId, imageObject);
+  }
+
+  return mapa;
+}
+
+// 🆕 FUNCIÓN ACTUALIZADA: Agrupar variantes por producto CON IMÁGENES
+function agruparVariantesPorProducto(
+  variantes: Variante[],
+  imagenesVariantes: Map<number, ImageObject>
+): Map<number, Variante[]> {
   const mapa = new Map<number, Variante[]>();
 
   for (const variante of variantes) {
     if (!mapa.has(variante.productId)) {
       mapa.set(variante.productId, []);
     }
+
+    // 🖼️ Agregar imagen de la variante si existe
+    const imagen = imagenesVariantes.get(variante.id);
+
     mapa.get(variante.productId)!.push({
       ...variante,
-      available: Boolean(variante.available) // Convertir 0/1 a boolean
+      available: Boolean(variante.available), // Convertir 0/1 a boolean
+      image: imagen // 🖼️ NUEVO: Incluir imagen de la variante
     });
   }
 
   return mapa;
 }
 
-// 🆕 FUNCIÓN NUEVA: Agrupar opciones por producto
+// 🆕 FUNCIÓN ACTUALIZADA: Agrupar opciones por producto (sin cambios)
 function agruparOpcionesPorProducto(opciones: OpcionProducto[], valores: ValorOpcion[]): Map<number, any[]> {
   const mapa = new Map<number, any[]>();
 
@@ -121,30 +240,53 @@ function agruparOpcionesPorProducto(opciones: OpcionProducto[], valores: ValorOp
   return mapa;
 }
 
-// 🔧 FUNCIÓN ACTUALIZADA: Enriquecer productos con variantes y opciones
+// 🔧 FUNCIÓN ACTUALIZADA: Enriquecer productos con variantes, opciones E IMÁGENES
 function enriquecerProductosConVariantes(
   productos: Producto[],
   variantesMap: Map<number, Variante[]>,
-  opcionesMap: Map<number, any[]>
+  opcionesMap: Map<number, any[]>,
+  imagenesProductos: Map<number, ImageObject>
 ): Producto[] {
   return productos.map(producto => {
     const variantes = variantesMap.get(producto.id) || [];
     const opciones = opcionesMap.get(producto.id) || [];
+    const imagen = imagenesProductos.get(producto.id); // 🖼️ NUEVO: Imagen del producto
 
     console.log(`🔍 Producto: ${producto.title} (ID: ${producto.id})`);
     console.log(`   📦 Variantes: ${variantes.length}`);
     console.log(`   ⚙️ Opciones: ${opciones.length}`);
+    console.log(`   🖼️ Imagen: ${imagen ? 'Sí' : 'No'}`);
 
     if (variantes.length > 0) {
-      console.log(`   📋 Variantes detalle:`, variantes.map(v => `${v.title} ($${v.price/100}) disponible:${v.available}`));
+      console.log(`   📋 Variantes detalle:`, variantes.map(v =>
+        `${v.title} ($${v.price/100}) disponible:${v.available} imagen:${v.image ? 'Sí' : 'No'}`
+      ));
     }
 
     return {
       ...producto,
       variants: variantes,
       options: opciones,
+      image: imagen, // 🖼️ NUEVO: Imagen destacada del producto
       // Para compatibilidad, mantener el precio del producto como el precio de la primera variante disponible
       price: variantes.find(v => v.available)?.price || producto.precio || 0
+    };
+  });
+}
+
+// 🔧 FUNCIÓN ACTUALIZADA: Enriquecer colecciones CON IMÁGENES
+function enriquecerColeccionesConImagenes(
+  colecciones: Coleccion[],
+  imagenesColecciones: Map<number, ImageObject>
+): Coleccion[] {
+  return colecciones.map(coleccion => {
+    const imagen = imagenesColecciones.get(coleccion.id);
+
+    console.log(`🏷️ Colección: ${coleccion.title} (ID: ${coleccion.id}) imagen: ${imagen ? 'Sí' : 'No'}`);
+
+    return {
+      ...coleccion,
+      image: imagen // 🖼️ NUEVO: Imagen de la colección
     };
   });
 }
@@ -172,7 +314,7 @@ async function agruparProductos(
   return resultado;
 }
 
-// 🔧 FUNCIÓN CORREGIDA: crearDrop con mejor manejo del Proxy
+// 🔧 FUNCIÓN CORREGIDA: crearDrop con mejor manejo del Proxy (sin cambios)
 function crearDrop<T extends { handle: string }>(items: T[]): any {
   const mapa = new Map<string, T>();
   for (const item of items) {
@@ -238,23 +380,36 @@ function crearDrop<T extends { handle: string }>(items: T[]): any {
   });
 }
 
-// ✨ FUNCIÓN ACTUALIZADA: buildLiquidCart ahora incluye properties y attributes
-function buildLiquidCart(token: string, cart: Cart): LiquidCart {
+// ✨ FUNCIÓN ACTUALIZADA: buildLiquidCart ahora incluye properties, attributes E IMÁGENES
+function buildLiquidCart(
+  token: string,
+  cart: Cart,
+  imagenesVariantes: Map<number, ImageObject>
+): LiquidCart {
     const item_count = cart.items.reduce((total, item) => total + item.quantity, 0);
     const total_price = cart.items.reduce((total, item) => total + (item.price * item.quantity), 0);
 
+    // 🖼️ NUEVO: Enriquecer items del carrito con imágenes de variantes
+    const itemsConImagenes = cart.items.map(item => {
+      const imagen = imagenesVariantes.get(item.id); // item.id es el variant_id
+      return {
+        ...item,
+        image: imagen // 🖼️ Agregar imagen de la variante al line item
+      };
+    });
+
     return {
         token,
-        items: cart.items, // Ya incluyen properties si las tienen
-        attributes: cart.attributes || {}, // ✨ NUEVO: Incluir attributes del carrito
+        items: itemsConImagenes, // 🖼️ Items ahora incluyen imágenes
+        attributes: cart.attributes || {},
         item_count,
         total_price
     };
 }
 
-// 🔧 FUNCIÓN PRINCIPAL ACTUALIZADA: crearContexto con variantes y opciones
+// 🔧 FUNCIÓN PRINCIPAL ACTUALIZADA: crearContexto con variantes, opciones E IMÁGENES
 export async function crearContexto(cartToken?: string, cartsStorage?: Map<string, Cart>) {
-  console.log("🚀 Iniciando creación de contexto con variantes...");
+  console.log("🚀 Iniciando creación de contexto con variantes e imágenes...");
 
   const data = JSON.parse(fs.readFileSync(path.join(rutaConfig, "settings_data.json"), "utf-8"));
   const current = data.current;
@@ -269,24 +424,40 @@ export async function crearContexto(cartToken?: string, cartsStorage?: Map<strin
     }
   }
 
-  // 🆕 PROCESAR VARIANTES Y OPCIONES
+  // 🖼️ PROCESAR IMÁGENES PRIMERO
+  console.log("🖼️ Procesando imágenes...");
+  const imagenesColeccionesMap = agruparImagenesColecciones(collectionImages as CollectionImage[]);
+  const imagenesProductosMap = agruparImagenesProductos(productImages as ProductImage[]);
+  const imagenesVariantesMap = agruparImagenesVariantes(variantImages as VariantImage[]);
+  console.log(`✅ Imágenes procesadas: ${imagenesColeccionesMap.size} colecciones, ${imagenesProductosMap.size} productos, ${imagenesVariantesMap.size} variantes`);
+
+  // 🆕 PROCESAR VARIANTES Y OPCIONES CON IMÁGENES
   console.log("📦 Procesando variantes...");
-  const variantesMap = agruparVariantesPorProducto(variants as Variante[]);
+  const variantesMap = agruparVariantesPorProducto(variants as Variante[], imagenesVariantesMap);
   console.log(`✅ Variantes agrupadas para ${variantesMap.size} productos`);
 
   console.log("⚙️ Procesando opciones...");
   const opcionesMap = agruparOpcionesPorProducto(productOptions as OpcionProducto[], productOptionValues as ValorOpcion[]);
   console.log(`✅ Opciones agrupadas para ${opcionesMap.size} productos`);
 
-  // 🔧 ENRIQUECER PRODUCTOS CON VARIANTES Y OPCIONES
-  const productosEnriquecidos = enriquecerProductosConVariantes(products as Producto[], variantesMap, opcionesMap);
-  console.log(`✅ ${productosEnriquecidos.length} productos enriquecidos con variantes`);
+  // 🔧 ENRIQUECER COLECCIONES CON IMÁGENES
+  const coleccionesEnriquecidas = enriquecerColeccionesConImagenes(collectionss as Coleccion[], imagenesColeccionesMap);
+  console.log(`✅ ${coleccionesEnriquecidas.length} colecciones enriquecidas con imágenes`);
 
-  const coleccionesConProductos = await agruparProductos(productosEnriquecidos, collectionss, collectionsProducts);
+  // 🔧 ENRIQUECER PRODUCTOS CON VARIANTES, OPCIONES E IMÁGENES
+  const productosEnriquecidos = enriquecerProductosConVariantes(
+    products as Producto[],
+    variantesMap,
+    opcionesMap,
+    imagenesProductosMap
+  );
+  console.log(`✅ ${productosEnriquecidos.length} productos enriquecidos con variantes e imágenes`);
+
+  const coleccionesConProductos = await agruparProductos(productosEnriquecidos, coleccionesEnriquecidas, collectionsProducts);
   const collecciones = crearDrop(coleccionesConProductos);
   const todosProductos = crearDrop(productosEnriquecidos);
 
-  // ✨ CONSTRUIR EL OBJETO CART PARA LIQUID CON PROPERTIES Y ATTRIBUTES
+  // ✨ CONSTRUIR EL OBJETO CART PARA LIQUID CON PROPERTIES, ATTRIBUTES E IMÁGENES
   let cart: LiquidCart = {
     token: cartToken || '',
     items: [],
@@ -301,14 +472,19 @@ export async function crearContexto(cartToken?: string, cartsStorage?: Map<strin
       cartsStorage.set(cartToken, { items: [], attributes: {} }); // ✨ Incluir attributes por defecto
     }
     const cartFromStorage = cartsStorage.get(cartToken)!;
-    cart = buildLiquidCart(cartToken, cartFromStorage);
+    cart = buildLiquidCart(cartToken, cartFromStorage, imagenesVariantesMap); // 🖼️ Pasar imágenes de variantes
 
     console.log(`🛒 Carrito cargado en contexto: ${cart.item_count} items, total: $${cart.total_price}`);
 
-    // 🏷️ Log adicional para properties y attributes si existen
+    // 🏷️ Log adicional para properties, attributes e imágenes
     const itemsWithProperties = cart.items.filter(item => item.properties && Object.keys(item.properties).length > 0);
     if (itemsWithProperties.length > 0) {
       console.log(`🏷️ Items con properties: ${itemsWithProperties.length}`);
+    }
+
+    const itemsWithImages = cart.items.filter(item => item.image);
+    if (itemsWithImages.length > 0) {
+      console.log(`🖼️ Items con imágenes: ${itemsWithImages.length}`);
     }
 
     if (cart.attributes && Object.keys(cart.attributes).length > 0) {
@@ -317,9 +493,9 @@ export async function crearContexto(cartToken?: string, cartsStorage?: Map<strin
   }
 
   const contexto = {
-    collections: collecciones,
-    all_products: todosProductos,
-    cart: cart, // 🛒 CARRITO AHORA INCLUYE PROPERTIES Y ATTRIBUTES
+    collections: collecciones, // 🖼️ Ahora incluyen imágenes
+    all_products: todosProductos, // 🖼️ Ahora incluyen imágenes y variantes con imágenes
+    cart: cart, // 🛒 CARRITO AHORA INCLUYE PROPERTIES, ATTRIBUTES E IMÁGENES
     Mockify: {
       locale: "es"
     },
@@ -330,7 +506,7 @@ export async function crearContexto(cartToken?: string, cartsStorage?: Map<strin
     settings,
   };
 
-  console.log("✅ Contexto creado exitosamente");
+  console.log("✅ Contexto creado exitosamente con imágenes");
   return contexto;
 }
 

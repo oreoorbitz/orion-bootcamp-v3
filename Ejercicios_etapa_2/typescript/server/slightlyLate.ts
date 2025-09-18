@@ -6,7 +6,17 @@ import { crearContexto } from "./contextPlease.ts";
 // 🛒 IMPORTAR la función del controlador
 import { generarHTMLDeCarrito } from "./controller.ts";
 
-// 🛒 SISTEMA DE CARRITO EN MEMORIA - ACTUALIZADO CON PROPERTIES Y ATTRIBUTES
+// 🖼️ TIPOS DE IMAGEN (deben coincidir con contextPlease.ts)
+interface ImageObject {
+  small: string;
+  medium: string;
+  large: string;
+  alt: string;
+  width: number;
+  height: number;
+}
+
+// 🛒 SISTEMA DE CARRITO EN MEMORIA - ACTUALIZADO CON PROPERTIES, ATTRIBUTES E IMÁGENES
 interface CartItem {
     id: number;           // id de la variante (clave de la línea)
     product_id: number;   // id del producto padre
@@ -16,6 +26,7 @@ interface CartItem {
     price: number;        // de la variante (centavos)
     quantity: number;
     properties?: { [k: string]: string }; // conservamos para compatibilidad
+    image?: ImageObject;  // 🖼️ NUEVO: Imagen de la variante
 }
 
 interface Cart {
@@ -31,7 +42,7 @@ function generateCartToken(): string {
     return 'cart_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 }
 
-// ✨ NUEVA FUNCIÓN: Buscar variante + su producto
+// ✨ FUNCIÓN ACTUALIZADA: Buscar variante + su producto CON IMAGEN
 async function getVariant(variantId: number): Promise<{variant: any, product: any} | null> {
     try {
         const context = await crearContexto();
@@ -45,10 +56,10 @@ async function getVariant(variantId: number): Promise<{variant: any, product: an
         // Buscar en todos los productos
         for (const product of context.all_products.values()) {
             if (product.variants && Array.isArray(product.variants)) {
-              console.log(`TEST00RProducto: ${product.title}, Variantes:`, product.variants.map(v => `ID:${v.id} - ${v.title} (available:${v.available})`));
+              console.log(`TEST00RProducto: ${product.title}, Variantes:`, product.variants.map(v => `ID:${v.id} - ${v.title} (available:${v.available}) imagen:${v.image ? 'Sí' : 'No'}`));
                 const variant = product.variants.find((v: any) => Number(v.id) === Number(variantId));
                 if (variant) {
-                    console.log(`✅ Variante encontrada: ${variant.title} del producto ${product.title}`);
+                    console.log(`✅ Variante encontrada: ${variant.title} del producto ${product.title} ${variant.image ? 'con imagen' : 'sin imagen'}`);
                     return { variant, product };
                 }
             }
@@ -144,11 +155,11 @@ function clearCart(token: string) {
     return cart;
 }
 
-// ACTUALIZADA: cartToJson con datos de variante
+// 🖼️ ACTUALIZADA: cartToJson con datos de variante E IMÁGENES
 function cartToJson(token: string, cart: Cart) {
     const { item_count, total_price } = recalculate(cart);
 
-    // Asegurar que cada item tenga el formato correcto
+    // Asegurar que cada item tenga el formato correcto CON IMAGEN
     const itemsFormatted = cart.items.map(item => ({
         id: item.id,              // id de la variante
         product_id: item.product_id,
@@ -157,7 +168,8 @@ function cartToJson(token: string, cart: Cart) {
         sku: item.sku,           // SKU de la variante
         price: item.price,       // precio de la variante
         quantity: item.quantity,
-        properties: item.properties || {}
+        properties: item.properties || {},
+        image: item.image        // 🖼️ NUEVO: Incluir imagen de la variante
     }));
 
     return {
@@ -169,7 +181,7 @@ function cartToJson(token: string, cart: Cart) {
     };
 }
 
-// ACTUALIZADA: Función para agregar item al carrito con variantes
+// 🖼️ ACTUALIZADA: Función para agregar item al carrito con variantes E IMÁGENES
 async function addItemToCart(
     token: string,
     variantId: number,
@@ -191,7 +203,7 @@ async function addItemToCart(
         throw new Error(`La variante ${variant.title} no está disponible`);
     }
 
-    console.log(`Variante válida: ${variant.title} - ${product.title}`);
+    console.log(`Variante válida: ${variant.title} - ${product.title} ${variant.image ? 'con imagen' : 'sin imagen'}`);
 
     // Verificar si la variante ya existe en el carrito
     const existingItem = cart.items.find(item => item.id === variantId);
@@ -210,7 +222,7 @@ async function addItemToCart(
         // Crear título combinado: "Producto - Variante"
         const combinedTitle = `${product.title} - ${variant.title}`;
 
-        // Crear nuevo item con datos de la variante
+        // 🖼️ NUEVO: Crear nuevo item con datos de la variante E IMAGEN
         const newItem: CartItem = {
             id: Number(variant.id),           // id de la variante
             product_id: Number(product.id),   // id del producto padre
@@ -219,13 +231,17 @@ async function addItemToCart(
             sku: variant.sku,                 // SKU de la variante
             price: variant.price,             // precio de la variante
             quantity: quantity,
-            properties: properties || {}
+            properties: properties || {},
+            image: variant.image              // 🖼️ NUEVO: Imagen de la variante
         };
 
         cart.items.push(newItem);
-        console.log(`Variante agregada al carrito: ${combinedTitle}`);
+        console.log(`Variante agregada al carrito: ${combinedTitle} ${variant.image ? 'con imagen' : 'sin imagen'}`);
         if (properties) {
             console.log(`Con properties:`, properties);
+        }
+        if (variant.image) {
+            console.log(`🖼️ Imagen incluida:`, variant.image.medium);
         }
     }
 
@@ -269,11 +285,19 @@ function createCookieHeader(name: string, value: string, options: any = {}): str
 // 📋 Lista de endpoints .js soportados
 const JS_ENDPOINTS = ['/cart.js'];
 
-// 🛒 Función para manejar el endpoint /cart.js - ACTUALIZADA
+// 🖼️ ACTUALIZADA: Función para manejar el endpoint /cart.js - CON IMÁGENES
 async function manejarCartJs(cartToken: string): Promise<Response> {
     try {
         const cart = getCart(cartToken);
         const responseData = cartToJson(cartToken, cart);
+
+        console.log(`🛒 /cart.js response: ${responseData.items.length} items`);
+
+        // Log de imágenes para debugging
+        const itemsWithImages = responseData.items.filter(item => item.image);
+        if (itemsWithImages.length > 0) {
+            console.log(`🖼️ Items con imágenes en /cart.js: ${itemsWithImages.length}`);
+        }
 
         return new Response(JSON.stringify(responseData), {
             status: 200,
@@ -291,7 +315,7 @@ async function manejarCartJs(cartToken: string): Promise<Response> {
     }
 }
 
-// ACTUALIZADA: Manejar POST /cart/add con variantes
+// 🖼️ ACTUALIZADA: Manejar POST /cart/add con variantes E IMÁGENES
 async function manejarCartAdd(req: Request, cartToken: string): Promise<Response> {
     try {
         const requestBody = await req.json();
@@ -341,6 +365,12 @@ async function manejarCartAdd(req: Request, cartToken: string): Promise<Response
         const responseData = cartToJson(cartToken, updatedCart);
 
         console.log(`Variante ${variantId} agregada al carrito. Items en carrito: ${updatedCart.items.length}`);
+
+        // Log de imagen para debugging
+        const addedItem = responseData.items.find(item => item.id === parseInt(variantId));
+        if (addedItem?.image) {
+            console.log(`🖼️ Item agregado incluye imagen: ${addedItem.image.medium}`);
+        }
 
         return new Response(
             JSON.stringify(responseData),
@@ -587,7 +617,7 @@ async function manejarPeticionThemeUpdate(req: Request, callback: (changedTempla
     }
 }
 
-// 📄 FUNCIÓN PRINCIPAL: iniciar servidor - ACTUALIZADA CON NUEVOS ENDPOINTS
+// 📄 FUNCIÓN PRINCIPAL: iniciar servidor - ACTUALIZADA CON NUEVOS ENDPOINTS E IMÁGENES
 export function iniciarServidor(puerto: number = 3000, callback: (changedTemplate?: string) => Promise<Response>) {
     console.log(`✅ Servidor iniciado en http://localhost:${puerto}/`);
 
@@ -610,7 +640,7 @@ export function iniciarServidor(puerto: number = 3000, callback: (changedTemplat
             return await manejarPeticionThemeUpdate(req, callback);
         }
 
-        // 🛒 POST /cart/add - ACTUALIZADA
+        // 🛒 POST /cart/add - ACTUALIZADA CON IMÁGENES
         if (req.method === "POST" && url.pathname === "/cart/add") {
             const response = await manejarCartAdd(req, cartToken);
 
