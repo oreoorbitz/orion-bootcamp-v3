@@ -29,20 +29,18 @@ let filtrosRegistrados: Record<string, Function> = {
   reverse: (x: string) => x.split('').reverse().join(''),
   asset_url: (x: string, contexto?: Record<string, any>) => {
     const templateType = contexto?.template_type || 'root';
-    if (templateType === 'product' || templateType === 'collection') {
-      return `../assets/${x}`;
-    } else {
-      return `./assets/${x}`;
-    }
+    return (templateType === 'product' || templateType === 'collection')
+      ? `../assets/${x}`
+      : `./assets/${x}`;
   },
   stylesheet_tag: (x: string) => `<link rel="stylesheet" href="${x}"></link>`,
-  money: (x: number) => (x/100).toFixed(2),
+  money: (x: number) => (x / 100).toFixed(2),
   t: (clave: string, contexto: Record<string, any>) => {
     const locale = contexto.Mockify?.locale ?? "en";
     const traducciones = cargarTraducciones(locale);
     const partes = clave.split(".");
     let actual = traducciones;
-    console.log("🌍 Locale recibido en filtro t:", contexto?.Mockify?.locale);
+    console.log("🌍 [t] Locale recibido:", contexto?.Mockify?.locale);
     for (const parte of partes) {
       actual = actual?.[parte];
       if (actual === undefined) break;
@@ -50,6 +48,50 @@ let filtrosRegistrados: Record<string, Function> = {
     return actual ?? clave;
   },
   times: (x: number, y: number) => x * y,
+
+  // 🧼 Elimina etiquetas HTML simples
+  strip_html: (input: string) => {
+    console.log("🧼 [strip_html] Entrada:", input);
+    if (typeof input !== 'string') return '';
+    const limpio = input.replace(/<[^>]*>/g, '').trim();
+    console.log("🧼 [strip_html] Salida:", limpio);
+    return limpio;
+  },
+
+  // 🖼️ Extrae la URL de una imagen según el tamaño
+  image_url: (image: Record<string, any>, args?: { width?: 'small' | 'medium' | 'large' }) => {
+    const size = args?.width || 'medium';
+    const url = image?.[size] || '';
+    console.log("🖼️ [image_url] Imagen recibida:", image);
+    console.log("🖼️ [image_url] Tamaño solicitado:", size);
+    console.log("🖼️ [image_url] URL devuelta:", url);
+    if (image && typeof image === 'object') {
+      image.__last_image_meta = {
+        alt: image.alt,
+        width: image.width,
+        height: image.height
+      };
+      console.log("🖼️ [image_url] Metadatos guardados:", image.__last_image_meta);
+    }
+    return url;
+  },
+
+  // 🖼️ Genera una etiqueta <img> con atributos intrínsecos
+  image_tag: (url: string, args?: Record<string, any>) => {
+    const meta = args?.__last_image_meta || {};
+    console.log("🖼️ [image_tag] URL recibida:", url);
+    console.log("🖼️ [image_tag] Args recibidos:", args);
+    console.log("🖼️ [image_tag] Metadatos:", meta);
+    const alt = args?.alt || (meta.alt ? filtrosRegistrados.strip_html(meta.alt) : '');
+    const width = meta.width ? `width="${meta.width}"` : '';
+    const height = meta.height ? `height="${meta.height}"` : '';
+    const attrs = Object.entries(args || {})
+      .filter(([k]) => !['alt', '__last_image_meta'].includes(k))
+      .map(([k, v]) => `${k}="${v}"`)
+      .join(' ');
+    console.log("🖼️ [image_tag] Alt final:", alt);
+    return `<img src="${url}" alt="${alt}" ${width} ${height} ${attrs} loading="lazy" decoding="async">`;
+  }
 };
 
 function preservarScripts(html: string): { html: string, scripts: string[] } {
@@ -495,8 +537,8 @@ function procesarVariableConFiltros(token: TokenPlantilla, contexto: Record<stri
     let nombreVariable = partes.shift() ?? '';
     let filtros = partes;
 
-    //console.log(`🔍 Procesando variable '${nombreVariable}' con filtros:`, filtros);
-    //console.log(`🔍 Contexto disponible:`, Object.keys(contexto));
+    console.log(`🔍 [procesarVariableConFiltros] Procesando variable: '${nombreVariable}'`);
+    console.log(`🔍 [procesarVariableConFiltros] Filtros encadenados:`, filtros);
 
     let valorFinal: any;
 
@@ -504,8 +546,10 @@ function procesarVariableConFiltros(token: TokenPlantilla, contexto: Record<stri
     if ((nombreVariable.startsWith("'") && nombreVariable.endsWith("'")) ||
         (nombreVariable.startsWith('"') && nombreVariable.endsWith('"'))) {
       valorFinal = nombreVariable.slice(1, -1);
+      console.log(`🔤 [Literal] Valor inicial:`, valorFinal);
     } else {
       valorFinal = resolverVariable(nombreVariable, contexto);
+      console.log(`🔗 [Variable] Valor resuelto:`, valorFinal);
     }
 
     // Aplicar filtros secuencialmente
@@ -516,19 +560,23 @@ function procesarVariableConFiltros(token: TokenPlantilla, contexto: Record<stri
         throw new Error(`Error: El filtro '${nombreFiltro}' no está definido.`);
       }
 
-      //console.log(`🔧 Aplicando filtro '${nombreFiltro}' a:`, valorFinal, argumentoRaw ? `con argumento '${argumentoRaw}'` : '');
+      console.log(`🔧 [Filtro] Aplicando '${nombreFiltro}'`);
+      console.log(`🔧 [Filtro] Valor antes:`, valorFinal);
 
       if (argumentoRaw !== undefined) {
         let argumento = resolverVariable(argumentoRaw, contexto);
+        console.log(`🔧 [Filtro] Argumento resuelto:`, argumento);
         valorFinal = filtrosRegistrados[nombreFiltro](valorFinal, argumento);
       } else if (nombreFiltro === 'asset_url' || nombreFiltro === 't' || nombreFiltro === 'translate') {
         valorFinal = filtrosRegistrados[nombreFiltro](valorFinal, contexto);
       } else {
         valorFinal = filtrosRegistrados[nombreFiltro](valorFinal);
       }
+
+      console.log(`✅ [Filtro] Valor después:`, valorFinal);
     }
 
-    //console.log(`✅ Resultado final para '${token.contenido}':`, valorFinal);
+    console.log(`🎯 [Resultado final] Para '${token.contenido}':`, valorFinal);
     return { tipo: "texto", contenido: String(valorFinal) };
   }
 
@@ -537,94 +585,78 @@ function procesarVariableConFiltros(token: TokenPlantilla, contexto: Record<stri
 
 // 🔧 FUNCIÓN MEJORADA: resolverVariable con mejor logging
 function resolverVariable(nombreVariable: string, contexto: Record<string, any>): any {
-  //console.log(`🔍 Resolviendo variable '${nombreVariable}'`);
-  //console.log(`🔍 Contexto disponible:`, Object.keys(contexto));
+  console.log(`🔍 [resolverVariable] Resolviendo: '${nombreVariable}'`);
+  console.log(`🔍 [resolverVariable] Claves en contexto:`, Object.keys(contexto));
 
-  // Verificar si la variable existe directamente
+  // Acceso directo
   if (Object.prototype.hasOwnProperty.call(contexto, nombreVariable)) {
     const valor = contexto[nombreVariable];
-    //console.log(`✅ Variable '${nombreVariable}' encontrada directamente: ${valor} (tipo: ${typeof valor})`);
+    console.log(`✅ [resolverVariable] Acceso directo: '${nombreVariable}' →`, valor, `(tipo: ${typeof valor})`);
     return valor;
   }
 
-  // Manejar acceso con corchetes como collections["soft-shirts"]
+  // Acceso con corchetes → convertir a puntos
   let segmentos = nombreVariable
     .replace(/\[(["'])(.*?)\1\]/g, '.$2') // convierte ['x'] o ["x"] a .x
     .split('.');
 
-  //console.log(`🔍 Segmentos de '${nombreVariable}':`, segmentos);
+  console.log(`🔍 [resolverVariable] Segmentos:`, segmentos);
 
   let valorFinal = segmentos.reduce((obj, key, index) => {
-    //console.log(`🔍 Paso ${index + 1}: Accediendo a '${key}' en:`, typeof obj);
-    //console.log(`🔍 Valor actual del objeto:`, obj);
+    console.log(`🔍 [Paso ${index + 1}] Accediendo a '${key}' en tipo:`, typeof obj);
+    console.log(`🔍 [Paso ${index + 1}] Objeto actual:`, obj);
 
     if (obj === null || obj === undefined) {
-      console.log(`⚠️ Objeto es null/undefined para clave '${key}'`);
+      console.warn(`⚠️ [Paso ${index + 1}] Objeto es null/undefined para clave '${key}'`);
       return undefined;
     }
 
-    // 🔧 CORRECCIÓN ESPECÍFICA PARA DROPS
+    // Drops o Map
     if (obj?.isDrop || (obj instanceof Map)) {
-      console.log(`🔍 Objeto es Drop/Map, intentando acceso a '${key}'`);
+      console.log(`🔍 [Paso ${index + 1}] Objeto es Drop/Map`);
 
-      // Intentar acceso vía get() si es Map
       if (obj instanceof Map && obj.has(key)) {
         const resultado = obj.get(key);
-        console.log(`✅ Map.get('${key}'):`, resultado);
+        console.log(`✅ [Map.get] '${key}' →`, resultado);
         return resultado;
       }
 
-      // Intentar acceso directo (para Proxy)
       const resultado = obj[key];
-      console.log(`🔍 Acceso directo Drop['${key}']:`, resultado);
+      console.log(`🔍 [Drop acceso directo] '${key}' →`, resultado);
 
-      if (resultado !== undefined) {
-        return resultado;
-      }
+      if (resultado !== undefined) return resultado;
 
-      // 🔧 ÚLTIMO RECURSO: Si el drop no tiene la clave, retornar undefined
-      console.log(`⚠️ Drop no tiene la clave '${key}'`);
+      console.warn(`⚠️ [Drop] Clave '${key}' no encontrada`);
       return undefined;
     }
 
-    // Para objetos normales
+    // Objeto normal
     if (typeof obj === 'object' && obj !== null) {
       if (Object.prototype.hasOwnProperty.call(obj, key)) {
         const resultado = obj[key];
-        console.log(`✅ Acceso Object['${key}']:`, resultado, `(tipo: ${typeof resultado})`);
+        console.log(`✅ [Object.hasOwnProperty] '${key}' →`, resultado);
         return resultado;
       }
 
-      // Acceso directo como fallback
       const resultado = obj[key];
       if (resultado !== undefined) {
-        console.log(`✅ Acceso directo fallback ['${key}']:`, resultado);
+        console.log(`✅ [Fallback acceso directo] '${key}' →`, resultado);
         return resultado;
       }
 
-      console.log(`⚠️ Propiedad '${key}' no encontrada. Disponibles:`, Object.keys(obj));
+      console.warn(`⚠️ [Objeto] Clave '${key}' no encontrada. Disponibles:`, Object.keys(obj));
       return undefined;
     }
 
-    console.log(`⚠️ No se puede acceder a '${key}' en tipo:`, typeof obj);
+    console.warn(`⚠️ [Tipo no soportado] No se puede acceder a '${key}' en tipo:`, typeof obj);
     return undefined;
   }, contexto);
 
-  // 🔧 DEBUG TEMPORAL: Verificar resolución de variables anidadas en bucles
-  // 🧹 Puedes borrar este bloque cuando confirmes que property.first y property.last se resuelven bien
-  if (typeof valorFinal === 'object' && valorFinal !== null) {
-    if ('first' in valorFinal || 'last' in valorFinal) {
-      //console.log("🔍 Resolviendo variable anidada:");
-      //console.log("   → first:", valorFinal.first);
-      //console.log("   → last:", valorFinal.last);
-    }
-  }
-
   if (valorFinal === undefined || valorFinal === null) {
-    console.warn(`⚠️ Variable '${nombreVariable}' no encontrada, retornando string vacío`);
+    console.warn(`⚠️ [resolverVariable] '${nombreVariable}' no encontrada, retornando string vacío`);
     valorFinal = "";
   } else {
-    console.log(`✅ Variable '${nombreVariable}' resuelta como:`, valorFinal, `(tipo: ${typeof valorFinal})`);
+    console.log(`✅ [resolverVariable] Resultado final:`, valorFinal, `(tipo: ${typeof valorFinal})`);
   }
 
   return valorFinal;
@@ -958,7 +990,7 @@ function renderizarVariables(
 
 export async function liquidEngine(entradaInicial: string, contexto: Record<string, any>): Promise<string> {
   //Contenido recibido
-    console.log("Entrada inicial en liquidEngine:\n", entradaInicial);
+    //console.log("Entrada inicial en liquidEngine:\n", entradaInicial);
     console.log("contexto pasado:", contexto);
 
   // Paso 1️⃣ Tokenizar y clasificar
@@ -992,7 +1024,7 @@ export async function liquidEngine(entradaInicial: string, contexto: Record<stri
 
     // 3️⃣ Renderizar variables (¡aquí se sustituyen los {{ product.id }}!)
     const entradaRenderizadaParcial = renderizarVariables(entradaProcesada, contexto, filtrosRegistrados);
-    //console.log("Entrada Renderizada Parcial:", entradaRenderizadaParcial)
+    console.log("Entrada Renderizada Parcial:", entradaRenderizadaParcial)
 
     // 4️⃣ Preservar bloques <script> para proteger el =>
     const { html: entradaSinScripts, scripts } = preservarScripts(entradaRenderizadaParcial);

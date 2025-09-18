@@ -6,6 +6,19 @@ import { crearContexto } from "./contextPlease.ts";
 // 🛒 IMPORTAR la función del controlador
 import { generarHTMLDeCarrito } from "./controller.ts";
 
+function getContentType(filePath: string): string {
+    if (filePath.endsWith(".png")) return "image/png";
+    if (filePath.endsWith(".jpg") || filePath.endsWith(".jpeg")) return "image/jpeg";
+    if (filePath.endsWith(".gif")) return "image/gif";
+    if (filePath.endsWith(".webp")) return "image/webp";
+    if (filePath.endsWith(".svg")) return "image/svg+xml";
+    if (filePath.endsWith(".css")) return "text/css";
+    if (filePath.endsWith(".js")) return "application/javascript";
+    if (filePath.endsWith(".json")) return "application/json";
+    return "text/html"; // fallback
+}
+
+
 // 🖼️ TIPOS DE IMAGEN (deben coincidir con contextPlease.ts)
 interface ImageObject {
   small: string;
@@ -454,7 +467,20 @@ async function manejarRutas(url: URL, shouldSetCookie: boolean, cartToken: strin
     } else if (url.pathname.startsWith("/assets/")) {
        const assetName = url.pathname.replace("/assets/", "");
        filePath = `server/themes/dev/dist/assets/${assetName}`;
-    } else {
+    } else if (url.pathname.startsWith("/images/")) {
+   const imageName = url.pathname.replace("/images/", "");
+   filePath = `/home/bambiux/code/Bambi-uxx/orion-bootcamp-v3/Ejercicios_etapa_2/typescript/server/images/${imageName}`;
+
+   try {
+       const data = await Deno.readFile(filePath);
+       const headers: HeadersInit = { "Content-Type": getContentType(filePath) };
+       return new Response(data, { headers });
+   } catch {
+       console.log(`⚠️ Imagen no encontrada: ${filePath}`);
+       return new Response("Imagen no encontrada", { status: 404 });
+   }
+}
+ else {
         // Usar el router para resolver todas las rutas
         const routeResult = router.resolve(url.pathname);
 
