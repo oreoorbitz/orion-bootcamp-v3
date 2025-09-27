@@ -5,25 +5,34 @@ import { injector } from "../injector.ts";
 import { iniciarServidor } from "./slightlyLate.ts";
 import { notificarRecargaPagina } from "./wsServer.ts";
 import { crearContexto } from "./contextPlease.ts";
-// 🛒 EXPORTAR la función para que pueda ser usada desde slightlyLate.ts
 export { generarHTMLDeCarrito };
 
-// 🛒 MODIFICAR getContext para incluir soporte de carrito
-async function getContext(cartToken?: string, cartsStorage?: Map<string, any>) {
-  return await crearContexto(cartToken, cartsStorage);
-}
+const DIRECTORY_TEMPLATES = "../server/themes/dev/templates/"
+const DIRECTORY_DIST = "../server/themes/dev/dist/"
+const FILE_THEME = "../server/themes/dev/layout/theme.liquid"
+const FILE_HOT_RELOAD = "./hotreload.ts"
+const HTML_CART_NOT_FOUND = `
+        <html>
+          <body>
+            <h1>Carrito no disponible</h1>
+            <p>La plantilla del carrito no se encuentra.</p>
+            <a href="/">Volver a la tienda</a>
+          </body>
+        </html>
+      `
+
 
 function path(stl: string) {
   return new URL(stl, import.meta.url).pathname;
 }
 
 function getTemplatePath(nombre: string): string {
-  const templatesDir = path("../server/themes/dev/templates/");
+  const templatesDir = path(DIRECTORY_TEMPLATES);
   return `${templatesDir}${nombre}.liquid`;
 }
-
+"content_for_index"
 function getOutputDirectory(templateType: string): string {
-  const baseOutputDir = path("../server/themes/dev/dist/");
+  const baseOutputDir = path(DIRECTORY_DIST);
   if (templateType === "product") return `${baseOutputDir}products/`;
   if (templateType === "collection") return `${baseOutputDir}collections/`;
   return baseOutputDir;
@@ -37,7 +46,7 @@ function getOutputFileName(templateType: string, itemHandle?: string): string {
   return `${templateType}.html`;
 }
 
-const layoutPath = path("../server/themes/dev/layout/theme.liquid");
+const layoutPath = path(FILE_THEME);
 
 async function generarHTMLDeTemplate(templateName: string, itemHandle?: string): Promise<string> {
   try {
@@ -57,11 +66,11 @@ async function generarHTMLDeTemplate(templateName: string, itemHandle?: string):
 
     const templateContent = await Deno.readTextFile(templatePath);
 
-    const baseContext = await getContext();
+    const baseContext = await crearContexto();
     let templateContext = { ...baseContext, template_type: templateName };
 
    if (templateName === "product" && itemHandle) {
-    const baseContext: any = await getContext?.() ?? await crearContexto();
+    const baseContext: any = await crearContexto();
 
     // Sacar un array de productos desde varias rutas
     const productsArray =
@@ -73,13 +82,7 @@ async function generarHTMLDeTemplate(templateName: string, itemHandle?: string):
                     ? baseContext.data.products
                     : [];
 
-    // Buscar producto por handle, slug o id
-    const product = productsArray.find(
-        (p: any) =>
-            p?.handle === itemHandle ||
-            p?.slug === itemHandle ||
-            String(p?.id ?? "") === itemHandle
-    );
+    const product = productsArray.find( (p: any) => p?.handle === itemHandle );
 
     if (product) {
         templateContext = {
@@ -99,7 +102,7 @@ async function generarHTMLDeTemplate(templateName: string, itemHandle?: string):
       }
     }
 
-    console.log("TEST0RR",JSON.stringify(templateContext.cart.items, null, 2))
+    console.log(JSON.stringify(templateContext.cart.items, null, 2))
 
     const renderedContent = await liquidEngine(templateContent, templateContext);
     const layoutContext = { ...templateContext, content_for_layout: renderedContent };
@@ -122,7 +125,7 @@ async function generarHTMLDeTemplate(templateName: string, itemHandle?: string):
     await Deno.writeTextFile(outputPath, finalTemplate);
     console.log(`✅ Archivo ${outputFileName} generado exitosamente en ${outputDirectory}`);
 
-    const tsPath = new URL("./hotreload.ts", import.meta.url).pathname;
+    const tsPath = new URL(FILE_HOT_RELOAD, import.meta.url).pathname;
     await injector(tsPath, outputPath);
     console.log(`✅ Hot Reload inyectado correctamente en ${outputFileName}.`);
 
@@ -133,7 +136,6 @@ async function generarHTMLDeTemplate(templateName: string, itemHandle?: string):
   }
 }
 
-// 🛒 NUEVA FUNCIÓN: Generar HTML para el carrito con contexto dinámico
 async function generarHTMLDeCarrito(cartToken?: string, cartsStorage?: Map<string, any>): Promise<string> {
   try {
     console.log(`✅ Generando HTML para carrito con token: ${cartToken}`);
@@ -143,15 +145,7 @@ async function generarHTMLDeCarrito(cartToken?: string, cartsStorage?: Map<strin
       await Deno.stat(templatePath);
     } catch {
       console.log(`⚠️ Template cart no encontrado, usando plantilla básica`);
-      return `
-        <html>
-          <body>
-            <h1>Carrito no disponible</h1>
-            <p>La plantilla del carrito no se encuentra.</p>
-            <a href="/">Volver a la tienda</a>
-          </body>
-        </html>
-      `;
+      return HTML_CART_NOT_FOUND;
     }
 
     const templateContent = await Deno.readTextFile(templatePath);
@@ -206,7 +200,7 @@ async function generarPaginasDeProductos(): Promise<string[]> {
   }
 
   // 2) Obtener SIEMPRE un contexto fresco
-  const baseContext: any = await getContext?.() ?? await crearContexto();
+  const baseContext: any = await crearContexto();
 
   // 3) Localizar productos en distintas rutas comunes
   let products: any[] = [];
@@ -233,9 +227,9 @@ async function generarPaginasDeProductos(): Promise<string[]> {
   // 5) Generar páginas por cada producto
   console.log(`🛍️ Generando ${products.length} páginas de productos...`);
   for (const product of products) {
-    const handle = product?.handle ?? product?.slug ?? String(product?.id ?? "");
+    const handle = product?.handle
     if (!handle) {
-      console.log("⚠️ Producto sin handle/slug/id; se omite.", product?.title ?? product?.name ?? "");
+      console.log("⚠️ Producto sin handle/id; se omite.", product?.title ?? product?.name ?? "");
       continue;
     }
     console.log(`🔄 Generando página para producto: ${handle}`);
@@ -252,7 +246,7 @@ async function generarPaginasDeColecciones(): Promise<string[]> {
     const collectionTemplatePath = getTemplatePath("collection");
     await Deno.stat(collectionTemplatePath);
 
-    const baseContext = await getContext();
+    const baseContext = await crearContexto();
     if (Array.isArray(baseContext.collections)) {
       console.log(`📂 Generando ${baseContext.collections.length} páginas de colecciones...`);
       for (const collection of baseContext.collections) {
