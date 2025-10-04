@@ -37,16 +37,15 @@
   </p>
 </div>
 
-
 <section class="flex-row">
   {% htmlOutput %}
-  <button class="bg-brand-teal text-white px-4 py-2 rounded hover:bg-accent transition" >Click Me</button>
+    <button class="bg-brand-teal text-white px-4 py-2 rounded hover:bg-accent transition" >Click Me</button>
   {% endhtmlOutput %}
 
   {% javascriptInput %}
-  <script>
-    document.querySelector('button').addEventListener('click', () => alert('clicked!'))
-  </script>
+    <script>
+      document.querySelector('button').addEventListener('click', () => alert('clicked!'))
+    </script>
   {% endjavascriptInput %}
 </section>
  

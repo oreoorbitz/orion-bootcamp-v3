@@ -23,6 +23,6 @@ export default function register(engine) {
         emitter.write(`<script data-injected></script>`)
         emitter.write(`</div>`)
       }
-    });
+    })
   }
   

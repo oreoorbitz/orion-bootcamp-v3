@@ -1,5 +1,6 @@
 import {disable, enable} from './utils.js'
 
+console.log('code-exercises.js loaded');
 document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll('[data-html-output]').forEach(output => {
     const container = output;

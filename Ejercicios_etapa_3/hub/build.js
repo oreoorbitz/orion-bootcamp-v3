@@ -7,96 +7,125 @@ import { Liquid } from 'liquidjs';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { exec } from 'child_process';
+import { spawn } from 'child_process';
 import glob from 'glob';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// ── PATHS (all absolute, no reliance on CWD) ────────────────────────────────
+const hubDir = __dirname;                                // .../Ejercicios_etapa_3/hub
+const projectRoot = path.resolve(hubDir, '..');          // .../Ejercicios_etapa_3
+const assetsDir = path.resolve(projectRoot, 'assets');   // .../Ejercicios_etapa_3/assets
+const generalOutDir = path.resolve(projectRoot, '1_general');
+const rootIndexHtml = path.resolve(projectRoot, 'index.html');
+
+const tailwindInput = path.resolve(hubDir, 'styles', 'tailwind.css');
+const tailwindOutput = path.resolve(assetsDir, 'tailwind.css');
+
+// ── Utilities ───────────────────────────────────────────────────────────────
+const ensureDir = async (dir) => fs.mkdir(dir, { recursive: true });
+
 const copyJavaScriptFiles = async () => {
-  const sourceDir = path.join(__dirname, 'javascript');
-  const targetDir = path.resolve(__dirname, '../assets');
+  const sourceDir = path.join(hubDir, 'public', 'javascript');
+  await ensureDir(assetsDir);
 
   try {
     const files = await fs.readdir(sourceDir);
     for (const file of files) {
       if (!file.endsWith('.js')) continue;
-
       const srcPath = path.join(sourceDir, file);
-      const destPath = path.join(targetDir, file);
+      const destPath = path.join(assetsDir, file);
       await fs.copyFile(srcPath, destPath);
       console.log(`📦 Copied JS: ${file}`);
     }
-  } catch (err) {
+  } catch {
     console.warn('⚠️ No JavaScript files to copy or source folder missing.');
   }
 };
 
+// Liquid engine
 const engine = new Liquid({
   root: [
-    path.join(__dirname, 'layout'),
-    path.join(__dirname, 'templates'),
-    path.join(__dirname, 'snippets'),
-    path.join(__dirname, 'sections')
+    path.join(hubDir, 'layout'),
+    path.join(hubDir, 'templates'),
+    path.join(hubDir, 'snippets'),
+    path.join(hubDir, 'sections'),
   ],
-  extname: '.liquid'
+  extname: '.liquid',
 });
 
-// Register filters
+// Register filters/tags
 registerLinkToModule(engine);
 registerHtmlOutput(engine);
 registerJavascriptInput(engine);
 registerHtmlInput(engine);
 
-const buildTailwind = () => {
-  return new Promise((resolve, reject) => {
-    exec(
-      'npx @tailwindcss/cli -i ./Ejercicios_etapa_3/hub/styles/tailwind.css -o ./Ejercicios_etapa_3/assets/tailwind.css --minify',
-      (error, stdout, stderr) => {
-        if (error) return reject(error);
-        console.log(stdout || stderr);
-        resolve();
+// ── Tailwind: spawn npx with pinned CWD + absolute IO paths ────────────────
+const buildTailwind = () =>
+  new Promise((resolve, reject) => {
+    const npx = process.platform === 'win32' ? 'npx.cmd' : 'npx';
+
+    const child = spawn(
+      npx,
+      [
+        // if you use @tailwindcss/cli keep it; otherwise prefer "tailwindcss"
+        'tailwindcss',
+        '-i', tailwindInput,
+        '-o', tailwindOutput,
+        '--minify',
+      ],
+      {
+        stdio: 'inherit',
+        cwd: projectRoot, // where node_modules lives
       }
     );
+
+    child.on('close', (code) => {
+      if (code === 0) resolve();
+      else reject(new Error(`tailwindcss exited with code ${code}`));
+    });
   });
-};
 
+// ── Build module pages (absolute everywhere) ────────────────────────────────
 const buildModulePages = async () => {
-  const modulesDir = path.join(__dirname, 'modules', 'general');
-  const outputBase = path.resolve(__dirname, '../1_general');
+  const modulesDir = path.join(hubDir, 'modules', 'general');
+  await fs.rm(generalOutDir, { recursive: true, force: true });
+  await ensureDir(generalOutDir);
 
-  await fs.rm(outputBase, { recursive: true, force: true });
-  await fs.mkdir(outputBase, { recursive: true });
-
-  const files = glob.sync(`${modulesDir}/**/index.liquid`);
+  const files = glob.sync(`${modulesDir}/**/index.liquid`, { nodir: true });
 
   for (const filepath of files) {
     const relativeModulePath = path.relative(modulesDir, path.dirname(filepath));
-    const outputDir = path.join(outputBase, relativeModulePath);
-    await fs.mkdir(outputDir, { recursive: true });
+    const outputDir = path.join(generalOutDir, relativeModulePath);
+    await ensureDir(outputDir);
 
+    // liquidjs accepts absolute paths; this keeps it simple
     const html = await engine.renderFile(filepath, {});
     const outputPath = path.join(outputDir, 'index.html');
-
     await fs.writeFile(outputPath, html, 'utf-8');
     console.log(`✅ Built ${outputPath}`);
   }
 };
 
+// ── Build root index (absolute) ────────────────────────────────────────────
 const buildRootIndex = async () => {
-  const templatePath = path.join(__dirname, 'templates', 'index.liquid');
-  const outputPath = path.resolve(__dirname, '../index.html');
-
+  const templatePath = path.join(hubDir, 'templates', 'index.liquid');
   const html = await engine.renderFile(templatePath, {});
-  await fs.writeFile(outputPath, html, 'utf-8');
-  console.log(`✅ Built entrypoint: ${outputPath}`);
+  await fs.writeFile(rootIndexHtml, html, 'utf-8');
+  console.log(`✅ Built entrypoint: ${rootIndexHtml}`);
 };
 
+// ── Orchestrate ────────────────────────────────────────────────────────────
 const run = async () => {
+  await ensureDir(assetsDir);
   await buildTailwind();
   await buildModulePages();
   await buildRootIndex();
   await copyJavaScriptFiles();
 };
 
-run().catch(console.error);
+run().catch((err) => {
+  console.error('❌ Build failed:', err?.stack || err);
+  process.exitCode = 1;
+});
