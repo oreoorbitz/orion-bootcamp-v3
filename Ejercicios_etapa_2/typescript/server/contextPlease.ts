@@ -30,7 +30,7 @@ type Producto = { id: number; title: string; handle: string; precio: number; [ke
 type Coleccion = { id: number; title: string; handle: string; [key: string]: any };
 type Relacion = { productId: number; collectionId: number };
 
-// 🖼️ NUEVOS TIPOS PARA IMÁGENES
+// Interfaces
 interface ImageObject {
   small: string;
   medium: string;
@@ -74,7 +74,31 @@ interface VariantImage {
   height: number;
 }
 
-// 🆕 TIPOS ACTUALIZADOS PARA VARIANTES CON IMÁGENES
+// 🛒 TIPOS ACTUALIZADOS PARA EL CARRITO CON PROPERTIES, ATTRIBUTES E IMÁGENES
+interface CartItem {
+    id: number; // ✨ Usar solo 'id' para consistencia (variant_id)
+    title: string;
+    handle: string;
+    price: number;
+    quantity: number;
+    properties?: { [k: string]: string }; // ✨ Properties por línea
+    image?: ImageObject; // 🖼️ NUEVO: Imagen de la variante en el carrito
+}
+
+interface Cart {
+    items: CartItem[];
+    attributes?: { [k: string]: string }; // ✨ Attributes globales del carrito
+}
+
+interface LiquidCart {
+    token: string;
+    items: CartItem[];
+    attributes?: { [k: string]: string }; // ✨ Attributes en respuesta Liquid
+    item_count: number;
+    total_price: number;
+}
+
+// Tipos
 type Variante = {
   id: number;
   productId: number;
@@ -102,29 +126,21 @@ type ValorOpcion = {
   value: string;
 };
 
-// 🛒 TIPOS ACTUALIZADOS PARA EL CARRITO CON PROPERTIES, ATTRIBUTES E IMÁGENES
-interface CartItem {
-    id: number; // ✨ Usar solo 'id' para consistencia (variant_id)
-    title: string;
-    handle: string;
-    price: number;
-    quantity: number;
-    properties?: { [k: string]: string }; // ✨ Properties por línea
-    image?: ImageObject; // 🖼️ NUEVO: Imagen de la variante en el carrito
+type Drop<T extends { handle: string }> = {
+  isDrop: true;
+  size: number;
+  get(key: string): T | undefined;
+  has(key: string): boolean;
+  keys(): IterableIterator<string>;
+  values(): IterableIterator<T>;
+  entries(): IterableIterator<[string, T]>;
+  forEach(callbackfn: (value: T, key: string, map: Map<string, T>) => void): void;
+  [Symbol.iterator](): IterableIterator<[string, T]>;
+} & {
+  [K in T['handle']]: T extends { handle: K } ? T : never;
 }
 
-interface Cart {
-    items: CartItem[];
-    attributes?: { [k: string]: string }; // ✨ Attributes globales del carrito
-}
 
-interface LiquidCart {
-    token: string;
-    items: CartItem[];
-    attributes?: { [k: string]: string }; // ✨ Attributes en respuesta Liquid
-    item_count: number;
-    total_price: number;
-}
 
 // 🖼️ NUEVA FUNCIÓN: Agrupar imágenes de colecciones
 function agruparImagenesColecciones(imagenes: CollectionImage[]): Map<number, ImageObject> {
@@ -315,7 +331,7 @@ async function agruparProductos(
 }
 
 // 🔧 FUNCIÓN CORREGIDA: crearDrop con mejor manejo del Proxy (sin cambios)
-function crearDrop<T extends { handle: string }>(items: T[]): any {
+function crearDrop<T extends { handle: string }>(items: T[]): Drop<T> {
   const mapa = new Map<string, T>();
   for (const item of items) {
     mapa.set(item.handle, item);
@@ -377,7 +393,7 @@ function crearDrop<T extends { handle: string }>(items: T[]): any {
       }
       return Reflect.getOwnPropertyDescriptor(target, prop);
     }
-  });
+  })  as unknown as Drop<T>;
 }
 
 // ✨ FUNCIÓN ACTUALIZADA: buildLiquidCart ahora incluye properties, attributes E IMÁGENES

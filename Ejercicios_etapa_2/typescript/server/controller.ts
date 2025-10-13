@@ -1,6 +1,5 @@
 import { liquidEngine } from "../plantilla_motor/motorDePlantillas.ts";
 import { htmlParser } from "../plantilla_motor/parserDehtml.ts";
-import { renderDOM } from "../plantilla_motor/renderizador.ts";
 import { injector } from "../injector.ts";
 import { iniciarServidor } from "./slightlyLate.ts";
 import { notificarRecargaPagina } from "./wsServer.ts";
@@ -30,7 +29,7 @@ function getTemplatePath(nombre: string): string {
   const templatesDir = path(DIRECTORY_TEMPLATES);
   return `${templatesDir}${nombre}.liquid`;
 }
-"content_for_index"
+
 function getOutputDirectory(templateType: string): string {
   const baseOutputDir = path(DIRECTORY_DIST);
   if (templateType === "product") return `${baseOutputDir}products/`;
@@ -74,13 +73,8 @@ async function generarHTMLDeTemplate(templateName: string, itemHandle?: string):
 
     // Sacar un array de productos desde varias rutas
     const productsArray =
-        Array.isArray(baseContext?.products)
-            ? baseContext.products
-            : baseContext?.all_products && typeof baseContext.all_products === "object"
-                ? Object.values(baseContext.all_products)
-                : Array.isArray(baseContext?.data?.products)
-                    ? baseContext.data.products
-                    : [];
+        (Array.isArray(baseContext?.products) ? baseContext.products : baseContext?.all_products )
+        && (typeof baseContext.all_products === "object") ? Object.values(baseContext.all_products) : Array.isArray(baseContext?.data?.products) ? baseContext.data.products : [];
 
     const product = productsArray.find( (p: any) => p?.handle === itemHandle );
 
@@ -109,7 +103,7 @@ async function generarHTMLDeTemplate(templateName: string, itemHandle?: string):
     const layoutContent = await Deno.readTextFile(layoutPath);
     const finalTemplate = await liquidEngine(layoutContent, layoutContext);
     const arbolDOM = htmlParser(finalTemplate);
-    const htmlFinal = renderDOM(arbolDOM);
+
 
     const outputDirectory = getOutputDirectory(templateName);
     const outputFileName = getOutputFileName(templateName, itemHandle);
@@ -166,7 +160,7 @@ async function generarHTMLDeCarrito(cartToken?: string, cartsStorage?: Map<strin
 
     // Parsear y renderizar el DOM
     const arbolDOM = htmlParser(finalTemplate);
-    const htmlFinal = renderDOM(arbolDOM);
+
 
     console.log(`✅ HTML del carrito generado exitosamente`);
     return finalTemplate;
